@@ -35,7 +35,7 @@ schéma complet des tables dans `DATA_MODEL.md`, commandes d'installation dans `
 
 | # | Tâche | Dev | Priorité | Statut | Détails |
 | --- | --- | --- | --- | --- | --- |
-| 3.1 | Layout général storefront (Navbar, Footer) | Front | P1 | ⚪ | Nouveau `resources/js/layouts/storefront` (le starter n'a que `app/auth/settings`). Prévoir la structure pour accueillir le mega-menu (24.3) sans tout refaire plus tard. |
+| 3.1 | Layout général storefront (Navbar, Footer) | Front | P1 | 🟢 | `resources/js/layouts/storefront/` (template) + `layouts/storefront-layout.tsx` (wrapper, même pattern que `app-layout.tsx`). `StorefrontHeader`/`StorefrontFooter` dans `components/storefront/`. Header alimenté par une liste `categoryNavItems: NavItem[]` vide pour l'instant — le mega-menu (24.3) n'aura qu'à peupler cette liste, pas à restructurer le header. Avatar/dropdown si connecté, sinon boutons connexion/inscription. `tsc`, `eslint` et `vite build` passent sans erreur ; pas encore de page consommatrice (catalogue = Phase 2). |
 
 ---
 
