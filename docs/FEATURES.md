@@ -28,7 +28,7 @@ schéma complet des tables dans `DATA_MODEL.md`, commandes d'installation dans `
 
 | # | Tâche | Dev | Priorité | Statut | Détails |
 | --- | --- | --- | --- | --- | --- |
-| 2.1 | Auth (Fortify) — login/register/reset password | Les deux | P0 | ⚪ | Déjà fourni par le starter (`FortifyServiceProvider::configureViews()`, vues Inertia pour login/register/reset/2FA). Vérifier que les emails de reset partent bien une fois Resend branché (5.1). |
+| 2.1 | Auth (Fortify) — login/register/reset password | Les deux | P0 | 🟢 | `FortifyServiceProvider::configureViews()` OK, toutes les routes (login/register/forgot-password/reset-password/2FA/confirm-password) enregistrées et testées : pages Inertia répondent 200, création d'un `User` via factory + hash de mot de passe validés en base PostgreSQL. Envoi réel des emails de reset à revérifier une fois Resend branché (5.1) — actuellement `MAIL_MAILER=log`. |
 | 2.2 | Rôles & permissions (Spatie) — admin/staff/support/customer | Backend | P0 | ⚪ | `spatie/laravel-permission`. Rôles définis dans `DATA_MODEL.md` : `admin`, `staff` (stock/commandes), `support` (commandes/avis, pas catalogue ni finance), `customer` implicite. Permissions fines type `orders.refund` réutilisées en 27.2. |
 
 ### 3. Layout général
