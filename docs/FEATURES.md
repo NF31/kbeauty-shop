@@ -13,6 +13,49 @@ schéma complet des tables dans `DATA_MODEL.md`, commandes d'installation dans `
 
 ---
 
+## Modèles de données & Migrations (vue d'ensemble)
+
+Récapitulatif de toutes les tables de `DATA_MODEL.md`, pour vérifier d'un coup d'œil qu'aucune
+n'est oubliée. Chaque table est réellement créée dans le cadre d'une tâche fonctionnelle
+ci-dessous (pas de doublon de travail entre cette liste et les tâches numérotées) — la colonne
+**Tâche** renvoie vers le `#.#` qui la migre.
+
+| Table | Tâche | Statut |
+| --- | --- | --- |
+| `users` | 1.1/2.1 (starter) | 🟢 |
+| `passkeys` | 2.1 (starter) | 🟢 |
+| `roles` / `permissions` / `model_has_roles` / `model_has_permissions` / `role_has_permissions` | 2.2 | 🟢 |
+| `brands` | 4.2 | ⚪ |
+| `categories` | 4.2 | ⚪ |
+| `product_category` (pivot) | 4.2 | ⚪ |
+| `products` | 4.1 | ⚪ |
+| `product_options` | 4.2 | ⚪ |
+| `product_option_values` | 4.2 | ⚪ |
+| `product_variants` | 4.2 | ⚪ |
+| `variant_option_values` (pivot) | 4.2 | ⚪ |
+| `product_images` | 5.1 | ⚪ |
+| `inventory_movements` | 4.4 | ⚪ |
+| `carts` | 8.1 | ⚪ |
+| `cart_items` | 8.1 | ⚪ |
+| `cart_gift_items` | 10.2 | ⚪ |
+| `gift_threshold_rules` | 10.2 | ⚪ |
+| `gift_threshold_rule_rewards` | 10.2 | ⚪ |
+| `addresses` | 9.1 | ⚪ |
+| `orders` | 9.2 | ⚪ |
+| `order_items` | 9.2 | ⚪ |
+| `payments` | 9.2 | ⚪ |
+| `refunds` | 16.3 | ⚪ |
+| `shipments` | 11.2 | ⚪ |
+| `coupons` | 10.1 | ⚪ |
+| `reviews` | 14.1 | ⚪ |
+| `review_photos` | 15.3 | ⚪ |
+| `articles` | 18.1 | ⚪ |
+| `article_product` (pivot) | 18.2 | ⚪ |
+| `newsletter_subscribers` | 13.2 | ⚪ |
+| `wishlists` | 26.3 | ⚪ |
+
+---
+
 ## PHASE 1 — Fondations
 
 ### 1. Setup & Configuration
