@@ -4,7 +4,7 @@
 
 | Couche | Choix | Rôle |
 | --- | --- | --- |
-| Backend | Laravel (PHP 8.3+) | logique métier, ORM, jobs, admin |
+| Backend | Laravel (PHP 8.4+) | logique métier, ORM, jobs, admin |
 | Bridge | Inertia.js | pont SPA sans API REST séparée à maintenir |
 | Frontend | React 19 + TypeScript | UI |
 | Styles | Tailwind CSS v4 + shadcn/ui (Radix) | design system |

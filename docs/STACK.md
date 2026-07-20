@@ -7,7 +7,7 @@ le *pourquoi* de certains choix ; ce document liste précisément *quoi installe
 
 | Catégorie | Technologie |
 | --- | --- |
-| Framework | Laravel 12 |
+| Framework | Laravel 13 |
 | Frontend | Inertia.js + React + TypeScript |
 | Style | Tailwind CSS |
 | Base de données | PostgreSQL |
