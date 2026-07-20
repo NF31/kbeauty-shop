@@ -9,22 +9,28 @@ use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function index(): Response
+    public function index(CloudinaryService $cloudinary): Response
     {
         $products = Product::query()
-            ->with('brand:id,name')
+            ->with(['brand:id,name', 'primaryImage'])
             ->withCount('variants')
             ->orderByDesc('created_at')
             ->get();
 
         return Inertia::render('admin/products/index', [
             'products' => $products,
+            'thumbnailUrls' => $products
+                ->filter(fn ($product) => $product->primaryImage !== null)
+                ->mapWithKeys(fn ($product) => [
+                    $product->id => $cloudinary->url($product->primaryImage->path, 150, 150),
+                ]),
         ]);
     }
 
@@ -55,10 +61,12 @@ class ProductController extends Controller
             'categories:id,name',
             'options.values',
             'variants.optionValues',
+            'images',
         ]);
 
         return Inertia::render('admin/products/edit', [
             'product' => $product,
+            'imageUrls' => $product->images->mapWithKeys(fn ($image) => [$image->id => $image->url(400, 400)]),
             'brandOptions' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categoryOptions' => Category::query()->orderBy('name')->get(['id', 'name']),
             'statusOptions' => ProductStatus::cases(),
