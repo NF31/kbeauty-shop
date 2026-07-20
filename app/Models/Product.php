@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Sluggable\Attributes\Sluggable;
 
 /**
  * @property int $id
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $deleted_at
  */
 #[ObservedBy(ProductObserver::class)]
+#[Sluggable(from: 'name', to: 'slug')]
 #[Fillable([
     'brand_id',
     'name',
