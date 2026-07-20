@@ -16,7 +16,7 @@
 | Emails transactionnels | Resend (mail driver Laravel) | confirmation commande, expédition |
 | Livraison | Sendcloud | tarifs, étiquettes, tracking |
 | Médias | Cloudinary | upload/transformation/CDN images produit |
-| Admin | Filament | back-office CRUD sans réinventer une UI admin |
+| Admin | Inertia + React (custom) | back-office sur le même stack que le storefront, pas de framework admin externe (pas de Livewire/Vue) |
 | Rôles/permissions | Spatie Laravel-Permission | admin/staff/support |
 | PDF | dompdf | factures |
 | SEO | Artesaos/SEOTools (ou équivalent) | meta tags dynamiques |
@@ -52,11 +52,6 @@ Kbeauty/
 │   │       └── SubmitReview.php
 │   ├── Console/Commands/               # Déjà présent
 │   ├── Enums/                          # OrderStatus, PaymentStatus, ReviewStatus... (PHP natifs)
-│   ├── Filament/                       # Ressources admin (Resources, Pages, Widgets)
-│   │   └── Resources/
-│   │       ├── ProductResource.php
-│   │       ├── OrderResource.php
-│   │       └── ReviewResource.php
 │   ├── Http/
 │   │   ├── Controllers/
 │   │   │   ├── Settings/               # Déjà présent
@@ -66,6 +61,11 @@ Kbeauty/
 │   │   │   │   ├── CartController.php
 │   │   │   │   ├── CheckoutController.php
 │   │   │   │   └── AccountController.php
+│   │   │   ├── Admin/                  # Contrôleurs back-office (staff/admin), Inertia comme le reste
+│   │   │   │   ├── DashboardController.php
+│   │   │   │   ├── ProductController.php
+│   │   │   │   ├── OrderController.php
+│   │   │   │   └── ReviewController.php
 │   │   │   └── Webhooks/
 │   │   │       └── StripeWebhookController.php
 │   │   ├── Middleware/                 # Déjà présent
@@ -89,8 +89,10 @@ Kbeauty/
 │   │   ├── actions/                    # Déjà présent (Wayfinder — appels typés vers les routes Laravel)
 │   │   ├── components/
 │   │   │   ├── ui/                     # Déjà présent (shadcn/ui)
-│   │   │   └── storefront/             # ProductCard, ProductGallery, VariantSelector,
-│   │   │                               # ReviewList, GiftProgressBar, MegaMenu...
+│   │   │   ├── storefront/             # ProductCard, ProductGallery, VariantSelector,
+│   │   │   │                           # ReviewList, GiftProgressBar, MegaMenu...
+│   │   │   └── admin/                  # DataTable, AdminSidebar, AdminHeader... réutilisés par
+│   │   │                               # toutes les pages admin (16.x)
 │   │   ├── hooks/                      # Déjà présent
 │   │   ├── layouts/                    # Déjà présent (app/auth/settings) + layouts/storefront à ajouter
 │   │   ├── lib/                        # Déjà présent
@@ -104,11 +106,19 @@ Kbeauty/
 │   │   │   │   ├── Brand.tsx
 │   │   │   │   ├── Cart.tsx
 │   │   │   │   └── Checkout.tsx        # étapes checkout : invité autorisé jusqu'au paiement
-│   │   │   └── account/                # À ajouter — PROTÉGÉ (middleware `auth`), espace client connecté
+│   │   │   ├── account/                # À ajouter — PROTÉGÉ (middleware `auth`), espace client connecté
+│   │   │   │   ├── Dashboard.tsx
+│   │   │   │   ├── Orders.tsx
+│   │   │   │   ├── Addresses.tsx
+│   │   │   │   └── Wishlist.tsx
+│   │   │   └── admin/                  # À ajouter — PROTÉGÉ (middleware `auth` + rôle Spatie staff/admin)
 │   │   │       ├── Dashboard.tsx
-│   │   │       ├── Orders.tsx
-│   │   │       ├── Addresses.tsx
-│   │   │       └── Wishlist.tsx
+│   │   │       ├── products/
+│   │   │       │   ├── Index.tsx       # DataTable réutilisable (composant table shadcn/ui)
+│   │   │       │   ├── Create.tsx
+│   │   │       │   └── Edit.tsx
+│   │   │       ├── orders/
+│   │   │       └── reviews/
 │   │   ├── routes/                     # Déjà présent (Wayfinder)
 │   │   ├── stores/                     # À ajouter
 │   │   │   └── cart-store.ts           # Zustand — état panier optimiste côté client
@@ -117,6 +127,7 @@ Kbeauty/
 │   └── views/                          # Déjà présent (shell Blade minimal pour Inertia)
 ├── routes/
 │   ├── web.php                         # Routes storefront (Inertia)
+│   ├── admin.php                       # À ajouter (préfixe /admin, middleware auth + rôle Spatie)
 │   ├── settings.php                    # Déjà présent
 │   ├── webhooks.php                    # À ajouter (Stripe, hors CSRF/session)
 │   └── console.php                     # Déjà présent
@@ -139,15 +150,19 @@ facilement (déjà la convention utilisée par `auth/` et `settings/` dans le st
 | --- | --- | --- | --- |
 | **Public** (storefront) | tout le monde, sans compte | Inertia + React | `resources/js/pages/storefront/`, contrôleurs `app/Http/Controllers/Storefront/` |
 | **Compte client** | connecté (`middleware('auth')`) | Inertia + React | `resources/js/pages/account/` + `settings/` (déjà présent), mêmes contrôleurs `Storefront/` (namespace conservé car ce sont toujours des pages "boutique", juste protégées) |
-| **Admin** (back-office) | staff/admin (rôle Spatie) | **Filament (Livewire)**, pas Inertia/React | `app/Filament/Resources/`, servi sur `/admin` (route auto-enregistrée par le panel provider Filament) |
+| **Admin** (back-office) | staff/admin (rôle Spatie) | Inertia + React, même stack que le storefront | `resources/js/pages/admin/`, contrôleurs `app/Http/Controllers/Admin/`, routes `routes/admin.php`, préfixe `/admin` |
 
-**Point important** : l'admin **n'a pas** de dossier dans `resources/js/pages/` — Filament génère
-sa propre UI côté serveur (Livewire), complètement indépendante d'Inertia/React. C'est un
-deuxième "sous-site" avec son propre système de rendu, monté sur `/admin`. Ça évite de recoder un
-CRUD React pour chaque ressource (produits, commandes, avis...), mais ça veut dire concrètement
-deux stacks front cohabitent dans le même repo Laravel : React (public + compte client) et
-Livewire (admin). Le routing des permissions Filament (qui voit quoi dans `/admin`) est géré par
-`spatie/laravel-permission`, voir §8 Sécurité & conformité.
+**Point important** : contrairement à un choix comme Filament, l'admin **n'est pas** un sous-site à
+part avec son propre système de rendu — c'est le même Inertia/React que le public et le compte
+client, juste un troisième dossier de pages (`pages/admin/`) protégé par un middleware de rôle.
+Un seul stack front dans tout le repo, donc les composants `components/ui` (shadcn/ui) et les
+patterns (Form Request, Action) sont partagés entre storefront et admin. La contrepartie : chaque
+écran CRUD (produits, commandes, avis...) doit être construit à la main (page + contrôleur + Form
+Request), il n'y a pas de génération automatique façon Filament — d'où l'intérêt du composant
+`DataTable` réutilisable (`components/admin/`) pour ne pas réécrire le tri/pagination à chaque
+ressource. Le routing des permissions admin (qui voit quoi dans `/admin`) est géré par
+`spatie/laravel-permission` via un middleware de rôle sur `routes/admin.php`, voir §8 Sécurité &
+conformité.
 
 Découpage des routes dans `routes/web.php` (schéma, pas le fichier final) :
 
@@ -167,7 +182,13 @@ Route::middleware('auth')->prefix('compte')->group(function () {
     Route::get('/favoris', [AccountController::class, 'wishlist']);
 });
 
-// Admin — pas de route ici, gérée automatiquement par Filament sur /admin
+// Admin — protégé (auth + rôle Spatie staff/admin/support), routes/admin.php
+Route::middleware(['auth', 'role:admin|staff|support'])->prefix('admin')->group(function () {
+    Route::get('/', [Admin\DashboardController::class, 'index']);
+    Route::resource('produits', Admin\ProductController::class);
+    Route::get('/commandes', [Admin\OrderController::class, 'index']);
+    Route::get('/avis', [Admin\ReviewController::class, 'index']);
+});
 ```
 
 - Le store Zustand gère l'état **optimiste** du panier (UI instantanée), mais la source de vérité
@@ -184,7 +205,7 @@ Route::middleware('auth')->prefix('compte')->group(function () {
    webhook Stripe** (`payment_intent.succeeded`) — jamais faire confiance au retour navigateur seul.
 3. Le webhook met à jour `Order.status = paid`, `Payment.status = succeeded`, déclenche un Job
    Horizon (email confirmation via Resend, décrément stock, création `Shipment` à traiter).
-4. Les remboursements passent par l'admin Filament → Action `RefundOrder` → API Stripe → `Refund`.
+4. Les remboursements passent par l'admin (Inertia/React) → Action `RefundOrder` → API Stripe → `Refund`.
 
 ## 5. Recherche (Scout + Meilisearch)
 
@@ -198,7 +219,7 @@ Route::middleware('auth')->prefix('compte')->group(function () {
 
 ## 6. Média (Cloudinary)
 
-- Upload direct depuis Filament (admin) et éventuellement depuis un futur espace vendeur.
+- Upload direct depuis l'admin (Inertia/React) et éventuellement depuis un futur espace vendeur.
 - Stocker uniquement le `public_id` Cloudinary en base, générer les URLs transformées
   (formats/tailles responsive) à la volée côté frontend plutôt que dupliquer plusieurs fichiers.
 
@@ -218,5 +239,6 @@ Route::middleware('auth')->prefix('compte')->group(function () {
 - Webhooks Stripe vérifiés par signature (`Stripe-Signature` header).
 - RGPD : cookies de mesure/marketing chargés uniquement après consentement (bandeau cookies avant
   tout pixel Meta/TikTok/Google Ads).
-- Permissions Filament strictement scopées via Spatie (un `support` ne doit pas pouvoir modifier
+- Permissions de l'admin strictement scopées via Spatie, vérifiées à la fois dans le middleware de
+  route (`role:...`) et dans chaque contrôleur/policy (un `support` ne doit pas pouvoir modifier
   les prix catalogue, un `staff` ne doit pas voir les remboursements sans permission dédiée).

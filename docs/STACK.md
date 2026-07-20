@@ -19,7 +19,7 @@ le *pourquoi* de certains choix ; ce document liste précisément *quoi installe
 | Médias | Cloudinary Laravel |
 | Emails | Resend (via `resend-laravel`) |
 | Queues | Laravel Horizon + Redis |
-| Admin panel | Filament |
+| Admin panel | Custom (Inertia + React — même stack que le storefront, pas de framework admin externe) |
 | Livraison | Sendcloud (API REST) |
 | Validation frontend | Zod + React Hook Form |
 | State panier | Zustand |
@@ -43,7 +43,6 @@ composer require spatie/laravel-sitemap
 composer require artesaos/seotools
 composer require barryvdh/laravel-dompdf
 composer require laravel/horizon
-composer require filament/filament
 composer require sentry/sentry-laravel
 ```
 
@@ -82,6 +81,12 @@ npm install @radix-ui/react-tabs
 > `recharts` n'est nécessaire qu'à la Phase 7 (KPIs admin, voir `FEATURES.md`) — à installer à ce
 > moment-là plutôt que dès le départ : `npm install recharts`.
 >
+> L'admin (back-office) est un module Inertia/React comme le storefront, pas un package séparé.
+> Pas de nouvelle dépendance de table de données pour l'instant : un composant `DataTable`
+> réutilisable est construit sur le composant `Table` de shadcn/ui (déjà dans le starter). Si le
+> besoin de tri/filtrage/pagination avancé le justifie une fois les premières ressources admin
+> construites (16.1), évaluer `@tanstack/react-table` à ce moment-là plutôt que par anticipation.
+>
 > `@headlessui/react` n'est pas ajouté par défaut : les primitives `@radix-ui/react-*` déjà
 > installées (base de shadcn/ui) couvrent la même fonction. Ne l'installer que si un composant
 > précis manque vraiment côté Radix, pour éviter deux librairies de primitives UI en parallèle.
@@ -105,7 +110,6 @@ starter.
 | `laravel/scout` + `meilisearch/meilisearch-php` | recherche catalogue tolérante aux fautes de frappe — voir note de séquencement dans `ARCHITECTURE.md` (pas indispensable dès le tout premier lancement) |
 | `spatie/laravel-sluggable` | slugs SEO auto-générés pour produits/catégories/articles |
 | `spatie/laravel-sitemap` + `artesaos/seotools` | SEO technique (sitemap.xml, meta tags dynamiques) |
-| `filament/filament` | back-office admin complet sans construire un CRUD Inertia maison pour chaque entité |
 | `laravel/horizon` + Redis | supervision des queues (emails, indexation Scout, jobs Sendcloud) |
 | `sentry/sentry-laravel` | remontée d'erreurs prod, indispensable dès la mise en ligne réelle |
 | `laravel/telescope` / `barryvdh/laravel-debugbar` | debug local uniquement — **ne jamais activer en production** |
@@ -184,7 +188,8 @@ Aligné sur le phasage de `FEATURES.md` — pas besoin d'installer tout le stack
 2. **Catalogue** : Cloudinary, Spatie Sluggable.
 3. **Panier/commande** : `bumbummen99/shoppingcart`, `brick/money`, Stripe.
 4. **Emails/queues** : Resend, Horizon + Redis.
-5. **Avis/admin** : Filament, dompdf.
+5. **Avis/admin** : dompdf (le back-office admin est un module Inertia/React custom — même stack
+   que le storefront, aucun package admin supplémentaire requis).
 6. **Livraison** : Sendcloud.
 7. **SEO/marketing** : Scout + Meilisearch, laravel-sitemap, SEOTools.
 8. **Observabilité** : Sentry, Telescope/Debugbar (dev).
