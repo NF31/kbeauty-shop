@@ -6,7 +6,10 @@ use App\Enums\InventoryMovementType;
 use App\Exceptions\InsufficientStockException;
 use App\Models\InventoryMovement;
 use App\Models\ProductVariant;
+use App\Models\User;
+use App\Notifications\LowStockAlert;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class StockService
 {
@@ -32,14 +35,34 @@ class StockService
                 throw new InsufficientStockException($locked, $quantity);
             }
 
+            $previousStock = $locked->stock_quantity;
+
             $locked->update(['stock_quantity' => $newStock]);
 
-            return InventoryMovement::create([
+            $movement = InventoryMovement::create([
                 'product_variant_id' => $locked->id,
                 'type' => $type,
                 'quantity' => $quantity,
                 'note' => $note,
             ]);
+
+            $this->notifyIfCrossingLowStockThreshold($locked, $previousStock, $newStock);
+
+            return $movement;
         });
+    }
+
+    /**
+     * Alerte les admins uniquement au moment où le stock franchit le seuil
+     * bas vers le bas — pas à chaque mouvement une fois déjà en dessous,
+     * pour éviter de spammer une notification par vente.
+     */
+    private function notifyIfCrossingLowStockThreshold(ProductVariant $variant, int $previousStock, int $newStock): void
+    {
+        $threshold = config('inventory.low_stock_threshold');
+
+        if ($previousStock > $threshold && $newStock <= $threshold) {
+            Notification::send(User::role('admin')->get(), new LowStockAlert($variant));
+        }
     }
 }
