@@ -6,6 +6,7 @@ import AdminLayout from '@/layouts/admin-layout';
 import AppLayout from '@/layouts/app-layout';
 import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
+import StorefrontLayout from '@/layouts/storefront-layout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
@@ -21,6 +22,8 @@ createInertiaApp({
                 return [AppLayout, SettingsLayout];
             case name.startsWith('admin/'):
                 return AdminLayout;
+            case name.startsWith('storefront/'):
+                return StorefrontLayout;
             default:
                 return AppLayout;
         }
