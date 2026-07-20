@@ -105,4 +105,12 @@ class Product extends Model
     {
         return $this->hasMany(ProductVariant::class);
     }
+
+    /**
+     * @return HasMany<ProductImage, $this>
+     */
+    public function images(): HasMany
+    {
+        return $this->hasMany(ProductImage::class)->orderBy('position');
+    }
 }

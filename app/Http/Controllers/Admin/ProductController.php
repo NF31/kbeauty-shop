@@ -55,10 +55,12 @@ class ProductController extends Controller
             'categories:id,name',
             'options.values',
             'variants.optionValues',
+            'images',
         ]);
 
         return Inertia::render('admin/products/edit', [
             'product' => $product,
+            'imageUrls' => $product->images->mapWithKeys(fn ($image) => [$image->id => $image->url(400, 400)]),
             'brandOptions' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categoryOptions' => Category::query()->orderBy('name')->get(['id', 'name']),
             'statusOptions' => ProductStatus::cases(),

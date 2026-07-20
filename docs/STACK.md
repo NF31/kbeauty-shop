@@ -16,7 +16,7 @@ le *pourquoi* de certains choix ; ce document liste précisément *quoi installe
 | Paiement | Stripe (`stripe-php`) |
 | Panier | `bumbummen99/shoppingcart` |
 | Recherche | Laravel Scout + Meilisearch |
-| Médias | Cloudinary Laravel |
+| Médias | Cloudinary (SDK officiel `cloudinary/cloudinary_php` — `cloudinary-labs/cloudinary-laravel` abandonné, incompatible Laravel 13) |
 | Emails | Resend (via `resend-laravel`) |
 | Queues | Laravel Horizon + Redis |
 | Admin panel | Custom (Inertia + React — même stack que le storefront, pas de framework admin externe) |
@@ -34,7 +34,7 @@ composer require spatie/laravel-permission
 composer require stripe/stripe-php
 composer require bumbummen99/shoppingcart
 composer require brick/money
-composer require cloudinary-labs/cloudinary-laravel
+composer require cloudinary/cloudinary_php
 composer require laravel/scout
 composer require meilisearch/meilisearch-php
 composer require resend/resend-laravel

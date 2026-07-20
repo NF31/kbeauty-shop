@@ -1,6 +1,7 @@
 import { Form, Head, Link, router } from '@inertiajs/react';
 import { useState } from 'react';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
+import ProductImageController from '@/actions/App/Http/Controllers/Admin/ProductImageController';
 import ProductOptionController from '@/actions/App/Http/Controllers/Admin/ProductOptionController';
 import ProductVariantController from '@/actions/App/Http/Controllers/Admin/ProductVariantController';
 import InputError from '@/components/input-error';
@@ -39,6 +40,12 @@ type ProductVariantData = {
     option_values: OptionValue[];
 };
 
+type ProductImageData = {
+    id: number;
+    alt_text: string | null;
+    product_variant_id: number | null;
+};
+
 type ProductData = {
     id: number;
     name: string;
@@ -52,10 +59,12 @@ type ProductData = {
     categories: { id: number; name: string }[];
     options: ProductOptionData[];
     variants: ProductVariantData[];
+    images: ProductImageData[];
 };
 
 type ProductsEditProps = {
     product: ProductData;
+    imageUrls: Record<number, string>;
     brandOptions: Option[];
     categoryOptions: Option[];
     statusOptions: string[];
@@ -73,6 +82,7 @@ function euros(cents: number): string {
 
 export default function ProductsEdit({
     product,
+    imageUrls,
     brandOptions,
     categoryOptions,
     statusOptions,
@@ -112,6 +122,20 @@ export default function ProductsEdit({
             ProductVariantController.destroy.url({
                 product: product.id,
                 variant: variant.id,
+            }),
+            { preserveScroll: true },
+        );
+    };
+
+    const handleDeleteImage = (image: ProductImageData) => {
+        if (!confirm('Supprimer cette image ?')) {
+            return;
+        }
+
+        router.delete(
+            ProductImageController.destroy.url({
+                product: product.id,
+                image: image.id,
             }),
             { preserveScroll: true },
         );
@@ -716,6 +740,114 @@ export default function ProductsEdit({
                                     className="w-fit"
                                 >
                                     Ajouter la variante
+                                </Button>
+                            </>
+                        )}
+                    </Form>
+                </section>
+
+                <section className="max-w-3xl space-y-4 border-t pt-6">
+                    <h2 className="text-lg font-semibold">Images</h2>
+
+                    <div className="flex flex-wrap gap-4">
+                        {product.images.map((image) => (
+                            <div
+                                key={image.id}
+                                className="flex w-40 flex-col gap-2 rounded-md border p-2"
+                            >
+                                <img
+                                    src={imageUrls[image.id]}
+                                    alt={image.alt_text ?? ''}
+                                    className="aspect-square rounded object-cover"
+                                />
+                                {image.product_variant_id && (
+                                    <Badge variant="outline">
+                                        {
+                                            product.variants.find(
+                                                (variant) =>
+                                                    variant.id ===
+                                                    image.product_variant_id,
+                                            )?.sku
+                                        }
+                                    </Badge>
+                                )}
+                                <Button
+                                    variant="destructive"
+                                    size="sm"
+                                    onClick={() => handleDeleteImage(image)}
+                                >
+                                    Supprimer
+                                </Button>
+                            </div>
+                        ))}
+                        {product.images.length === 0 && (
+                            <p className="text-sm text-muted-foreground">
+                                Aucune image pour l'instant.
+                            </p>
+                        )}
+                    </div>
+
+                    <Form
+                        {...ProductImageController.store.form(product.id)}
+                        resetOnSuccess
+                        className="flex flex-col gap-3 rounded-md border p-3"
+                    >
+                        {({ processing, errors }) => (
+                            <>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="image">Fichier</Label>
+                                    <Input
+                                        id="image"
+                                        name="image"
+                                        type="file"
+                                        accept="image/*"
+                                        required
+                                    />
+                                    <InputError message={errors.image} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="alt_text">
+                                        Texte alternatif
+                                    </Label>
+                                    <Input id="alt_text" name="alt_text" />
+                                    <InputError message={errors.alt_text} />
+                                </div>
+                                {product.variants.length > 0 && (
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="product_variant_id">
+                                            Variante associée
+                                        </Label>
+                                        <Select name="product_variant_id">
+                                            <SelectTrigger id="product_variant_id">
+                                                <SelectValue placeholder="Aucune (image générique du produit)" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {product.variants.map(
+                                                    (variant) => (
+                                                        <SelectItem
+                                                            key={variant.id}
+                                                            value={String(
+                                                                variant.id,
+                                                            )}
+                                                        >
+                                                            {variant.sku}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError
+                                            message={errors.product_variant_id}
+                                        />
+                                    </div>
+                                )}
+                                <Button
+                                    type="submit"
+                                    size="sm"
+                                    disabled={processing}
+                                    className="w-fit"
+                                >
+                                    Ajouter l'image
                                 </Button>
                             </>
                         )}
