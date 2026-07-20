@@ -32,7 +32,10 @@ export function DataTable<Row>({
             <TableHeader>
                 <TableRow>
                     {columns.map((column) => (
-                        <TableHead key={column.key} className={column.className}>
+                        <TableHead
+                            key={column.key}
+                            className={column.className}
+                        >
                             {column.header}
                         </TableHead>
                     ))}
@@ -52,7 +55,10 @@ export function DataTable<Row>({
                     rows.map((row) => (
                         <TableRow key={rowKey(row)}>
                             {columns.map((column) => (
-                                <TableCell key={column.key} className={column.className}>
+                                <TableCell
+                                    key={column.key}
+                                    className={column.className}
+                                >
                                     {column.render(row)}
                                 </TableCell>
                             ))}

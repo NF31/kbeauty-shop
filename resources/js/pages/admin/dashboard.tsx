@@ -39,7 +39,9 @@ export default function AdminDashboard({ stats }: DashboardProps) {
                     </Card>
                     <Card>
                         <CardHeader>
-                            <CardDescription>Variantes en stock bas</CardDescription>
+                            <CardDescription>
+                                Variantes en stock bas
+                            </CardDescription>
                             <CardTitle className="text-3xl">
                                 {stats.lowStockVariantsCount}
                             </CardTitle>
