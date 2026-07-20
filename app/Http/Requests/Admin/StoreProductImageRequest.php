@@ -17,7 +17,8 @@ class StoreProductImageRequest extends FormRequest
         $product = $this->route('product');
 
         return [
-            'image' => ['required', 'image', 'max:5120'],
+            'images' => ['required', 'array', 'min:1'],
+            'images.*' => ['image', 'max:5120'],
             'alt_text' => ['nullable', 'string', 'max:255'],
             'product_variant_id' => [
                 'nullable',

@@ -32,6 +32,8 @@ Route::middleware(['auth', 'role:admin|staff|support'])
 
             Route::post('products/{product}/images', [ProductImageController::class, 'store'])
                 ->name('products.images.store');
+            Route::patch('products/{product}/images/{image}/primary', [ProductImageController::class, 'makePrimary'])
+                ->name('products.images.make-primary');
             Route::delete('products/{product}/images/{image}', [ProductImageController::class, 'destroy'])
                 ->name('products.images.destroy');
         });

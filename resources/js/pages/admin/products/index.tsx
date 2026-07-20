@@ -17,6 +17,7 @@ type ProductRow = {
 
 type ProductsIndexProps = {
     products: ProductRow[];
+    thumbnailUrls: Record<number, string>;
 };
 
 const statusLabels: Record<ProductRow['status'], string> = {
@@ -25,7 +26,10 @@ const statusLabels: Record<ProductRow['status'], string> = {
     archived: 'Archivé',
 };
 
-export default function ProductsIndex({ products }: ProductsIndexProps) {
+export default function ProductsIndex({
+    products,
+    thumbnailUrls,
+}: ProductsIndexProps) {
     const handleDelete = (product: ProductRow) => {
         if (!confirm(`Supprimer le produit « ${product.name} » ?`)) {
             return;
@@ -37,6 +41,24 @@ export default function ProductsIndex({ products }: ProductsIndexProps) {
     };
 
     const columns: DataTableColumn<ProductRow>[] = [
+        {
+            key: 'thumbnail',
+            header: 'Image',
+            render: (row) =>
+                thumbnailUrls[row.id] ? (
+                    <img
+                        src={thumbnailUrls[row.id]}
+                        alt={row.name}
+                        className="size-10 rounded object-cover"
+                    />
+                ) : (
+                    <div
+                        role="img"
+                        aria-label={`Aucune image pour ${row.name}`}
+                        className="size-10 rounded bg-muted"
+                    />
+                ),
+        },
         { key: 'name', header: 'Nom', render: (row) => row.name },
         {
             key: 'brand',

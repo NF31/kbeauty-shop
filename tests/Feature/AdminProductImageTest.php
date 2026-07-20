@@ -24,7 +24,7 @@ test('support role cannot manage product images', function () {
 
     $this->actingAs($support)
         ->post("/admin/products/{$product->id}/images", [
-            'image' => UploadedFile::fake()->image('serum.jpg'),
+            'images' => [UploadedFile::fake()->image('serum.jpg')],
         ])
         ->assertForbidden();
 });
@@ -37,13 +37,30 @@ test('admin can upload a product image, stored as a Cloudinary public_id', funct
     });
 
     $this->actingAs($this->admin)->post("/admin/products/{$product->id}/images", [
-        'image' => UploadedFile::fake()->image('serum.jpg'),
+        'images' => [UploadedFile::fake()->image('serum.jpg')],
         'alt_text' => 'Sérum vitamine C',
     ])->assertRedirect();
 
     $image = ProductImage::query()->where('product_id', $product->id)->firstOrFail();
     expect($image->path)->toBe('products/1/fake-public-id');
     expect($image->alt_text)->toBe('Sérum vitamine C');
+});
+
+test('admin can upload several product images at once', function () {
+    $product = Product::factory()->create();
+
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('upload')->twice()->andReturn('products/1/a', 'products/1/b');
+    });
+
+    $this->actingAs($this->admin)->post("/admin/products/{$product->id}/images", [
+        'images' => [
+            UploadedFile::fake()->image('face.jpg'),
+            UploadedFile::fake()->image('dos.jpg'),
+        ],
+    ])->assertRedirect();
+
+    expect(ProductImage::query()->where('product_id', $product->id)->count())->toBe(2);
 });
 
 test('an image can be associated with a specific variant of the same product', function () {
@@ -55,7 +72,7 @@ test('an image can be associated with a specific variant of the same product', f
     });
 
     $this->actingAs($this->admin)->post("/admin/products/{$product->id}/images", [
-        'image' => UploadedFile::fake()->image('teinte.jpg'),
+        'images' => [UploadedFile::fake()->image('teinte.jpg')],
         'product_variant_id' => $variant->id,
     ])->assertRedirect();
 
@@ -68,9 +85,24 @@ test('an image cannot be associated with a variant of another product', function
     $otherVariant = ProductVariant::factory()->create();
 
     $this->actingAs($this->admin)->post("/admin/products/{$product->id}/images", [
-        'image' => UploadedFile::fake()->image('serum.jpg'),
+        'images' => [UploadedFile::fake()->image('serum.jpg')],
         'product_variant_id' => $otherVariant->id,
     ])->assertInvalid(['product_variant_id']);
+});
+
+test('admin can set a non-first image as the primary one', function () {
+    $product = Product::factory()->create();
+    $first = ProductImage::factory()->create(['product_id' => $product->id, 'position' => 0]);
+    $second = ProductImage::factory()->create(['product_id' => $product->id, 'position' => 1]);
+    $third = ProductImage::factory()->create(['product_id' => $product->id, 'position' => 2]);
+
+    $this->actingAs($this->admin)
+        ->patch("/admin/products/{$product->id}/images/{$third->id}/primary")
+        ->assertRedirect();
+
+    expect($third->fresh()->position)->toBe(0);
+    expect($first->fresh()->position)->toBe(1);
+    expect($second->fresh()->position)->toBe(2);
 });
 
 test('admin can delete a product image', function () {

@@ -44,6 +44,7 @@ type ProductImageData = {
     id: number;
     alt_text: string | null;
     product_variant_id: number | null;
+    position: number;
 };
 
 type ProductData = {
@@ -127,6 +128,17 @@ export default function ProductsEdit({
         );
     };
 
+    const handleMakePrimary = (image: ProductImageData) => {
+        router.patch(
+            ProductImageController.makePrimary.url({
+                product: product.id,
+                image: image.id,
+            }),
+            {},
+            { preserveScroll: true },
+        );
+    };
+
     const handleDeleteImage = (image: ProductImageData) => {
         if (!confirm('Supprimer cette image ?')) {
             return;
@@ -159,9 +171,19 @@ export default function ProductsEdit({
                     <h1 className="text-2xl font-semibold">
                         Modifier le produit
                     </h1>
-                    <Button variant="destructive" onClick={handleDeleteProduct}>
-                        Supprimer
-                    </Button>
+                    <div className="flex items-center gap-2">
+                        <Button variant="outline" asChild>
+                            <Link href={ProductController.index.url()}>
+                                Retour à la liste
+                            </Link>
+                        </Button>
+                        <Button
+                            variant="destructive"
+                            onClick={handleDeleteProduct}
+                        >
+                            Supprimer
+                        </Button>
+                    </div>
                 </div>
 
                 <Form
@@ -330,17 +352,9 @@ export default function ProductsEdit({
                                 <InputError message={errors.is_featured} />
                             </div>
 
-                            <div className="flex items-center gap-4">
-                                <Button type="submit" disabled={processing}>
-                                    Enregistrer
-                                </Button>
-                                <Link
-                                    href={ProductController.index.url()}
-                                    className="text-sm text-muted-foreground hover:underline"
-                                >
-                                    Retour à la liste
-                                </Link>
-                            </div>
+                            <Button type="submit" disabled={processing}>
+                                Enregistrer
+                            </Button>
                         </>
                     )}
                 </Form>
@@ -750,26 +764,38 @@ export default function ProductsEdit({
                     <h2 className="text-lg font-semibold">Images</h2>
 
                     <div className="flex flex-wrap gap-4">
-                        {product.images.map((image) => (
+                        {product.images.map((image, index) => (
                             <div
                                 key={image.id}
                                 className="flex w-40 flex-col gap-2 rounded-md border p-2"
                             >
                                 <img
                                     src={imageUrls[image.id]}
-                                    alt={image.alt_text ?? ''}
+                                    alt={image.alt_text ?? product.name}
                                     className="aspect-square rounded object-cover"
                                 />
-                                {image.product_variant_id && (
-                                    <Badge variant="outline">
-                                        {
-                                            product.variants.find(
-                                                (variant) =>
-                                                    variant.id ===
-                                                    image.product_variant_id,
-                                            )?.sku
-                                        }
-                                    </Badge>
+                                <div className="flex flex-wrap gap-1">
+                                    {index === 0 && <Badge>Principale</Badge>}
+                                    {image.product_variant_id && (
+                                        <Badge variant="outline">
+                                            {
+                                                product.variants.find(
+                                                    (variant) =>
+                                                        variant.id ===
+                                                        image.product_variant_id,
+                                                )?.sku
+                                            }
+                                        </Badge>
+                                    )}
+                                </div>
+                                {index !== 0 && (
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => handleMakePrimary(image)}
+                                    >
+                                        Définir comme principale
+                                    </Button>
                                 )}
                                 <Button
                                     variant="destructive"
@@ -795,15 +821,18 @@ export default function ProductsEdit({
                         {({ processing, errors }) => (
                             <>
                                 <div className="grid gap-2">
-                                    <Label htmlFor="image">Fichier</Label>
+                                    <Label htmlFor="images">
+                                        Fichiers (sélection multiple possible)
+                                    </Label>
                                     <Input
-                                        id="image"
-                                        name="image"
+                                        id="images"
+                                        name="images[]"
                                         type="file"
                                         accept="image/*"
+                                        multiple
                                         required
                                     />
-                                    <InputError message={errors.image} />
+                                    <InputError message={errors.images} />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="alt_text">

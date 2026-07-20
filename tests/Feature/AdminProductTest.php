@@ -3,6 +3,7 @@
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductOption;
 use App\Models\ProductOptionValue;
 use App\Models\ProductVariant;
@@ -35,6 +36,21 @@ test('admin can list products with brand and variant count', function () {
         ->assertInertia(fn ($page) => $page
             ->component('admin/products/index')
             ->has('products', 1)
+        );
+});
+
+test('the product list exposes a thumbnail url for the primary image only', function () {
+    $product = Product::factory()->create();
+    $primary = ProductImage::factory()->create(['product_id' => $product->id, 'position' => 0]);
+    ProductImage::factory()->create(['product_id' => $product->id, 'position' => 1]);
+    $withoutImage = Product::factory()->create();
+
+    $this->actingAs($this->admin)->get('/admin/products')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('admin/products/index')
+            ->where("thumbnailUrls.{$product->id}", fn ($url) => str_contains($url, $primary->path))
+            ->missing("thumbnailUrls.{$withoutImage->id}")
         );
 });
 
