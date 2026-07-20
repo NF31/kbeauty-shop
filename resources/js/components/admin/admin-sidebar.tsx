@@ -1,5 +1,6 @@
-import { Link } from '@inertiajs/react';
-import { LayoutGrid } from 'lucide-react';
+import { Link, usePage } from '@inertiajs/react';
+import { LayoutGrid, Tags } from 'lucide-react';
+import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -15,15 +16,29 @@ import {
 import admin from '@/routes/admin';
 import type { NavItem } from '@/types';
 
-const mainNavItems: NavItem[] = [
-    {
-        title: 'Dashboard',
-        href: admin.dashboard(),
-        icon: LayoutGrid,
-    },
-];
-
 export function AdminSidebar() {
+    const { auth } = usePage().props;
+    const canManageProducts = auth.roles.some((role) =>
+        ['admin', 'staff'].includes(role),
+    );
+
+    const mainNavItems: NavItem[] = [
+        {
+            title: 'Dashboard',
+            href: admin.dashboard(),
+            icon: LayoutGrid,
+        },
+        ...(canManageProducts
+            ? [
+                  {
+                      title: 'Catégories',
+                      href: CategoryController.index.url(),
+                      icon: Tags,
+                  },
+              ]
+            : []),
+    ];
+
     return (
         <Sidebar collapsible="icon" variant="inset">
             <SidebarHeader>
