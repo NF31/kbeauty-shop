@@ -37,9 +37,10 @@ class ProductFactory extends Factory
      */
     public function published(): static
     {
-        return $this->state(fn (array $attributes) => [
+        return $this->state(fn () => [
             'status' => ProductStatus::Published,
             'published_at' => now(),
+            'ingredients_inci' => fake()->sentence(10),
         ]);
     }
 }
