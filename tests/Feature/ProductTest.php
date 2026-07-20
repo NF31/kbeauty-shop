@@ -2,7 +2,6 @@
 
 use App\Enums\ProductStatus;
 use App\Models\Product;
-use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -40,9 +39,9 @@ test('a deleted product is soft deleted, not removed', function () {
     expect(Product::withTrashed()->first()->deleted_at)->not->toBeNull();
 });
 
-test('the slug must be unique', function () {
-    Product::factory()->create(['slug' => 'serum-centella']);
+test('the slug is auto-generated and unique-suffixed on collision', function () {
+    Product::create(['name' => 'Sérum centella', 'description' => 'Un sérum.']);
+    $duplicate = Product::create(['name' => 'Sérum centella', 'description' => 'Un autre sérum.']);
 
-    expect(fn () => Product::factory()->create(['slug' => 'serum-centella']))
-        ->toThrow(QueryException::class);
+    expect($duplicate->slug)->toBe('serum-centella-1');
 });
