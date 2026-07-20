@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Tags } from 'lucide-react';
+import { LayoutGrid, Package, Tags } from 'lucide-react';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
+import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import { NavUser } from '@/components/nav-user';
@@ -30,6 +31,11 @@ export function AdminSidebar() {
         },
         ...(canManageProducts
             ? [
+                  {
+                      title: 'Produits',
+                      href: ProductController.index.url(),
+                      icon: Package,
+                  },
                   {
                       title: 'Catégories',
                       href: CategoryController.index.url(),
