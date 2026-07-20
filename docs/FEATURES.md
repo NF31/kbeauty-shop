@@ -20,7 +20,7 @@ schéma complet des tables dans `DATA_MODEL.md`, commandes d'installation dans `
 | # | Tâche | Dev | Priorité | Statut | Détails |
 | --- | --- | --- | --- | --- | --- |
 | 1.1 | Setup Laravel + starter kit Inertia/React | Les deux | P0 | 🟢 | Starter en place (Fortify + passkeys + 2FA + shadcn/ui), Laravel 13.20.0. `composer run dev` lance bien `php artisan serve` + `queue:listen` + `npm run dev` (Vite) en parallèle via `concurrently`, `.env` déjà généré. |
-| 1.2 | Setup PostgreSQL + migrations de base | Backend | P0 | ⚪ | `DB_CONNECTION=pgsql` en local et CI (service Postgres éphémère). Éviter un pooler en mode "transaction" en dev — casse les migrations Laravel (session pooling ou connexion directe uniquement). |
+| 1.2 | Setup PostgreSQL + migrations de base | Backend | P0 | 🟢 | `DB_CONNECTION=pgsql` en local (Neon, connexion directe via `DB_URL`, **jamais** l'endpoint `-pooler`). `.env.example` mis à jour. Migrations de base passées avec succès. Bug concrètement reproduit avec l'endpoint `-pooler` (mode transaction PgBouncer) : `migrate:rollback` a répondu "DONE" sans réellement dropper la colonne, provoquant un `Duplicate column` au remigrate — état corrigé manuellement. Confirme l'avertissement : connexion directe uniquement. |
 | 1.3 | Setup Tailwind CSS | Front | P0 | ⚪ | Déjà présent dans le starter (Tailwind v4 + shadcn/ui/Radix). Rien à réinstaller, juste vérifier la config `resources/css/app.css`. |
 | 1.4 | Validation env variables | Backend | P1 | ⚪ | Tenir `.env.example` à jour à chaque nouveau package (voir `STACK.md` §5). `php artisan config:cache` en CI pour détecter une clé manquante avant le déploiement. |
 
