@@ -32,6 +32,40 @@ Article (blog) >──< Product (cross-sell éditorial)
 GiftThresholdRule ──< GiftThresholdRuleReward
 ```
 
+## Comptes utilisateurs (fourni par le starter kit)
+
+### users
+| Colonne | Type | Notes |
+| --- | --- | --- |
+| id | bigint pk | |
+| name | string | |
+| email | string unique | |
+| email_verified_at | timestamp nullable | |
+| password | string (hashed) | |
+| two_factor_secret | text nullable | chiffré, géré par Fortify |
+| two_factor_recovery_codes | text nullable | chiffré, géré par Fortify |
+| two_factor_confirmed_at | timestamp nullable | |
+| remember_token | string nullable | |
+| created_at / updated_at | timestamps | |
+
+> Table déjà migrée par le starter (`0001_01_01_000000_create_users_table` +
+> `add_two_factor_columns_to_users_table`) — pas une migration à écrire, juste le socle sur lequel
+> se branchent `addresses`, `orders`, `wishlists`, `reviews` et les rôles Spatie (2.1/2.2).
+
+### passkeys
+| Colonne | Type | Notes |
+| --- | --- | --- |
+| id | bigint pk | |
+| user_id | bigint fk(users) | |
+| name | string | libellé choisi par l'utilisateur (ex. "MacBook Touch ID") |
+| credential_id | string unique | |
+| credential | text | données WebAuthn, gérées par `laravel/passkeys` |
+| last_used_at | timestamp nullable | |
+| created_at / updated_at | timestamps | |
+
+> Fournie par `laravel/passkeys` (déjà dans le starter, voir `STACK.md`). Authentification sans
+> mot de passe, en complément de Fortify.
+
 ## Gestion des rôles (Spatie Laravel-Permission)
 
 - Rôles de base : `admin`, `staff` (gestion stock/commandes), `support` (accès commandes/avis
