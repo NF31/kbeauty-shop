@@ -55,6 +55,23 @@ test('the product page exposes the default variant stock quantity', function () 
         );
 });
 
+test('the product page exposes the compare-at price when it is set and higher than the price', function () {
+    $product = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create([
+        'product_id' => $product->id,
+        'price_cents' => 2990,
+        'compare_at_price_cents' => 3990,
+    ]);
+
+    $this->get("/produits/{$product->slug}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/product')
+            ->where('priceCents', 2990)
+            ->where('compareAtPriceCents', 3990)
+        );
+});
+
 test('a draft product page returns 404', function () {
     $product = Product::factory()->create(['status' => 'draft']);
 

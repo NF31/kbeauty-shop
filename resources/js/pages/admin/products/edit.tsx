@@ -513,6 +513,28 @@ export default function ProductsEdit({
                                             </div>
                                             <div className="grid gap-2">
                                                 <Label
+                                                    htmlFor={`compare-at-price-${variant.id}`}
+                                                >
+                                                    Prix barré (centimes)
+                                                </Label>
+                                                <Input
+                                                    id={`compare-at-price-${variant.id}`}
+                                                    name="compare_at_price_cents"
+                                                    type="number"
+                                                    min={0}
+                                                    defaultValue={
+                                                        variant.compare_at_price_cents ??
+                                                        ''
+                                                    }
+                                                />
+                                                <InputError
+                                                    message={
+                                                        errors.compare_at_price_cents
+                                                    }
+                                                />
+                                            </div>
+                                            <div className="grid gap-2">
+                                                <Label
                                                     htmlFor={`stock-${variant.id}`}
                                                 >
                                                     Stock
@@ -626,8 +648,21 @@ export default function ProductsEdit({
                                             )}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            {euros(variant.price_cents)} — stock
-                                            : {variant.stock_quantity}
+                                            {euros(variant.price_cents)}
+                                            {variant.compare_at_price_cents !==
+                                                null &&
+                                                variant.compare_at_price_cents >
+                                                    variant.price_cents && (
+                                                    <>
+                                                        {' '}
+                                                        <span className="line-through">
+                                                            {euros(
+                                                                variant.compare_at_price_cents,
+                                                            )}
+                                                        </span>
+                                                    </>
+                                                )}{' '}
+                                            — stock : {variant.stock_quantity}
                                         </p>
                                         <div className="mt-1 flex flex-wrap gap-1">
                                             {variant.option_values.map(
@@ -696,6 +731,20 @@ export default function ProductsEdit({
                                         required
                                     />
                                     <InputError message={errors.price_cents} />
+                                </div>
+                                <div className="grid gap-2">
+                                    <Label htmlFor="new_compare_at_price">
+                                        Prix barré (centimes)
+                                    </Label>
+                                    <Input
+                                        id="new_compare_at_price"
+                                        name="compare_at_price_cents"
+                                        type="number"
+                                        min={0}
+                                    />
+                                    <InputError
+                                        message={errors.compare_at_price_cents}
+                                    />
                                 </div>
                                 <div className="grid gap-2">
                                     <Label htmlFor="new_stock">Stock</Label>

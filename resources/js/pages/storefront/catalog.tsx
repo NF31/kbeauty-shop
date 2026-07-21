@@ -8,6 +8,7 @@ type CatalogProduct = {
     name: string;
     brand: { id: number; name: string } | null;
     priceCents: number | null;
+    compareAtPriceCents: number | null;
     thumbnailUrl: string | null;
 };
 
@@ -58,8 +59,17 @@ export default function CatalogPage({ products }: CatalogPageProps) {
                                     {product.name}
                                 </p>
                                 {product.priceCents !== null && (
-                                    <p className="text-sm text-muted-foreground">
-                                        {euros(product.priceCents)}
+                                    <p className="flex items-baseline gap-2 text-sm text-muted-foreground">
+                                        <span>{euros(product.priceCents)}</span>
+                                        {product.compareAtPriceCents !== null &&
+                                            product.compareAtPriceCents >
+                                                product.priceCents && (
+                                                <span className="text-xs line-through">
+                                                    {euros(
+                                                        product.compareAtPriceCents,
+                                                    )}
+                                                </span>
+                                            )}
                                     </p>
                                 )}
                             </Link>

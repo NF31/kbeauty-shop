@@ -25,6 +25,27 @@ test('the catalog page lists published products with brand and price', function 
         );
 });
 
+test('the catalog page exposes the compare-at price when it is set and higher than the price', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $product = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create([
+        'product_id' => $product->id,
+        'price_cents' => 2990,
+        'compare_at_price_cents' => 3990,
+    ]);
+
+    $this->get('/produits')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->where('products.data.0.priceCents', 2990)
+            ->where('products.data.0.compareAtPriceCents', 3990)
+        );
+});
+
 test('the catalog page excludes draft and archived products', function () {
     Product::factory()->create(['status' => 'draft']);
     Product::factory()->published()->create(['status' => 'archived']);
