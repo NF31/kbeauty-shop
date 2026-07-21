@@ -3,8 +3,11 @@
 namespace App\Services;
 
 use App\Models\Order;
+use Stripe\Event;
+use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
 use Stripe\StripeClient;
+use Stripe\Webhook;
 
 class StripeService
 {
@@ -49,5 +52,17 @@ class StripeService
         return $this->stripe->paymentIntents->update($paymentIntentId, [
             'amount' => $amountCents,
         ]);
+    }
+
+    /**
+     * Vérifie que la requête de webhook provient bien de Stripe (signature
+     * `Stripe-Signature`) avant de faire confiance à son contenu — jamais
+     * traiter un payload de webhook sans cette vérification.
+     *
+     * @throws SignatureVerificationException si la signature est invalide/absente.
+     */
+    public function constructWebhookEvent(string $payload, string $signature): Event
+    {
+        return Webhook::constructEvent($payload, $signature, config('services.stripe.webhook_secret'));
     }
 }
