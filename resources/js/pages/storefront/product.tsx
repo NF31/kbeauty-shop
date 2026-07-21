@@ -35,7 +35,7 @@ export default function ProductPage({
     const [quantity, setQuantity] = useState(1);
     const inStock = (stockQuantity ?? 0) > 0;
     const { url } = usePage();
-    const skinType = new URLSearchParams(url.split('?')[1]).get('skin_type');
+    const activeFiltersQueryString = url.split('?')[1] ?? '';
 
     return (
         <>
@@ -44,9 +44,9 @@ export default function ProductPage({
                 <ProductGallery images={images} productName={product.name} />
 
                 <div className="flex flex-col gap-4">
-                    {skinType && (
+                    {activeFiltersQueryString && (
                         <Link
-                            href={`/produits?skin_type=${skinType}`}
+                            href={`/produits?${activeFiltersQueryString}`}
                             className="text-sm text-muted-foreground underline"
                         >
                             ← Retour au catalogue filtré
