@@ -69,6 +69,18 @@ test('admin can create a draft product with an auto-generated slug and categorie
     expect($product->categories->pluck('id')->all())->toBe([$category->id]);
 });
 
+test('admin can create a product with skin types', function () {
+    $this->actingAs($this->admin)->post('/admin/products', [
+        'name' => 'Crème apaisante',
+        'description' => 'Une crème.',
+        'status' => 'draft',
+        'skin_types' => ['sensible', 'seche'],
+    ])->assertRedirect();
+
+    $product = Product::query()->where('name', 'Crème apaisante')->firstOrFail();
+    expect($product->skin_types)->toBe(['sensible', 'seche']);
+});
+
 test('publishing a product without an INCI list is rejected', function () {
     $this->actingAs($this->admin)->post('/admin/products', [
         'name' => 'Crème hydratante',

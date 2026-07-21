@@ -22,6 +22,8 @@ import admin from '@/routes/admin';
 
 type Option = { id: number; name: string };
 
+type SkinTypeOption = { value: string; label: string };
+
 type OptionValue = { id: number; value: string; position: number };
 
 type ProductOptionData = {
@@ -54,6 +56,7 @@ type ProductData = {
     description: string;
     ingredients_inci: string | null;
     how_to_use: string | null;
+    skin_types: string[] | null;
     status: 'draft' | 'published' | 'archived';
     is_featured: boolean;
     brand: { id: number; name: string } | null;
@@ -69,6 +72,7 @@ type ProductsEditProps = {
     brandOptions: Option[];
     categoryOptions: Option[];
     statusOptions: string[];
+    skinTypeOptions: SkinTypeOption[];
 };
 
 const statusLabels: Record<string, string> = {
@@ -87,6 +91,7 @@ export default function ProductsEdit({
     brandOptions,
     categoryOptions,
     statusOptions,
+    skinTypeOptions,
 }: ProductsEditProps) {
     const handleDeleteProduct = () => {
         if (!confirm(`Supprimer le produit « ${product.name} » ?`)) {
@@ -312,6 +317,34 @@ export default function ProductsEdit({
                                     defaultValue={product.how_to_use ?? ''}
                                 />
                                 <InputError message={errors.how_to_use} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label>Types de peau</Label>
+                                <div className="flex flex-col gap-2">
+                                    {skinTypeOptions.map((option) => (
+                                        <div
+                                            key={option.value}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <Checkbox
+                                                id={`skin-type-${option.value}`}
+                                                name="skin_types[]"
+                                                value={option.value}
+                                                defaultChecked={(
+                                                    product.skin_types ?? []
+                                                ).includes(option.value)}
+                                            />
+                                            <Label
+                                                htmlFor={`skin-type-${option.value}`}
+                                                className="font-normal"
+                                            >
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                                <InputError message={errors.skin_types} />
                             </div>
 
                             <div className="grid gap-2">

@@ -17,10 +17,13 @@ import admin from '@/routes/admin';
 
 type Option = { id: number; name: string };
 
+type SkinTypeOption = { value: string; label: string };
+
 type ProductsCreateProps = {
     brandOptions: Option[];
     categoryOptions: Option[];
     statusOptions: string[];
+    skinTypeOptions: SkinTypeOption[];
 };
 
 const statusLabels: Record<string, string> = {
@@ -33,6 +36,7 @@ export default function ProductsCreate({
     brandOptions,
     categoryOptions,
     statusOptions,
+    skinTypeOptions,
 }: ProductsCreateProps) {
     return (
         <>
@@ -148,6 +152,31 @@ export default function ProductsCreate({
                                     rows={3}
                                 />
                                 <InputError message={errors.how_to_use} />
+                            </div>
+
+                            <div className="grid gap-2">
+                                <Label>Types de peau</Label>
+                                <div className="flex flex-col gap-2">
+                                    {skinTypeOptions.map((option) => (
+                                        <div
+                                            key={option.value}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <Checkbox
+                                                id={`skin-type-${option.value}`}
+                                                name="skin_types[]"
+                                                value={option.value}
+                                            />
+                                            <Label
+                                                htmlFor={`skin-type-${option.value}`}
+                                                className="font-normal"
+                                            >
+                                                {option.label}
+                                            </Label>
+                                        </div>
+                                    ))}
+                                </div>
+                                <InputError message={errors.skin_types} />
                             </div>
 
                             <div className="grid gap-2">

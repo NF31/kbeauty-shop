@@ -3,18 +3,23 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Enums\ProductStatus;
+use App\Enums\SkinType;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\CloudinaryService;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CatalogController extends Controller
 {
-    public function index(CloudinaryService $cloudinary): Response
+    public function index(Request $request, CloudinaryService $cloudinary): Response
     {
+        $skinType = SkinType::tryFrom((string) $request->query('skin_type'));
+
         $products = Product::query()
             ->where('status', ProductStatus::Published)
+            ->when($skinType, fn ($query) => $query->whereJsonContains('skin_types', $skinType->value))
             ->with(['brand:id,name', 'primaryImage', 'variants'])
             ->orderByDesc('created_at')
             ->paginate(24)
@@ -38,6 +43,9 @@ class CatalogController extends Controller
 
         return Inertia::render('storefront/catalog', [
             'products' => $products,
+            'activeSkinType' => $skinType
+                ? ['value' => $skinType->value, 'label' => $skinType->label()]
+                : null,
         ]);
     }
 }

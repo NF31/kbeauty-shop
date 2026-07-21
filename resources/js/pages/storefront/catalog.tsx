@@ -14,20 +14,41 @@ type CatalogProduct = {
 
 type CatalogPageProps = {
     products: Paginated<CatalogProduct>;
+    activeSkinType: { value: string; label: string } | null;
 };
 
 function euros(cents: number): string {
     return (cents / 100).toFixed(2) + ' €';
 }
 
-export default function CatalogPage({ products }: CatalogPageProps) {
+export default function CatalogPage({
+    products,
+    activeSkinType,
+}: CatalogPageProps) {
     return (
         <>
             <Head title="Catalogue" />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
-                <h1 className="mb-6 text-3xl font-semibold">
-                    Tous nos produits
-                </h1>
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
+                    <h1 className="text-3xl font-semibold">
+                        Tous nos produits
+                    </h1>
+                    <Link
+                        href="/guide-de-choix"
+                        className="text-sm text-muted-foreground underline"
+                    >
+                        Besoin d'aide pour choisir ?
+                    </Link>
+                </div>
+
+                {activeSkinType && (
+                    <p className="mb-6 text-sm text-muted-foreground">
+                        Filtré pour : {activeSkinType.label}{' '}
+                        <Link href="/produits" className="underline">
+                            (retirer le filtre)
+                        </Link>
+                    </p>
+                )}
 
                 {products.data.length === 0 ? (
                     <p className="text-muted-foreground">
@@ -38,7 +59,11 @@ export default function CatalogPage({ products }: CatalogPageProps) {
                         {products.data.map((product) => (
                             <Link
                                 key={product.id}
-                                href={`/produits/${product.slug}`}
+                                href={
+                                    activeSkinType
+                                        ? `/produits/${product.slug}?skin_type=${activeSkinType.value}`
+                                        : `/produits/${product.slug}`
+                                }
                                 className="group flex flex-col gap-2"
                             >
                                 <div className="aspect-square overflow-hidden rounded-md bg-muted">

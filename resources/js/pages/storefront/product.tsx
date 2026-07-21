@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ProductGalleryImage } from '@/components/storefront/product-gallery';
 import { ProductGallery } from '@/components/storefront/product-gallery';
@@ -34,6 +34,8 @@ export default function ProductPage({
 }: ProductPageProps) {
     const [quantity, setQuantity] = useState(1);
     const inStock = (stockQuantity ?? 0) > 0;
+    const { url } = usePage();
+    const skinType = new URLSearchParams(url.split('?')[1]).get('skin_type');
 
     return (
         <>
@@ -42,6 +44,14 @@ export default function ProductPage({
                 <ProductGallery images={images} productName={product.name} />
 
                 <div className="flex flex-col gap-4">
+                    {skinType && (
+                        <Link
+                            href={`/produits?skin_type=${skinType}`}
+                            className="text-sm text-muted-foreground underline"
+                        >
+                            ← Retour au catalogue filtré
+                        </Link>
+                    )}
                     {product.brand && (
                         <p className="text-sm text-muted-foreground">
                             {product.brand.name}

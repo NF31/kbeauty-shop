@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\SkinType;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
@@ -28,6 +29,13 @@ class CatalogDemoSeeder extends Seeder
 
                 $priceCents = fake()->numberBetween(500, 8000);
                 $onSale = $index % 3 === 0;
+
+                $product->update([
+                    'skin_types' => fake()->randomElements(
+                        array_map(fn (SkinType $type) => $type->value, SkinType::cases()),
+                        rand(1, 2),
+                    ),
+                ]);
 
                 $product->variants()->create([
                     'sku' => strtoupper(fake()->unique()->bothify('SKU-########')),
