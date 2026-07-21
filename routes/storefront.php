@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CheckoutController;
@@ -48,4 +49,12 @@ Route::middleware('checkout.auth')->group(function () {
 
     Route::get('commande/confirmation', [CheckoutController::class, 'confirmation'])
         ->name('storefront.checkout.confirmation');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('mon-compte/commandes', [AccountController::class, 'orders'])
+        ->name('storefront.account.orders');
+
+    Route::get('mon-compte/commandes/{order}', [AccountController::class, 'show'])
+        ->name('storefront.account.orders.show');
 });
