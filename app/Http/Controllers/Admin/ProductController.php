@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Enums\ProductStatus;
+use App\Enums\SkinType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\StoreProductRequest;
 use App\Http\Requests\Admin\UpdateProductRequest;
@@ -40,6 +41,10 @@ class ProductController extends Controller
             'brandOptions' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categoryOptions' => Category::query()->orderBy('name')->get(['id', 'name']),
             'statusOptions' => ProductStatus::cases(),
+            'skinTypeOptions' => array_map(
+                fn (SkinType $type) => ['value' => $type->value, 'label' => $type->label()],
+                SkinType::cases(),
+            ),
         ]);
     }
 
@@ -70,6 +75,10 @@ class ProductController extends Controller
             'brandOptions' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categoryOptions' => Category::query()->orderBy('name')->get(['id', 'name']),
             'statusOptions' => ProductStatus::cases(),
+            'skinTypeOptions' => array_map(
+                fn (SkinType $type) => ['value' => $type->value, 'label' => $type->label()],
+                SkinType::cases(),
+            ),
         ]);
     }
 

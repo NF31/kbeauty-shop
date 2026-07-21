@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Admin;
 
 use App\Enums\ProductStatus;
+use App\Enums\SkinType;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -23,6 +24,8 @@ class StoreProductRequest extends FormRequest
             'description' => ['required', 'string'],
             'ingredients_inci' => ['nullable', 'string', 'required_if:status,published'],
             'how_to_use' => ['nullable', 'string'],
+            'skin_types' => ['nullable', 'array'],
+            'skin_types.*' => [new Enum(SkinType::class)],
             'status' => ['required', new Enum(ProductStatus::class)],
             'is_featured' => ['boolean'],
         ];
