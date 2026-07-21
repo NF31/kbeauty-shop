@@ -1,5 +1,6 @@
 import { Head, Link, router } from '@inertiajs/react';
-import { useState } from 'react';
+import { Search } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 
@@ -19,6 +20,7 @@ type SortValue = 'price_asc' | 'price_desc' | 'name_asc' | null;
 
 type CatalogPageProps = {
     products: Paginated<CatalogProduct>;
+    search: string | null;
     activeSkinType: SkinTypeOption | null;
     activeCategory: NamedOption | null;
     activeBrand: NamedOption | null;
@@ -54,6 +56,7 @@ function applyFilters(patch: Record<string, string | null>) {
 
 export default function CatalogPage({
     products,
+    search,
     activeSkinType,
     activeCategory,
     activeBrand,
@@ -66,11 +69,36 @@ export default function CatalogPage({
 }: CatalogPageProps) {
     const [priceMinInput, setPriceMinInput] = useState(priceMin ?? '');
     const [priceMaxInput, setPriceMaxInput] = useState(priceMax ?? '');
+    const [searchInput, setSearchInput] = useState(search ?? '');
+    const isFirstRender = useRef(true);
+
+    useEffect(() => {
+        if (isFirstRender.current) {
+            isFirstRender.current = false;
+
+            return;
+        }
+
+        const timeout = setTimeout(() => {
+            applyFilters({ q: searchInput || null });
+        }, 400);
+
+        return () => clearTimeout(timeout);
+    }, [searchInput]);
 
     const hasActiveFilters =
-        activeSkinType || activeCategory || activeBrand || priceMin || priceMax;
+        search ||
+        activeSkinType ||
+        activeCategory ||
+        activeBrand ||
+        priceMin ||
+        priceMax;
 
     const activeFiltersQuery = new URLSearchParams();
+
+    if (search) {
+        activeFiltersQuery.set('q', search);
+    }
 
     if (activeSkinType) {
         activeFiltersQuery.set('skin_type', activeSkinType.value);
@@ -113,6 +141,20 @@ export default function CatalogPage({
                         Besoin d'aide pour choisir ?
                     </Link>
                 </div>
+
+                <label className="mb-6 flex flex-col gap-1 text-sm">
+                    Rechercher
+                    <div className="relative">
+                        <Search className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 opacity-60" />
+                        <input
+                            type="search"
+                            className="w-full rounded-md border bg-background p-2 pl-8"
+                            placeholder="Nom du produit..."
+                            value={searchInput}
+                            onChange={(e) => setSearchInput(e.target.value)}
+                        />
+                    </div>
+                </label>
 
                 <div className="mb-6 flex flex-wrap items-end gap-4 border-b pb-6">
                     <label className="flex flex-col gap-1 text-sm">
