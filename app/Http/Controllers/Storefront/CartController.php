@@ -10,6 +10,7 @@ use App\Models\CartItem;
 use App\Models\ProductVariant;
 use App\Services\CartService;
 use App\Services\CloudinaryService;
+use App\Support\CartPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
@@ -22,26 +23,7 @@ class CartController extends Controller
     {
         $cart = $cartService->current($request);
 
-        $cart->load(['items.variant.product.primaryImage']);
-
-        return Inertia::render('storefront/cart', [
-            'items' => $cart->items->map(fn (CartItem $item) => [
-                'id' => $item->id,
-                'productName' => $item->variant->product->name,
-                'productSlug' => $item->variant->product->slug,
-                'sku' => $item->variant->sku,
-                'quantity' => $item->quantity,
-                'unitPriceCents' => $item->unit_price_cents,
-                'lineTotalCents' => $item->lineTotalCents($cart->currency),
-                'stockQuantity' => $item->variant->stock_quantity,
-                'thumbnailUrl' => $item->variant->product->primaryImage
-                    ? $cloudinary->url($item->variant->product->primaryImage->path, 200, 200)
-                    : null,
-            ]),
-            'subtotalCents' => $cart->subtotalCents(),
-            'totalCents' => $cart->totalCents(),
-            'currency' => $cart->currency,
-        ]);
+        return Inertia::render('storefront/cart', CartPresenter::present($cart, $cloudinary));
     }
 
     public function store(AddCartItemRequest $request, CartService $cartService): RedirectResponse

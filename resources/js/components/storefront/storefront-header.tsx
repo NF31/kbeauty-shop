@@ -1,6 +1,8 @@
 import { Link, usePage } from '@inertiajs/react';
-import { Menu, Search, ShoppingBag } from 'lucide-react';
+import { Menu, Search } from 'lucide-react';
+import { useEffect } from 'react';
 import AppLogo from '@/components/app-logo';
+import { MiniCartSheet } from '@/components/storefront/mini-cart-sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -26,6 +28,7 @@ import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
 import { cn } from '@/lib/utils';
 import { home, login, register } from '@/routes';
+import { useCartStore } from '@/stores/cart-store';
 import type { NavItem } from '@/types';
 
 /**
@@ -36,9 +39,14 @@ import type { NavItem } from '@/types';
 const categoryNavItems: NavItem[] = [];
 
 export function StorefrontHeader() {
-    const { auth } = usePage().props;
+    const { auth, cart } = usePage().props;
     const getInitials = useInitials();
     const { whenCurrentUrl } = useCurrentUrl();
+    const sync = useCartStore((state) => state.sync);
+
+    useEffect(() => {
+        sync(cart);
+    }, [cart, sync]);
 
     return (
         <header className="border-b border-sidebar-border/80">
@@ -115,9 +123,7 @@ export function StorefrontHeader() {
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                         <Search className="!size-5 opacity-80" />
                     </Button>
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
-                        <ShoppingBag className="!size-5 opacity-80" />
-                    </Button>
+                    <MiniCartSheet />
 
                     {auth.user ? (
                         <DropdownMenu>

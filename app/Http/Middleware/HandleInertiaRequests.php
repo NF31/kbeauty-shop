@@ -2,6 +2,9 @@
 
 namespace App\Http\Middleware;
 
+use App\Services\CartService;
+use App\Services\CloudinaryService;
+use App\Support\CartPresenter;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -45,6 +48,10 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $user?->getRoleNames() ?? [],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'cart' => fn () => CartPresenter::present(
+                app(CartService::class)->findExisting($request),
+                app(CloudinaryService::class),
+            ),
         ];
     }
 }

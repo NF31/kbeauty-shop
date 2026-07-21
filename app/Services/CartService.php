@@ -120,6 +120,23 @@ class CartService
     }
 
     /**
+     * Panier du visiteur courant s'il en a déjà un, sans jamais en créer un
+     * (contrairement à current()) — pour le badge/mini-panier du header,
+     * qu'on ne veut pas déclencher pour chaque visiteur qui ne touche jamais
+     * au panier.
+     */
+    public function findExisting(Request $request): ?Cart
+    {
+        if ($request->user()) {
+            return Cart::query()->where('user_id', $request->user()->id)->first();
+        }
+
+        $token = $request->cookie(self::COOKIE_NAME);
+
+        return $token ? Cart::query()->where('session_token', $token)->first() : null;
+    }
+
+    /**
      * Fusionne le panier invité dans le panier du compte qui vient de se
      * connecter (déclenché par MergeGuestCartOnLogin). Les quantités des
      * variantes déjà présentes dans le panier utilisateur sont cumulées, pas

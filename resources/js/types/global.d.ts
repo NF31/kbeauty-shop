@@ -1,3 +1,4 @@
+import type { CartStoreItem } from '@/stores/cart-store';
 import type { Auth } from '@/types/auth';
 
 declare module 'react' {
@@ -13,6 +14,13 @@ declare module '@inertiajs/core' {
             name: string;
             auth: Auth;
             sidebarOpen: boolean;
+            cart: {
+                items: CartStoreItem[];
+                subtotalCents: number;
+                totalCents: number;
+                currency: string;
+                itemCount: number;
+            };
             [key: string]: unknown;
         };
     }
