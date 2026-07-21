@@ -193,7 +193,7 @@ filtrer/afficher un sélecteur par axe (comme sur uniikon.com : "50ml / 100ml" +
 | Colonne | Type | Notes |
 | --- | --- | --- |
 | id | bigint pk | |
-| user_id | bigint fk nullable | commande invité possible |
+| user_id | bigint fk nullable | nullable au niveau schéma, mais toujours renseigné en pratique — le checkout invité a été retiré (9.2, `FEATURES.md`), un compte est requis avant `/commande` |
 | order_number | string unique | ex. `KB-2026-00001` |
 | status | enum(`pending`,`paid`,`processing`,`shipped`,`delivered`,`cancelled`,`refunded`) | |
 | shipping_address_id | fk(addresses) | |

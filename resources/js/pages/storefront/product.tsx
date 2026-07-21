@@ -1,8 +1,9 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useState } from 'react';
 import type { ProductGalleryImage } from '@/components/storefront/product-gallery';
 import { ProductGallery } from '@/components/storefront/product-gallery';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
+import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ProductPageProps = {
@@ -15,6 +16,7 @@ type ProductPageProps = {
         how_to_use: string | null;
         brand: { id: number; name: string } | null;
     };
+    defaultVariantId: number | null;
     priceCents: number | null;
     compareAtPriceCents: number | null;
     stockQuantity: number | null;
@@ -27,15 +29,41 @@ function euros(cents: number): string {
 
 export default function ProductPage({
     product,
+    defaultVariantId,
     priceCents,
     compareAtPriceCents,
     stockQuantity,
     images,
 }: ProductPageProps) {
     const [quantity, setQuantity] = useState(1);
+    const [isAdding, setIsAdding] = useState(false);
+    const [addError, setAddError] = useState<string | null>(null);
     const inStock = (stockQuantity ?? 0) > 0;
     const { url } = usePage();
     const activeFiltersQueryString = url.split('?')[1] ?? '';
+
+    const addToCart = () => {
+        if (!defaultVariantId) {
+            return;
+        }
+
+        setIsAdding(true);
+        setAddError(null);
+
+        router.post(
+            '/panier',
+            { product_variant_id: defaultVariantId, quantity },
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setAddError(
+                        errors.quantity ??
+                            "Impossible d'ajouter ce produit au panier.",
+                    ),
+                onFinish: () => setIsAdding(false),
+            },
+        );
+    };
 
     return (
         <>
@@ -73,11 +101,26 @@ export default function ProductPage({
                     )}
 
                     {inStock ? (
-                        <QuantitySelector
-                            value={quantity}
-                            onChange={setQuantity}
-                            max={stockQuantity ?? 1}
-                        />
+                        <>
+                            <QuantitySelector
+                                value={quantity}
+                                onChange={setQuantity}
+                                max={stockQuantity ?? 1}
+                            />
+
+                            <Button
+                                onClick={addToCart}
+                                disabled={isAdding || !defaultVariantId}
+                            >
+                                Ajouter au panier
+                            </Button>
+
+                            {addError && (
+                                <p className="text-sm text-destructive">
+                                    {addError}
+                                </p>
+                            )}
+                        </>
                     ) : (
                         <p className="text-sm text-muted-foreground">
                             Rupture de stock.

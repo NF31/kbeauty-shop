@@ -105,7 +105,7 @@ Kbeauty/
 │   │   │   │   ├── Product.tsx
 │   │   │   │   ├── Brand.tsx
 │   │   │   │   ├── Cart.tsx
-│   │   │   │   └── Checkout.tsx        # étapes checkout : invité autorisé jusqu'au paiement
+│   │   │   │   └── Checkout.tsx        # étapes checkout : compte requis (9.2), pas de guest checkout
 │   │   │   ├── account/                # À ajouter — PROTÉGÉ (middleware `auth`), espace client connecté
 │   │   │   │   ├── Dashboard.tsx
 │   │   │   │   ├── Orders.tsx

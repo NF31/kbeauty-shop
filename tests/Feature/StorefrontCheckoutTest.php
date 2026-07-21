@@ -4,40 +4,80 @@ use App\Enums\AddressType;
 use App\Models\Address;
 use App\Models\ProductVariant;
 use App\Models\User;
-use App\Services\CartService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
-function addAndReachCheckout(ProductVariant $variant): string
+function addAndReachCheckout(ProductVariant $variant): User
 {
-    $response = test()->post('/panier', ['product_variant_id' => $variant->id, 'quantity' => 1]);
+    $user = User::factory()->create();
 
-    return $response->getCookie(CartService::COOKIE_NAME)->getValue();
+    test()->actingAs($user)
+        ->post('/panier', ['product_variant_id' => $variant->id, 'quantity' => 1]);
+
+    return $user;
 }
 
-test('a guest with an empty cart is redirected away from /commande', function () {
-    $this->get('/commande')->assertRedirect('/panier');
+test('a guest is redirected to login before reaching /commande, and back to /commande after logging in', function () {
+    $this->get('/commande')->assertRedirect('/login');
+
+    $user = User::factory()->create();
+
+    $this->from('/commande')
+        ->post('/login', ['email' => $user->email, 'password' => 'password'])
+        ->assertRedirect('/commande');
 });
 
-test('a guest with items in cart can reach /commande', function () {
-    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
-    $token = addAndReachCheckout($variant);
+test('an authenticated user with an empty cart is redirected away from /commande', function () {
+    $user = User::factory()->create();
 
-    $this->withCookie(CartService::COOKIE_NAME, $token)
+    $this->actingAs($user)->get('/commande')->assertRedirect('/panier');
+});
+
+test('an authenticated user with items in cart can reach /commande', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = addAndReachCheckout($variant);
+
+    $this->actingAs($user)
         ->get('/commande')
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('storefront/checkout')
+            ->where('step', 'address')
             ->where('cart.itemCount', 1)
         );
 });
 
-test('a guest can submit shipping address with billing same as shipping', function () {
+test('a user with addresses already set in session reaches the recap step', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
-    $token = addAndReachCheckout($variant);
+    $user = addAndReachCheckout($variant);
 
-    $this->withCookie(CartService::COOKIE_NAME, $token)
+    $this->actingAs($user)
+        ->post('/commande/adresse', [
+            'shipping' => [
+                'full_name' => 'Jeanne Dupont',
+                'line1' => '12 rue des Lilas',
+                'postal_code' => '75001',
+                'city' => 'Paris',
+                'country_code' => 'FR',
+            ],
+            'billing_same_as_shipping' => true,
+        ]);
+
+    $this->actingAs($user)
+        ->get('/commande')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/checkout')
+            ->where('step', 'recap')
+        );
+});
+
+test('a user can submit shipping address with billing same as shipping', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = addAndReachCheckout($variant);
+
+    $this->actingAs($user)
         ->post('/commande/adresse', [
             'shipping' => [
                 'full_name' => 'Jeanne Dupont',
@@ -51,15 +91,15 @@ test('a guest can submit shipping address with billing same as shipping', functi
         ->assertRedirect();
 
     expect(Address::query()->count())->toBe(2);
-    expect(Address::query()->where('type', AddressType::Shipping)->sole()->user_id)->toBeNull();
+    expect(Address::query()->where('type', AddressType::Shipping)->sole()->user_id)->toBe($user->id);
     expect(Address::query()->where('type', AddressType::Billing)->sole()->full_name)->toBe('Jeanne Dupont');
 });
 
 test('a distinct billing address is persisted when billing_same_as_shipping is false', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
-    $token = addAndReachCheckout($variant);
+    $user = addAndReachCheckout($variant);
 
-    $this->withCookie(CartService::COOKIE_NAME, $token)
+    $this->actingAs($user)
         ->post('/commande/adresse', [
             'shipping' => [
                 'full_name' => 'Jeanne Dupont',
@@ -86,9 +126,9 @@ test('a distinct billing address is persisted when billing_same_as_shipping is f
 
 test('billing address fields are required when billing_same_as_shipping is false', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
-    $token = addAndReachCheckout($variant);
+    $user = addAndReachCheckout($variant);
 
-    $this->withCookie(CartService::COOKIE_NAME, $token)
+    $this->actingAs($user)
         ->post('/commande/adresse', [
             'shipping' => [
                 'full_name' => 'Jeanne Dupont',

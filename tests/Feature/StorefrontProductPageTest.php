@@ -14,7 +14,7 @@ test('a published product page is publicly visible', function () {
     });
 
     $product = Product::factory()->published()->create(['name' => 'Sérum vitamine C']);
-    ProductVariant::factory()->default()->create(['product_id' => $product->id, 'price_cents' => 2990]);
+    $variant = ProductVariant::factory()->default()->create(['product_id' => $product->id, 'price_cents' => 2990]);
 
     $this->get("/produits/{$product->slug}")
         ->assertOk()
@@ -22,6 +22,7 @@ test('a published product page is publicly visible', function () {
             ->component('storefront/product')
             ->where('product.name', 'Sérum vitamine C')
             ->where('priceCents', 2990)
+            ->where('defaultVariantId', $variant->id)
         );
 });
 
