@@ -107,11 +107,17 @@ export default function CartPage({
                             ))}
                         </ul>
 
-                        <div className="mt-6 flex justify-end">
+                        <div className="mt-6 flex items-center justify-end gap-4">
                             <p className="text-lg font-semibold">
                                 Total :{' '}
                                 {formatMoney(storeTotalCents, storeCurrency)}
                             </p>
+                            <Link
+                                href="/commande"
+                                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                            >
+                                Passer la commande
+                            </Link>
                         </div>
                     </>
                 )}
