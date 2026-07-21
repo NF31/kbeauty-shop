@@ -1,6 +1,7 @@
 import { Head, Link, router } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
+import { formatMoney } from '@/lib/money';
 
 type CartItem = {
     id: number;
@@ -17,13 +18,15 @@ type CartItem = {
 type CartPageProps = {
     items: CartItem[];
     subtotalCents: number;
+    totalCents: number;
+    currency: string;
 };
 
-function euros(cents: number): string {
-    return (cents / 100).toFixed(2) + ' €';
-}
-
-export default function CartPage({ items, subtotalCents }: CartPageProps) {
+export default function CartPage({
+    items,
+    totalCents,
+    currency,
+}: CartPageProps) {
     return (
         <>
             <Head title="Panier" />
@@ -66,7 +69,11 @@ export default function CartPage({ items, subtotalCents }: CartPageProps) {
                                             {item.sku}
                                         </p>
                                         <p className="text-sm text-muted-foreground">
-                                            {euros(item.unitPriceCents)} / unité
+                                            {formatMoney(
+                                                item.unitPriceCents,
+                                                currency,
+                                            )}{' '}
+                                            / unité
                                         </p>
                                     </div>
 
@@ -86,7 +93,10 @@ export default function CartPage({ items, subtotalCents }: CartPageProps) {
                                     />
 
                                     <p className="w-24 text-right font-medium tabular-nums">
-                                        {euros(item.lineTotalCents)}
+                                        {formatMoney(
+                                            item.lineTotalCents,
+                                            currency,
+                                        )}
                                     </p>
 
                                     <button
@@ -110,7 +120,7 @@ export default function CartPage({ items, subtotalCents }: CartPageProps) {
 
                         <div className="mt-6 flex justify-end">
                             <p className="text-lg font-semibold">
-                                Sous-total : {euros(subtotalCents)}
+                                Total : {formatMoney(totalCents, currency)}
                             </p>
                         </div>
                     </>

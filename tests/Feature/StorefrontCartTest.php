@@ -31,6 +31,8 @@ test('a guest can add a product variant to the cart and see it on /panier', func
             ->where('items.0.unitPriceCents', 1500)
             ->where('items.0.lineTotalCents', 3000)
             ->where('subtotalCents', 3000)
+            ->where('totalCents', 3000)
+            ->where('currency', 'EUR')
         );
 });
 
