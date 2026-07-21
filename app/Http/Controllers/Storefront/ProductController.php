@@ -29,6 +29,7 @@ class ProductController extends Controller
                 'how_to_use' => $product->how_to_use,
                 'brand' => $product->brand,
             ],
+            'defaultVariantId' => $defaultVariant?->id,
             'priceCents' => $defaultVariant?->price_cents,
             'compareAtPriceCents' => $defaultVariant?->compare_at_price_cents,
             'stockQuantity' => $defaultVariant?->stock_quantity,

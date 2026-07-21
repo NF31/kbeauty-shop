@@ -22,7 +22,8 @@
         "laravel/wayfinder": "^0.1.14",
         "meilisearch/meilisearch-php": "^1.16",
         "spatie/laravel-permission": "^8.3",
-        "spatie/laravel-sluggable": "^4.0"
+        "spatie/laravel-sluggable": "^4.0",
+        "stripe/stripe-php": "^21.0"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",

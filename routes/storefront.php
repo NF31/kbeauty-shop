@@ -28,8 +28,24 @@ Route::patch('panier/{cartItem}', [CartController::class, 'update'])
 Route::delete('panier/{cartItem}', [CartController::class, 'destroy'])
     ->name('storefront.cart.destroy');
 
-Route::get('commande', [CheckoutController::class, 'index'])
-    ->name('storefront.checkout.index');
+// Le tunnel de commande exige un compte (pas de checkout invité) — un
+// visiteur non connecté est redirigé vers /login, puis renvoyé ici une fois
+// connecté/inscrit via le mécanisme "intended URL" de Laravel (voir
+// RequireAccountForCheckout). Le panier reste accessible sans compte.
+Route::middleware('checkout.auth')->group(function () {
+    Route::get('commande', [CheckoutController::class, 'index'])
+        ->name('storefront.checkout.index');
 
-Route::post('commande/adresse', [CheckoutController::class, 'storeAddress'])
-    ->name('storefront.checkout.store-address');
+    Route::post('commande/adresse', [CheckoutController::class, 'storeAddress'])
+        ->name('storefront.checkout.store-address');
+
+    // GET + POST sur la même URI : un rechargement de page pendant l'étape
+    // paiement (GET) doit pouvoir réafficher le PaymentIntent en cours plutôt
+    // que de répondre 405 — pay() est idempotent (réutilise la commande/le
+    // paiement pending existants), donc sûr à rejouer sur un simple GET.
+    Route::match(['get', 'post'], 'commande/paiement', [CheckoutController::class, 'pay'])
+        ->name('storefront.checkout.pay');
+
+    Route::get('commande/confirmation', [CheckoutController::class, 'confirmation'])
+        ->name('storefront.checkout.confirmation');
+});

@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Stripe\StripeClient;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -20,6 +21,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(Cloudinary::class, fn () => new Cloudinary(config('services.cloudinary.url')));
+
+        $this->app->singleton(StripeClient::class, fn () => new StripeClient(config('services.stripe.secret')));
     }
 
     /**

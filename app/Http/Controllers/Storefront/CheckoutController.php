@@ -2,12 +2,18 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Actions\Orders\PlaceOrder;
 use App\Enums\AddressType;
+use App\Enums\PaymentProvider;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutAddressRequest;
 use App\Models\Address;
+use App\Models\Order;
+use App\Models\Payment;
 use App\Services\CartService;
 use App\Services\CloudinaryService;
+use App\Services\StripeService;
 use App\Support\CartPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,6 +26,8 @@ class CheckoutController extends Controller
 
     private const SESSION_BILLING_ADDRESS_ID = 'checkout.billing_address_id';
 
+    private const SESSION_ORDER_ID = 'checkout.order_id';
+
     public function index(Request $request, CartService $cartService, CloudinaryService $cloudinary): Response|RedirectResponse
     {
         $cart = $cartService->current($request);
@@ -29,14 +37,18 @@ class CheckoutController extends Controller
             return redirect()->route('storefront.cart.index');
         }
 
+        $shippingAddress = $this->sessionAddress($request, self::SESSION_SHIPPING_ADDRESS_ID);
+        $billingAddress = $this->sessionAddress($request, self::SESSION_BILLING_ADDRESS_ID);
+
         return Inertia::render('storefront/checkout', [
+            'step' => $shippingAddress && $billingAddress ? 'recap' : 'address',
             'cart' => CartPresenter::present($cart, $cloudinary),
             'defaultShippingAddress' => $request->user()?->addresses()
                 ->where('type', AddressType::Shipping)
                 ->where('is_default', true)
                 ->first(),
-            'shippingAddressId' => $request->session()->get(self::SESSION_SHIPPING_ADDRESS_ID),
-            'billingAddressId' => $request->session()->get(self::SESSION_BILLING_ADDRESS_ID),
+            'shippingAddress' => $shippingAddress,
+            'billingAddress' => $billingAddress,
         ]);
     }
 
@@ -68,5 +80,135 @@ class CheckoutController extends Controller
         $request->session()->put(self::SESSION_BILLING_ADDRESS_ID, $billing->id);
 
         return back();
+    }
+
+    /**
+     * Étape "Payer" du récapitulatif (docs/ARCHITECTURE.md §4) : crée (ou
+     * remet à jour) l'`Order` en `pending` à partir du panier courant, puis
+     * un `PaymentIntent` Stripe. La confirmation définitive du paiement
+     * n'arrive jamais ici mais via le webhook Stripe (tâche 9.4).
+     */
+    public function pay(
+        Request $request,
+        CartService $cartService,
+        CloudinaryService $cloudinary,
+        StripeService $stripe,
+        PlaceOrder $placeOrder,
+    ): Response|RedirectResponse {
+        $cart = $cartService->current($request);
+        $cart->loadMissing('items');
+
+        $shippingAddress = $this->sessionAddress($request, self::SESSION_SHIPPING_ADDRESS_ID);
+        $billingAddress = $this->sessionAddress($request, self::SESSION_BILLING_ADDRESS_ID);
+
+        if ($cart->items->isEmpty() || ! $shippingAddress || ! $billingAddress) {
+            return redirect()->route('storefront.checkout.index');
+        }
+
+        $orderId = $request->session()->get(self::SESSION_ORDER_ID);
+        $existingOrder = $orderId ? Order::query()->find((int) $orderId) : null;
+
+        $order = $placeOrder($cart, $shippingAddress, $billingAddress, $existingOrder);
+
+        $request->session()->put(self::SESSION_ORDER_ID, $order->id);
+
+        $payment = Payment::query()
+            ->where('order_id', $order->id)
+            ->where('status', PaymentStatus::Pending)
+            ->latest('id')
+            ->first();
+
+        if ($payment) {
+            // Le statut local reste `pending` tant que le webhook (9.4) n'a
+            // pas confirmé le paiement — mais côté Stripe le PaymentIntent
+            // peut déjà être `succeeded` (ex. rechargement de la page après
+            // un paiement réussi). Stripe refuse de modifier le montant d'un
+            // PaymentIntent qui n'est plus modifiable, donc on vérifie son
+            // statut réel avant de le mettre à jour.
+            $intent = $stripe->retrievePaymentIntent($payment->provider_payment_id);
+
+            if ($intent->status === 'succeeded') {
+                return redirect()->route('storefront.checkout.confirmation');
+            }
+
+            if (in_array($intent->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
+                $intent = $stripe->updatePaymentIntentAmount($payment->provider_payment_id, $order->total_cents);
+
+                $payment->update(['amount_cents' => $order->total_cents]);
+            }
+        } else {
+            $intent = $stripe->createPaymentIntent($order);
+
+            $payment = Payment::query()->create([
+                'order_id' => $order->id,
+                'provider' => PaymentProvider::Stripe,
+                'provider_payment_id' => $intent->id,
+                'status' => PaymentStatus::Pending,
+                'amount_cents' => $order->total_cents,
+            ]);
+        }
+
+        return Inertia::render('storefront/checkout', [
+            'step' => 'payment',
+            'cart' => CartPresenter::present($cart, $cloudinary),
+            'shippingAddress' => $shippingAddress,
+            'billingAddress' => $billingAddress,
+            'order' => [
+                'orderNumber' => $order->order_number,
+                'totalCents' => $order->total_cents,
+                'currency' => $order->currency,
+            ],
+            'clientSecret' => $intent->client_secret,
+            'stripeKey' => config('services.stripe.key'),
+            // Préremplit le Payment Element avec ce qu'on a déjà collecté à
+            // l'étape adresse — inutile de redemander nom/adresse/téléphone,
+            // et l'email du compte s'il est connecté (pas encore capturé pour
+            // un invité, cf. tunnel 9.1).
+            'customerEmail' => $request->user()?->email,
+        ]);
+    }
+
+    /**
+     * `return_url` de `stripe.confirmPayment()` — nécessaire pour les moyens
+     * de paiement avec redirection (ex. iDEAL), même si la CB ne repasse pas
+     * par ici. Le *statut de la commande* n'est jamais mis à jour depuis
+     * cette page : seul le webhook Stripe (`payment_intent.succeeded`, tâche
+     * 9.4) fait foi. On vide en revanche le panier ici si le paiement est
+     * confirmé côté Stripe — sinon le client le retrouverait plein en
+     * retournant sur /panier après avoir payé.
+     */
+    public function confirmation(Request $request, CartService $cartService, StripeService $stripe): Response
+    {
+        $orderId = $request->session()->get(self::SESSION_ORDER_ID);
+        $order = $orderId ? Order::query()->find((int) $orderId) : null;
+
+        if ($order) {
+            $payment = Payment::query()->where('order_id', $order->id)->latest('id')->first();
+
+            if ($payment && $stripe->retrievePaymentIntent($payment->provider_payment_id)->status === 'succeeded') {
+                $cartService->findExisting($request)?->items()->delete();
+
+                // Le tunnel de cette commande est terminé — sans ça, un
+                // nouveau passage sur /commande avec un panier différent
+                // retomberait sur cette même commande déjà payée (session
+                // encore porteuse de son shipping/billing/order id).
+                $request->session()->forget([
+                    self::SESSION_SHIPPING_ADDRESS_ID,
+                    self::SESSION_BILLING_ADDRESS_ID,
+                    self::SESSION_ORDER_ID,
+                ]);
+            }
+        }
+
+        return Inertia::render('storefront/checkout-confirmation', [
+            'orderNumber' => $order?->order_number,
+        ]);
+    }
+
+    private function sessionAddress(Request $request, string $sessionKey): ?Address
+    {
+        $id = $request->session()->get($sessionKey);
+
+        return $id ? Address::query()->find((int) $id) : null;
     }
 }

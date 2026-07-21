@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AddressAutocompleteInput } from '@/components/storefront/address-autocomplete-input';
+import { StripePaymentForm } from '@/components/storefront/stripe-payment-form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
@@ -22,30 +23,84 @@ const addressSchema = z.object({
     phone: z.string().optional(),
 });
 
-const checkoutSchema = z.object({
-    shipping: addressSchema,
-    billingSameAsShipping: z.boolean(),
-    billing: addressSchema.partial(),
+// Pas de `.min(1)` ici : `addressSchema.partial()` ne dispenserait que les
+// clés absentes, pas les chaînes vides envoyées par le formulaire quand la
+// facturation est masquée — la contrainte de présence est gérée uniquement
+// par le `superRefine` ci-dessous, selon `billingSameAsShipping`.
+const billingFieldsSchema = z.object({
+    fullName: z.string().optional(),
+    line1: z.string().optional(),
+    line2: z.string().optional(),
+    postalCode: z.string().optional(),
+    city: z.string().optional(),
+    countryCode: z.string().optional(),
+    phone: z.string().optional(),
 });
+
+const checkoutSchema = z
+    .object({
+        shipping: addressSchema,
+        billingSameAsShipping: z.boolean(),
+        billing: billingFieldsSchema,
+    })
+    // `billing` n'est requis que si l'adresse de facturation diffère de la
+    // livraison — sinon ses champs restent vides (masqués côté UI) et ne
+    // doivent pas faire échouer la validation (miroir de la règle
+    // `required_if:billing_same_as_shipping,false` côté backend).
+    .superRefine((data, ctx) => {
+        if (data.billingSameAsShipping) {
+            return;
+        }
+
+        const requiredFields: (keyof z.infer<typeof addressSchema>)[] = [
+            'fullName',
+            'line1',
+            'postalCode',
+            'city',
+            'countryCode',
+        ];
+
+        for (const field of requiredFields) {
+            if (!data.billing[field]) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ['billing', field],
+                    message: 'Ce champ est requis.',
+                });
+            }
+        }
+    });
 
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
+export type AddressProp = {
+    full_name: string;
+    line1: string;
+    line2: string | null;
+    postal_code: string;
+    city: string;
+    country_code: string;
+    phone: string | null;
+};
+
 type CheckoutPageProps = {
+    step: 'address' | 'recap' | 'payment';
     cart: {
         subtotalCents: number;
         totalCents: number;
         currency: string;
         itemCount: number;
     };
-    defaultShippingAddress: {
-        full_name: string;
-        line1: string;
-        line2: string | null;
-        postal_code: string;
-        city: string;
-        country_code: string;
-        phone: string | null;
-    } | null;
+    defaultShippingAddress: AddressProp | null;
+    shippingAddress: AddressProp | null;
+    billingAddress: AddressProp | null;
+    order?: {
+        orderNumber: string;
+        totalCents: number;
+        currency: string;
+    };
+    clientSecret?: string;
+    customerEmail?: string | null;
 };
 
 const emptyAddress = {
@@ -59,9 +114,108 @@ const emptyAddress = {
 };
 
 export default function CheckoutPage({
+    step,
     cart,
     defaultShippingAddress,
+    shippingAddress,
+    billingAddress,
+    order,
+    clientSecret,
+    customerEmail,
 }: CheckoutPageProps) {
+    return (
+        <>
+            <Head title="Commande" />
+            <div className="mx-auto max-w-2xl p-4 md:p-8">
+                <h1 className="mb-6 text-3xl font-semibold">Commande</h1>
+
+                <p className="mb-6 text-sm text-muted-foreground">
+                    {cart.itemCount} article(s) — Total :{' '}
+                    <span className="font-medium text-foreground">
+                        {formatMoney(cart.totalCents, cart.currency)}
+                    </span>
+                </p>
+
+                {step === 'address' && (
+                    <AddressStep
+                        defaultShippingAddress={defaultShippingAddress}
+                    />
+                )}
+
+                {step === 'recap' && (
+                    <RecapStep
+                        shippingAddress={shippingAddress}
+                        billingAddress={billingAddress}
+                    />
+                )}
+
+                {step === 'payment' && order && clientSecret && (
+                    <StripePaymentForm
+                        clientSecret={clientSecret}
+                        totalCents={order.totalCents}
+                        currency={order.currency}
+                        billingAddress={billingAddress}
+                        customerEmail={customerEmail}
+                    />
+                )}
+            </div>
+        </>
+    );
+}
+
+function RecapStep({
+    shippingAddress,
+    billingAddress,
+}: {
+    shippingAddress: AddressProp | null;
+    billingAddress: AddressProp | null;
+}) {
+    const onPay = () => {
+        router.post('/commande/paiement');
+    };
+
+    return (
+        <div className="space-y-8">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <AddressSummary title="Livraison" address={shippingAddress} />
+                <AddressSummary title="Facturation" address={billingAddress} />
+            </div>
+
+            <Button onClick={onPay}>Passer au paiement</Button>
+        </div>
+    );
+}
+
+function AddressSummary({
+    title,
+    address,
+}: {
+    title: string;
+    address: AddressProp | null;
+}) {
+    if (!address) {
+        return null;
+    }
+
+    return (
+        <div className="space-y-1 text-sm">
+            <p className="font-medium text-foreground">{title}</p>
+            <p>{address.full_name}</p>
+            <p>{address.line1}</p>
+            {address.line2 && <p>{address.line2}</p>}
+            <p>
+                {address.postal_code} {address.city}
+            </p>
+            <p>{address.country_code}</p>
+        </div>
+    );
+}
+
+function AddressStep({
+    defaultShippingAddress,
+}: {
+    defaultShippingAddress: AddressProp | null;
+}) {
     const {
         control,
         register,
@@ -117,72 +271,58 @@ export default function CheckoutPage({
     };
 
     return (
-        <>
-            <Head title="Commande" />
-            <div className="mx-auto max-w-2xl p-4 md:p-8">
-                <h1 className="mb-6 text-3xl font-semibold">Commande</h1>
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+            <fieldset className="space-y-4">
+                <legend className="mb-2 text-lg font-medium">
+                    Adresse de livraison
+                </legend>
+                <AddressFields
+                    prefix="shipping"
+                    register={register}
+                    control={control}
+                    setValue={setValue}
+                    errors={errors.shipping}
+                />
+            </fieldset>
 
-                <p className="mb-6 text-sm text-muted-foreground">
-                    {cart.itemCount} article(s) — Total :{' '}
-                    <span className="font-medium text-foreground">
-                        {formatMoney(cart.totalCents, cart.currency)}
-                    </span>
-                </p>
-
-                <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
-                    <fieldset className="space-y-4">
-                        <legend className="mb-2 text-lg font-medium">
-                            Adresse de livraison
-                        </legend>
-                        <AddressFields
-                            prefix="shipping"
-                            register={register}
-                            control={control}
-                            setValue={setValue}
-                            errors={errors.shipping}
+            <div className="flex items-center gap-2">
+                <Controller
+                    name="billingSameAsShipping"
+                    control={control}
+                    render={({ field }) => (
+                        <Checkbox
+                            id="billingSameAsShipping"
+                            checked={field.value}
+                            onCheckedChange={(checked) =>
+                                field.onChange(checked === true)
+                            }
                         />
-                    </fieldset>
-
-                    <div className="flex items-center gap-2">
-                        <Controller
-                            name="billingSameAsShipping"
-                            control={control}
-                            render={({ field }) => (
-                                <Checkbox
-                                    id="billingSameAsShipping"
-                                    checked={field.value}
-                                    onCheckedChange={(checked) =>
-                                        field.onChange(checked === true)
-                                    }
-                                />
-                            )}
-                        />
-                        <Label htmlFor="billingSameAsShipping">
-                            Utiliser la même adresse pour la facturation
-                        </Label>
-                    </div>
-
-                    {!billingSameAsShipping && (
-                        <fieldset className="space-y-4">
-                            <legend className="mb-2 text-lg font-medium">
-                                Adresse de facturation
-                            </legend>
-                            <AddressFields
-                                prefix="billing"
-                                register={register}
-                                control={control}
-                                setValue={setValue}
-                                errors={errors.billing}
-                            />
-                        </fieldset>
                     )}
-
-                    <Button type="submit" disabled={isSubmitting}>
-                        Continuer
-                    </Button>
-                </form>
+                />
+                <Label htmlFor="billingSameAsShipping">
+                    Utiliser la même adresse pour la facturation
+                </Label>
             </div>
-        </>
+
+            {!billingSameAsShipping && (
+                <fieldset className="space-y-4">
+                    <legend className="mb-2 text-lg font-medium">
+                        Adresse de facturation
+                    </legend>
+                    <AddressFields
+                        prefix="billing"
+                        register={register}
+                        control={control}
+                        setValue={setValue}
+                        errors={errors.billing}
+                    />
+                </fieldset>
+            )}
+
+            <Button type="submit" disabled={isSubmitting}>
+                Continuer
+            </Button>
+        </form>
     );
 }
 
