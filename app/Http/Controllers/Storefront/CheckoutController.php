@@ -182,10 +182,14 @@ class CheckoutController extends Controller
         $orderId = $request->session()->get(self::SESSION_ORDER_ID);
         $order = $orderId ? Order::query()->find((int) $orderId) : null;
 
+        $paymentConfirmed = false;
+
         if ($order) {
             $payment = Payment::query()->where('order_id', $order->id)->latest('id')->first();
 
-            if ($payment && $stripe->retrievePaymentIntent($payment->provider_payment_id)->status === 'succeeded') {
+            $paymentConfirmed = $payment && $stripe->retrievePaymentIntent($payment->provider_payment_id)->status === 'succeeded';
+
+            if ($paymentConfirmed) {
                 $cartService->findExisting($request)?->items()->delete();
 
                 // Le tunnel de cette commande est terminé — sans ça, un
@@ -202,6 +206,11 @@ class CheckoutController extends Controller
 
         return Inertia::render('storefront/checkout-confirmation', [
             'orderNumber' => $order?->order_number,
+            // Statut Stripe lu en direct, pas le statut local de la commande
+            // (qui reste `pending` tant que le webhook 9.4 n'est pas passé) —
+            // sinon le client voit "en cours de confirmation" alors que
+            // Stripe a déjà répondu "succeeded".
+            'paymentConfirmed' => $paymentConfirmed,
         ]);
     }
 
