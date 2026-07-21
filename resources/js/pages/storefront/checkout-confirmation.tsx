@@ -2,8 +2,10 @@ import { Head, Link } from '@inertiajs/react';
 
 export default function CheckoutConfirmationPage({
     orderNumber,
+    paymentConfirmed,
 }: {
     orderNumber: string | null;
+    paymentConfirmed: boolean;
 }) {
     return (
         <>
@@ -12,9 +14,19 @@ export default function CheckoutConfirmationPage({
                 <h1 className="mb-4 text-3xl font-semibold">Merci !</h1>
                 {orderNumber ? (
                     <p className="mb-6 text-muted-foreground">
-                        Votre commande <strong>{orderNumber}</strong> est en
-                        cours de confirmation. Vous recevrez un email dès que le
-                        paiement sera validé.
+                        {paymentConfirmed ? (
+                            <>
+                                Votre commande <strong>{orderNumber}</strong>{' '}
+                                est confirmée. Vous recevrez un email de
+                                confirmation sous peu.
+                            </>
+                        ) : (
+                            <>
+                                Votre commande <strong>{orderNumber}</strong>{' '}
+                                est en cours de confirmation. Vous recevrez un
+                                email dès que le paiement sera validé.
+                            </>
+                        )}
                     </p>
                 ) : (
                     <p className="mb-6 text-muted-foreground">
