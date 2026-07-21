@@ -34,8 +34,13 @@ class CatalogController extends Controller
 
         $sort = $request->query('sort');
 
+        $search = trim((string) $request->query('q'));
+
+        $searchIds = $search !== '' ? Product::search($search)->keys() : null;
+
         $products = Product::query()
             ->where('status', ProductStatus::Published)
+            ->when($searchIds !== null, fn ($query) => $query->whereIn('products.id', $searchIds))
             ->when($skinType, fn ($query) => $query->whereJsonContains('skin_types', $skinType->value))
             ->when($category, fn ($query) => $query->whereHas(
                 'categories',
@@ -91,6 +96,7 @@ class CatalogController extends Controller
             'activeBrand' => $brand
                 ? ['slug' => $brand->slug, 'name' => $brand->name]
                 : null,
+            'search' => $search !== '' ? $search : null,
             'priceMin' => $request->query('price_min'),
             'priceMax' => $request->query('price_max'),
             'sort' => in_array($sort, ['price_asc', 'price_desc', 'name_asc'], true) ? $sort : null,

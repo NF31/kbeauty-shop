@@ -174,6 +174,53 @@ test('the catalog page sorts products by price ascending', function () {
         );
 });
 
+test('the catalog page searches products by name', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $matching = Product::factory()->published()->create(['name' => 'Sérum vitamine C éclat']);
+    ProductVariant::factory()->default()->create(['product_id' => $matching->id]);
+
+    $other = Product::factory()->published()->create(['name' => 'Crème hydratante nuit']);
+    ProductVariant::factory()->default()->create(['product_id' => $other->id]);
+
+    $this->get('/produits?q=vitamine')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $matching->id)
+            ->where('search', 'vitamine')
+        );
+});
+
+test('the catalog page search is case insensitive and matches the short description', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $matching = Product::factory()->published()->create([
+        'name' => 'Produit A',
+        'short_description' => 'Apaise les peaux SENSIBLES',
+    ]);
+    ProductVariant::factory()->default()->create(['product_id' => $matching->id]);
+
+    $other = Product::factory()->published()->create([
+        'name' => 'Produit B',
+        'short_description' => 'Hydrate en profondeur',
+    ]);
+    ProductVariant::factory()->default()->create(['product_id' => $other->id]);
+
+    $this->get('/produits?q=sensibles')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $matching->id)
+        );
+});
+
 test('the catalog page excludes draft and archived products', function () {
     Product::factory()->create(['status' => 'draft']);
     Product::factory()->published()->create(['status' => 'archived']);

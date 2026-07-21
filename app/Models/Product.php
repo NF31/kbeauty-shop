@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Laravel\Scout\Searchable;
 use Spatie\Sluggable\Attributes\Sluggable;
 
 /**
@@ -58,7 +59,7 @@ use Spatie\Sluggable\Attributes\Sluggable;
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, Searchable, SoftDeletes;
 
     /**
      * Get the attributes that should be cast.
@@ -124,5 +125,24 @@ class Product extends Model
     public function primaryImage(): HasOne
     {
         return $this->hasOne(ProductImage::class)->ofMany('position', 'min');
+    }
+
+    /**
+     * Seuls les produits publiés doivent être trouvables via la recherche catalogue.
+     */
+    public function shouldBeSearchable(): bool
+    {
+        return $this->status === ProductStatus::Published;
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'name' => $this->name,
+            'short_description' => $this->short_description,
+        ];
     }
 }
