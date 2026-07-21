@@ -1,6 +1,7 @@
 import { Head } from '@inertiajs/react';
 import type { ProductGalleryImage } from '@/components/storefront/product-gallery';
 import { ProductGallery } from '@/components/storefront/product-gallery';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ProductPageProps = {
     product: {
@@ -8,6 +9,8 @@ type ProductPageProps = {
         name: string;
         short_description: string | null;
         description: string;
+        ingredients_inci: string | null;
+        how_to_use: string | null;
         brand: { id: number; name: string } | null;
     };
     priceCents: number | null;
@@ -41,13 +44,73 @@ export default function ProductPage({
                             {euros(priceCents)}
                         </p>
                     )}
-                    {product.short_description && (
-                        <p className="text-muted-foreground">
-                            {product.short_description}
-                        </p>
-                    )}
-                    <p className="whitespace-pre-line">{product.description}</p>
                 </div>
+            </div>
+
+            <div className="mx-auto max-w-5xl p-4 md:p-8">
+                <Tabs defaultValue="benefits">
+                    <TabsList>
+                        <TabsTrigger value="benefits">Bénéfices</TabsTrigger>
+                        <TabsTrigger value="description">
+                            Description
+                        </TabsTrigger>
+                        <TabsTrigger value="ingredients">
+                            Ingrédients
+                        </TabsTrigger>
+                        <TabsTrigger value="how-to-use">
+                            Mode d'emploi
+                        </TabsTrigger>
+                        <TabsTrigger value="reviews">Avis</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="benefits">
+                        {product.short_description ? (
+                            <p className="whitespace-pre-line">
+                                {product.short_description}
+                            </p>
+                        ) : (
+                            <p className="text-muted-foreground">
+                                Aucun bénéfice renseigné pour ce produit.
+                            </p>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="description">
+                        <p className="whitespace-pre-line">
+                            {product.description}
+                        </p>
+                    </TabsContent>
+
+                    <TabsContent value="ingredients">
+                        {product.ingredients_inci ? (
+                            <p className="whitespace-pre-line">
+                                {product.ingredients_inci}
+                            </p>
+                        ) : (
+                            <p className="text-muted-foreground">
+                                Liste INCI non renseignée pour ce produit.
+                            </p>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="how-to-use">
+                        {product.how_to_use ? (
+                            <p className="whitespace-pre-line">
+                                {product.how_to_use}
+                            </p>
+                        ) : (
+                            <p className="text-muted-foreground">
+                                Mode d'emploi non renseigné pour ce produit.
+                            </p>
+                        )}
+                    </TabsContent>
+
+                    <TabsContent value="reviews">
+                        <p className="text-muted-foreground">
+                            Aucun avis pour le moment.
+                        </p>
+                    </TabsContent>
+                </Tabs>
             </div>
         </>
     );
