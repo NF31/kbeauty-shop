@@ -30,6 +30,7 @@ class ProductController extends Controller
                 'brand' => $product->brand,
             ],
             'priceCents' => $defaultVariant?->price_cents,
+            'compareAtPriceCents' => $defaultVariant?->compare_at_price_cents,
             'stockQuantity' => $defaultVariant?->stock_quantity,
             'images' => $product->images->map(fn ($image) => [
                 'id' => $image->id,

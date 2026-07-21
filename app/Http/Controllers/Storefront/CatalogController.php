@@ -20,16 +20,21 @@ class CatalogController extends Controller
             ->paginate(24)
             ->withQueryString();
 
-        $products->through(fn (Product $product) => [
-            'id' => $product->id,
-            'slug' => $product->slug,
-            'name' => $product->name,
-            'brand' => $product->brand,
-            'priceCents' => ($product->variants->firstWhere('is_default', true) ?? $product->variants->first())?->price_cents,
-            'thumbnailUrl' => $product->primaryImage
-                ? $cloudinary->url($product->primaryImage->path, 400, 400)
-                : null,
-        ]);
+        $products->through(function (Product $product) use ($cloudinary) {
+            $defaultVariant = $product->variants->firstWhere('is_default', true) ?? $product->variants->first();
+
+            return [
+                'id' => $product->id,
+                'slug' => $product->slug,
+                'name' => $product->name,
+                'brand' => $product->brand,
+                'priceCents' => $defaultVariant?->price_cents,
+                'compareAtPriceCents' => $defaultVariant?->compare_at_price_cents,
+                'thumbnailUrl' => $product->primaryImage
+                    ? $cloudinary->url($product->primaryImage->path, 400, 400)
+                    : null,
+            ];
+        });
 
         return Inertia::render('storefront/catalog', [
             'products' => $products,

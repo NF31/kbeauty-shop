@@ -16,6 +16,7 @@ type ProductPageProps = {
         brand: { id: number; name: string } | null;
     };
     priceCents: number | null;
+    compareAtPriceCents: number | null;
     stockQuantity: number | null;
     images: ProductGalleryImage[];
 };
@@ -27,6 +28,7 @@ function euros(cents: number): string {
 export default function ProductPage({
     product,
     priceCents,
+    compareAtPriceCents,
     stockQuantity,
     images,
 }: ProductPageProps) {
@@ -47,8 +49,16 @@ export default function ProductPage({
                     )}
                     <h1 className="text-3xl font-semibold">{product.name}</h1>
                     {priceCents !== null && (
-                        <p className="text-xl font-medium">
-                            {euros(priceCents)}
+                        <p className="flex items-baseline gap-3">
+                            <span className="text-xl font-medium">
+                                {euros(priceCents)}
+                            </span>
+                            {compareAtPriceCents !== null &&
+                                compareAtPriceCents > priceCents && (
+                                    <span className="text-base text-muted-foreground line-through">
+                                        {euros(compareAtPriceCents)}
+                                    </span>
+                                )}
                         </p>
                     )}
 

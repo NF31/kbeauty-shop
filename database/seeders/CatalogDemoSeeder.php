@@ -22,12 +22,17 @@ class CatalogDemoSeeder extends Seeder
             ->count(30)
             ->published()
             ->create()
-            ->each(function (Product $product) use ($brands, $categories) {
+            ->each(function (Product $product, int $index) use ($brands, $categories) {
                 $product->update(['brand_id' => $brands->random()->id]);
                 $product->categories()->attach($categories->random(rand(1, 2))->pluck('id'));
+
+                $priceCents = fake()->numberBetween(500, 8000);
+                $onSale = $index % 3 === 0;
+
                 $product->variants()->create([
                     'sku' => strtoupper(fake()->unique()->bothify('SKU-########')),
-                    'price_cents' => fake()->numberBetween(500, 8000),
+                    'price_cents' => $priceCents,
+                    'compare_at_price_cents' => $onSale ? (int) round($priceCents * 1.3) : null,
                     'currency' => 'EUR',
                     'stock_quantity' => fake()->numberBetween(0, 200),
                     'is_default' => true,
