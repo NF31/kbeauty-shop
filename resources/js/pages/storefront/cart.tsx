@@ -1,22 +1,14 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Trash2 } from 'lucide-react';
+import { useEffect } from 'react';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
+import { useCartActions } from '@/hooks/use-cart-actions';
 import { formatMoney } from '@/lib/money';
-
-type CartItem = {
-    id: number;
-    productName: string;
-    productSlug: string;
-    sku: string;
-    quantity: number;
-    unitPriceCents: number;
-    lineTotalCents: number;
-    stockQuantity: number;
-    thumbnailUrl: string | null;
-};
+import type { CartStoreItem } from '@/stores/cart-store';
+import { useCartStore } from '@/stores/cart-store';
 
 type CartPageProps = {
-    items: CartItem[];
+    items: CartStoreItem[];
     subtotalCents: number;
     totalCents: number;
     currency: string;
@@ -24,16 +16,27 @@ type CartPageProps = {
 
 export default function CartPage({
     items,
+    subtotalCents,
     totalCents,
     currency,
 }: CartPageProps) {
+    const storeItems = useCartStore((state) => state.items);
+    const storeTotalCents = useCartStore((state) => state.totalCents);
+    const storeCurrency = useCartStore((state) => state.currency);
+    const sync = useCartStore((state) => state.sync);
+    const { updateQuantity, removeItem } = useCartActions();
+
+    useEffect(() => {
+        sync({ items, subtotalCents, totalCents, currency });
+    }, [items, subtotalCents, totalCents, currency, sync]);
+
     return (
         <>
             <Head title="Panier" />
             <div className="mx-auto max-w-4xl p-4 md:p-8">
                 <h1 className="mb-6 text-3xl font-semibold">Mon panier</h1>
 
-                {items.length === 0 ? (
+                {storeItems.length === 0 ? (
                     <p className="text-muted-foreground">
                         Votre panier est vide.{' '}
                         <Link href="/produits" className="underline">
@@ -43,7 +46,7 @@ export default function CartPage({
                 ) : (
                     <>
                         <ul className="divide-y border-y">
-                            {items.map((item) => (
+                            {storeItems.map((item) => (
                                 <li
                                     key={item.id}
                                     className="flex flex-wrap items-center gap-4 py-4"
@@ -71,7 +74,7 @@ export default function CartPage({
                                         <p className="text-sm text-muted-foreground">
                                             {formatMoney(
                                                 item.unitPriceCents,
-                                                currency,
+                                                storeCurrency,
                                             )}{' '}
                                             / unité
                                         </p>
@@ -81,21 +84,14 @@ export default function CartPage({
                                         value={item.quantity}
                                         max={item.stockQuantity}
                                         onChange={(quantity) =>
-                                            router.patch(
-                                                `/panier/${item.id}`,
-                                                { quantity },
-                                                {
-                                                    preserveScroll: true,
-                                                    preserveState: true,
-                                                },
-                                            )
+                                            updateQuantity(item.id, quantity)
                                         }
                                     />
 
                                     <p className="w-24 text-right font-medium tabular-nums">
                                         {formatMoney(
                                             item.lineTotalCents,
-                                            currency,
+                                            storeCurrency,
                                         )}
                                     </p>
 
@@ -103,14 +99,7 @@ export default function CartPage({
                                         type="button"
                                         aria-label="Retirer du panier"
                                         className="text-muted-foreground hover:text-destructive"
-                                        onClick={() =>
-                                            router.delete(
-                                                `/panier/${item.id}`,
-                                                {
-                                                    preserveScroll: true,
-                                                },
-                                            )
-                                        }
+                                        onClick={() => removeItem(item.id)}
                                     >
                                         <Trash2 className="size-4" />
                                     </button>
@@ -120,7 +109,8 @@ export default function CartPage({
 
                         <div className="mt-6 flex justify-end">
                             <p className="text-lg font-semibold">
-                                Total : {formatMoney(totalCents, currency)}
+                                Total :{' '}
+                                {formatMoney(storeTotalCents, storeCurrency)}
                             </p>
                         </div>
                     </>
