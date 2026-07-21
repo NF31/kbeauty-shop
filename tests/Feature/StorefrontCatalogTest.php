@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\Brand;
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Services\CloudinaryService;
@@ -80,6 +82,95 @@ test('an invalid skin type query parameter is ignored', function () {
             ->component('storefront/catalog')
             ->has('products.data', 1)
             ->where('activeSkinType', null)
+        );
+});
+
+test('the catalog page filters products by category', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $category = Category::factory()->create();
+    $matching = Product::factory()->published()->create();
+    $matching->categories()->attach($category->id);
+    ProductVariant::factory()->default()->create(['product_id' => $matching->id]);
+
+    $other = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $other->id]);
+
+    $this->get("/produits?category={$category->slug}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $matching->id)
+            ->where('activeCategory.slug', $category->slug)
+        );
+});
+
+test('the catalog page filters products by brand', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $brand = Brand::factory()->create();
+    $matching = Product::factory()->published()->create(['brand_id' => $brand->id]);
+    ProductVariant::factory()->default()->create(['product_id' => $matching->id]);
+
+    $other = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $other->id]);
+
+    $this->get("/produits?brand={$brand->slug}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $matching->id)
+            ->where('activeBrand.slug', $brand->slug)
+        );
+});
+
+test('the catalog page filters products by price range', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $cheap = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $cheap->id, 'price_cents' => 500]);
+
+    $matching = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $matching->id, 'price_cents' => 2500]);
+
+    $expensive = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $expensive->id, 'price_cents' => 9000]);
+
+    $this->get('/produits?price_min=20&price_max=30')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $matching->id)
+        );
+});
+
+test('the catalog page sorts products by price ascending', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $expensive = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $expensive->id, 'price_cents' => 9000]);
+
+    $cheap = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $cheap->id, 'price_cents' => 500]);
+
+    $this->get('/produits?sort=price_asc')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->where('products.data.0.id', $cheap->id)
+            ->where('products.data.1.id', $expensive->id)
+            ->where('sort', 'price_asc')
         );
 });
 
