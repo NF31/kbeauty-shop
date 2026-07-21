@@ -51,7 +51,7 @@ class PlaceOrder
                 $order->update(['order_number' => sprintf('KB-%d-%05d', now()->year, $order->id)]);
             }
 
-            $cart->loadMissing(['items.variant.product', 'items.variant.optionValues']);
+            $cart->loadMissing(['items.variant.product.primaryImage', 'items.variant.optionValues']);
 
             foreach ($cart->items as $item) {
                 $variantLabel = $item->variant->optionValues->pluck('value')->implode(' / ');
@@ -60,6 +60,7 @@ class PlaceOrder
                     'product_variant_id' => $item->product_variant_id,
                     'product_name' => $item->variant->product->name,
                     'variant_label' => $variantLabel !== '' ? $variantLabel : $item->variant->sku,
+                    'product_image_path' => $item->variant->product->primaryImage?->path,
                     'unit_price_cents' => $item->unit_price_cents,
                     'quantity' => $item->quantity,
                     'total_cents' => $item->lineTotalCents($cart->currency),

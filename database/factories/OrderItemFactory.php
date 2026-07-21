@@ -22,6 +22,7 @@ class OrderItemFactory extends Factory
             'product_variant_id' => ProductVariant::factory(),
             'product_name' => $this->faker->words(3, true),
             'variant_label' => $this->faker->randomElement(['50ml', '100ml', 'Standard']),
+            'product_image_path' => null,
             'unit_price_cents' => $unitPriceCents,
             'quantity' => $quantity,
             'total_cents' => $unitPriceCents * $quantity,

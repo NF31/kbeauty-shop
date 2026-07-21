@@ -14,13 +14,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property int $product_variant_id
  * @property string $product_name
  * @property string $variant_label
+ * @property string|null $product_image_path
  * @property int $unit_price_cents
  * @property int $quantity
  * @property int $total_cents
  * @property bool $is_gift
  */
 #[Fillable([
-    'order_id', 'product_variant_id', 'product_name', 'variant_label',
+    'order_id', 'product_variant_id', 'product_name', 'variant_label', 'product_image_path',
     'unit_price_cents', 'quantity', 'total_cents', 'is_gift',
 ])]
 class OrderItem extends Model
