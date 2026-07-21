@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
+use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SkinGuideController;
 use Illuminate\Support\Facades\Route;
@@ -26,3 +27,9 @@ Route::patch('panier/{cartItem}', [CartController::class, 'update'])
 
 Route::delete('panier/{cartItem}', [CartController::class, 'destroy'])
     ->name('storefront.cart.destroy');
+
+Route::get('commande', [CheckoutController::class, 'index'])
+    ->name('storefront.checkout.index');
+
+Route::post('commande/adresse', [CheckoutController::class, 'storeAddress'])
+    ->name('storefront.checkout.store-address');
