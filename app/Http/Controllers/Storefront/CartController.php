@@ -32,13 +32,15 @@ class CartController extends Controller
                 'sku' => $item->variant->sku,
                 'quantity' => $item->quantity,
                 'unitPriceCents' => $item->unit_price_cents,
-                'lineTotalCents' => $item->lineTotalCents(),
+                'lineTotalCents' => $item->lineTotalCents($cart->currency),
                 'stockQuantity' => $item->variant->stock_quantity,
                 'thumbnailUrl' => $item->variant->product->primaryImage
                     ? $cloudinary->url($item->variant->product->primaryImage->path, 200, 200)
                     : null,
             ]),
             'subtotalCents' => $cart->subtotalCents(),
+            'totalCents' => $cart->totalCents(),
+            'currency' => $cart->currency,
         ]);
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Brick\Money\Money;
 use Database\Factories\CartItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -37,8 +38,13 @@ class CartItem extends Model
         return $this->belongsTo(ProductVariant::class, 'product_variant_id');
     }
 
-    public function lineTotalCents(): int
+    public function lineTotal(string $currency): Money
     {
-        return $this->quantity * $this->unit_price_cents;
+        return Money::ofMinor($this->unit_price_cents, $currency)->multipliedBy($this->quantity);
+    }
+
+    public function lineTotalCents(string $currency): int
+    {
+        return $this->lineTotal($currency)->getMinorAmount()->toInt();
     }
 }
