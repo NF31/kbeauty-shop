@@ -40,6 +40,21 @@ test('the product page exposes ingredients and how-to-use for the tabs', functio
         );
 });
 
+test('the product page exposes the default variant stock quantity', function () {
+    $product = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create([
+        'product_id' => $product->id,
+        'stock_quantity' => 7,
+    ]);
+
+    $this->get("/produits/{$product->slug}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/product')
+            ->where('stockQuantity', 7)
+        );
+});
+
 test('a draft product page returns 404', function () {
     $product = Product::factory()->create(['status' => 'draft']);
 

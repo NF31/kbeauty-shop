@@ -1,6 +1,8 @@
 import { Head } from '@inertiajs/react';
+import { useState } from 'react';
 import type { ProductGalleryImage } from '@/components/storefront/product-gallery';
 import { ProductGallery } from '@/components/storefront/product-gallery';
+import { QuantitySelector } from '@/components/storefront/quantity-selector';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 type ProductPageProps = {
@@ -14,6 +16,7 @@ type ProductPageProps = {
         brand: { id: number; name: string } | null;
     };
     priceCents: number | null;
+    stockQuantity: number | null;
     images: ProductGalleryImage[];
 };
 
@@ -24,8 +27,12 @@ function euros(cents: number): string {
 export default function ProductPage({
     product,
     priceCents,
+    stockQuantity,
     images,
 }: ProductPageProps) {
+    const [quantity, setQuantity] = useState(1);
+    const inStock = (stockQuantity ?? 0) > 0;
+
     return (
         <>
             <Head title={product.name} />
@@ -42,6 +49,18 @@ export default function ProductPage({
                     {priceCents !== null && (
                         <p className="text-xl font-medium">
                             {euros(priceCents)}
+                        </p>
+                    )}
+
+                    {inStock ? (
+                        <QuantitySelector
+                            value={quantity}
+                            onChange={setQuantity}
+                            max={stockQuantity ?? 1}
+                        />
+                    ) : (
+                        <p className="text-sm text-muted-foreground">
+                            Rupture de stock.
                         </p>
                     )}
                 </div>
