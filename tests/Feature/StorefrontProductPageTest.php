@@ -25,6 +25,21 @@ test('a published product page is publicly visible', function () {
         );
 });
 
+test('the product page exposes ingredients and how-to-use for the tabs', function () {
+    $product = Product::factory()->published()->create([
+        'ingredients_inci' => 'Aqua, Glycerin, Niacinamide',
+        'how_to_use' => 'Appliquer matin et soir sur peau propre.',
+    ]);
+
+    $this->get("/produits/{$product->slug}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/product')
+            ->where('product.ingredients_inci', 'Aqua, Glycerin, Niacinamide')
+            ->where('product.how_to_use', 'Appliquer matin et soir sur peau propre.')
+        );
+});
+
 test('a draft product page returns 404', function () {
     $product = Product::factory()->create(['status' => 'draft']);
 

@@ -25,6 +25,8 @@ class ProductController extends Controller
                 'name' => $product->name,
                 'short_description' => $product->short_description,
                 'description' => $product->description,
+                'ingredients_inci' => $product->ingredients_inci,
+                'how_to_use' => $product->how_to_use,
                 'brand' => $product->brand,
             ],
             'priceCents' => $defaultVariant?->price_cents,
