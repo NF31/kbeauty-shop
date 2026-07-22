@@ -7,6 +7,8 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Models\User;
+use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
 use App\Services\StockService;
 use App\Services\StripeService;
@@ -14,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Notification;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
 
@@ -84,5 +87,6 @@ class StripeWebhookController extends Controller
         });
 
         $payment->order->user->notify(new OrderConfirmation($payment->order));
+        Notification::send(User::role('admin')->get(), new NewPaidOrderAlert($payment->order));
     }
 }
