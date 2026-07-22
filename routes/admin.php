@@ -31,7 +31,9 @@ Route::middleware(['auth', 'role:admin|staff|support'])
             Route::delete('products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])
                 ->name('products.variants.destroy');
 
+            // Throttle dedie : chaque upload appelle l'API Cloudinary (cout direct).
             Route::post('products/{product}/images', [ProductImageController::class, 'store'])
+                ->middleware('throttle:20,1,admin-product-images')
                 ->name('products.images.store');
             Route::patch('products/{product}/images/{image}/primary', [ProductImageController::class, 'makePrimary'])
                 ->name('products.images.make-primary');
@@ -46,6 +48,11 @@ Route::middleware(['auth', 'role:admin|staff|support'])
         });
 
         Route::middleware('permission:orders.refund')->group(function () {
-            Route::post('orders/{order}/refund', [OrderController::class, 'refund'])->name('orders.refund');
+            // Throttle dedie : chaque appel declenche un remboursement Stripe reel et
+            // irreversible — un compte admin compromis ou un bug frontend en boucle ne
+            // doit pas pouvoir vider les paiements en rafale.
+            Route::post('orders/{order}/refund', [OrderController::class, 'refund'])
+                ->middleware('throttle:10,1,admin-refund')
+                ->name('orders.refund');
         });
     });
