@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Fortify\Features;
@@ -23,6 +24,37 @@ test('users can authenticate using the login screen', function () {
 
     $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
+});
+
+test('admin, staff and support roles are redirected to the admin dashboard on login', function (string $role) {
+    $this->seed(RolePermissionSeeder::class);
+
+    $user = User::factory()->create();
+    $user->assignRole($role);
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
+    $response->assertRedirect(route('admin.dashboard', absolute: false));
+})->with(['admin', 'staff', 'support']);
+
+test('an intended url takes priority over the role-based redirect', function () {
+    $this->seed(RolePermissionSeeder::class);
+
+    $user = User::factory()->create();
+    $user->assignRole('admin');
+
+    $this->get(route('admin.orders.index'));
+
+    $response = $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $response->assertRedirect(route('admin.orders.index', absolute: false));
 });
 
 test('users with two factor enabled are redirected to two factor challenge', function () {
