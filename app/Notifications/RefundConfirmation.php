@@ -30,7 +30,7 @@ class RefundConfirmation extends Notification implements ShouldQueue
 
         $mail = (new MailMessage)
             ->subject("Remboursement pour votre commande {$order->order_number}")
-            ->greeting("{$this->salutation($notifiable)},")
+            ->greeting(Salutation::pour($notifiable).',')
             ->line("Un remboursement de {$this->formatCents($this->refund->amount_cents)} a été effectué pour votre commande {$order->order_number}.");
 
         if ($this->refund->reason) {
@@ -45,10 +45,5 @@ class RefundConfirmation extends Notification implements ShouldQueue
     private function formatCents(int $cents): string
     {
         return number_format($cents / 100, 2, ',', ' ').' €';
-    }
-
-    private function salutation(User $notifiable): string
-    {
-        return Salutation::selonHeure().' '.$notifiable->name;
     }
 }

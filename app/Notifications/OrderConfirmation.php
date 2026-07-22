@@ -28,7 +28,7 @@ class OrderConfirmation extends Notification implements ShouldQueue
     {
         $mail = (new MailMessage)
             ->subject("Confirmation de votre commande {$this->order->order_number}")
-            ->greeting("{$this->salutation($notifiable)},")
+            ->greeting(Salutation::pour($notifiable).',')
             ->line("Merci pour votre commande {$this->order->order_number}, elle a bien été payée et va être préparée.");
 
         foreach ($this->order->items as $item) {
@@ -45,10 +45,5 @@ class OrderConfirmation extends Notification implements ShouldQueue
     private function formatCents(int $cents): string
     {
         return number_format($cents / 100, 2, ',', ' ').' €';
-    }
-
-    private function salutation(User $notifiable): string
-    {
-        return Salutation::selonHeure().' '.$notifiable->name;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Support;
 
+use App\Models\User;
+
 class Salutation
 {
     /**
@@ -12,5 +14,10 @@ class Salutation
     public static function selonHeure(): string
     {
         return now()->hour < 18 ? 'Bonjour' : 'Bonsoir';
+    }
+
+    public static function pour(User $notifiable): string
+    {
+        return self::selonHeure().' '.$notifiable->name;
     }
 }
