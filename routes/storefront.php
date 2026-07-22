@@ -5,6 +5,7 @@ use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\LegalController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SkinGuideController;
 use Illuminate\Support\Facades\Route;
@@ -14,6 +15,21 @@ Route::get('produits', [CatalogController::class, 'index'])
 
 Route::get('guide-de-choix', [SkinGuideController::class, 'index'])
     ->name('storefront.skin-guide');
+
+Route::get('mentions-legales', [LegalController::class, 'mentions'])
+    ->name('storefront.legal.mentions');
+
+Route::get('cgv', [LegalController::class, 'cgv'])
+    ->name('storefront.legal.cgv');
+
+Route::get('confidentialite', [LegalController::class, 'confidentialite'])
+    ->name('storefront.legal.confidentialite');
+
+Route::get('livraison', [LegalController::class, 'livraison'])
+    ->name('storefront.legal.livraison');
+
+Route::get('retours', [LegalController::class, 'retours'])
+    ->name('storefront.legal.retours');
 
 Route::get('produits/{product:slug}', [ProductController::class, 'show'])
     ->name('storefront.products.show');
