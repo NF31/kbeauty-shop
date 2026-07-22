@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Address;
+use App\Models\Order;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -103,6 +104,22 @@ test('a user can delete their own address', function () {
         ->assertRedirect();
 
     expect(Address::query()->find($address->id))->toBeNull();
+});
+
+test('a user cannot delete an address referenced by an existing order', function () {
+    $user = User::factory()->create();
+    $address = Address::factory()->for($user)->create();
+    Order::factory()->for($user)->create([
+        'shipping_address_id' => $address->id,
+        'billing_address_id' => $address->id,
+    ]);
+
+    $this->actingAs($user)
+        ->delete("/mon-compte/adresses/{$address->id}")
+        ->assertRedirect()
+        ->assertSessionHasErrors('address');
+
+    expect(Address::query()->find($address->id))->not->toBeNull();
 });
 
 test('a user cannot delete another user\'s address', function () {

@@ -63,6 +63,14 @@ class AccountAddressController extends Controller
     {
         abort_if($address->user_id !== $request->user()->id, 403);
 
+        // Une adresse referencee par une commande passee (FK orders.shipping/billing_address_id)
+        // ne peut pas etre supprimee : ce sont des donnees historiques de facturation/livraison.
+        if ($address->shippingOrders()->exists() || $address->billingOrders()->exists()) {
+            return back()->withErrors([
+                'address' => 'Cette adresse est utilisee par une commande passee et ne peut pas etre supprimee.',
+            ]);
+        }
+
         $address->delete();
 
         return back();
