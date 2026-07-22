@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\InventoryMovement;
@@ -10,7 +11,6 @@ use App\Models\ProductVariant;
 use App\Models\User;
 use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
-use App\Services\StripeService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -44,8 +44,8 @@ test('a request without a Stripe-Signature header is rejected', function () {
 });
 
 test('a request with an invalid signature is rejected', function () {
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->once()->andThrow(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andThrow(
             SignatureVerificationException::factory('invalide', null, null)
         );
     });
@@ -55,8 +55,8 @@ test('a request with an invalid signature is rejected', function () {
 });
 
 test('an unhandled event type is acknowledged without side effects', function () {
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
             fakeStripeEvent('payment_intent.payment_failed')
         );
     });
@@ -79,8 +79,8 @@ test('payment_intent.succeeded marks the order/payment as paid and decrements st
         'status' => PaymentStatus::Pending,
     ]);
 
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
             fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
         );
     });
@@ -111,8 +111,8 @@ test('payment_intent.succeeded sends an order confirmation email to the order ow
         'status' => PaymentStatus::Pending,
     ]);
 
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
             fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
         );
     });
@@ -139,8 +139,8 @@ test('replaying the same succeeded event does not resend the confirmation email'
         'status' => PaymentStatus::Pending,
     ]);
 
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->twice()->andReturn(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->twice()->andReturn(
             fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
         );
     });
@@ -165,8 +165,8 @@ test('replaying the same succeeded event does not decrement stock twice', functi
         'status' => PaymentStatus::Pending,
     ]);
 
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->twice()->andReturn(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->twice()->andReturn(
             fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
         );
     });
@@ -199,8 +199,8 @@ test('payment_intent.succeeded notifies admins of the new paid order', function 
         'status' => PaymentStatus::Pending,
     ]);
 
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
             fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
         );
     });
@@ -213,8 +213,8 @@ test('payment_intent.succeeded notifies admins of the new paid order', function 
 });
 
 test('a succeeded PaymentIntent with no matching Payment is acknowledged without error', function () {
-    $this->mock(StripeService::class, function ($mock) {
-        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn(
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
             fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_unknown'])
         );
     });

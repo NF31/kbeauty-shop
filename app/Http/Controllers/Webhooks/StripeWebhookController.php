@@ -2,21 +2,11 @@
 
 namespace App\Http\Controllers\Webhooks;
 
-use App\Enums\InventoryMovementType;
-use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
+use App\Application\Orders\UseCases\ConfirmOrderPayment;
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Http\Controllers\Controller;
-use App\Models\Payment;
-use App\Models\User;
-use App\Notifications\NewPaidOrderAlert;
-use App\Notifications\OrderConfirmation;
-use App\Services\StockService;
-use App\Services\StripeService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Notification;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
 
@@ -27,7 +17,7 @@ use Stripe\PaymentIntent;
  */
 class StripeWebhookController extends Controller
 {
-    public function __invoke(Request $request, StripeService $stripe, StockService $stockService): Response
+    public function __invoke(Request $request, PaymentGatewayInterface $gateway, ConfirmOrderPayment $confirmOrderPayment): Response
     {
         $signature = $request->header('Stripe-Signature');
 
@@ -36,7 +26,7 @@ class StripeWebhookController extends Controller
         }
 
         try {
-            $event = $stripe->constructWebhookEvent($request->getContent(), $signature);
+            $event = $gateway->verifyWebhookSignature($request->getContent(), $signature);
         } catch (SignatureVerificationException) {
             return response('Signature invalide.', 400);
         }
@@ -45,48 +35,9 @@ class StripeWebhookController extends Controller
             /** @var PaymentIntent $paymentIntent */
             $paymentIntent = $event->data->object;
 
-            $this->markAsPaid($paymentIntent, $stockService);
+            $confirmOrderPayment($paymentIntent->id);
         }
 
         return response('', 200);
-    }
-
-    private function markAsPaid(PaymentIntent $paymentIntent, StockService $stockService): void
-    {
-        $payment = Payment::query()
-            ->with('order.items', 'order.user')
-            ->where('provider_payment_id', $paymentIntent->id)
-            ->first();
-
-        if (! $payment) {
-            Log::warning('Webhook Stripe : PaymentIntent sans Payment correspondant.', ['payment_intent_id' => $paymentIntent->id]);
-
-            return;
-        }
-
-        // Stripe peut renvoyer le même événement plusieurs fois (livraison au moins une fois) :
-        // ne décrémenter le stock qu'une seule fois par paiement.
-        if ($payment->status === PaymentStatus::Succeeded) {
-            return;
-        }
-
-        DB::transaction(function () use ($payment, $stockService) {
-            $payment->update(['status' => PaymentStatus::Succeeded, 'paid_at' => now()]);
-
-            $order = $payment->order;
-            $order->update(['status' => OrderStatus::Paid]);
-
-            foreach ($order->items as $item) {
-                $stockService->recordMovement(
-                    $item->variant,
-                    InventoryMovementType::Sale,
-                    -$item->quantity,
-                    "Commande {$order->order_number}",
-                );
-            }
-        });
-
-        $payment->order->user->notify(new OrderConfirmation($payment->order));
-        Notification::send(User::role('admin')->get(), new NewPaidOrderAlert($payment->order));
     }
 }

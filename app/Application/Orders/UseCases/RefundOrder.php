@@ -1,16 +1,16 @@
 <?php
 
-namespace App\Actions\Orders;
+namespace App\Application\Orders\UseCases;
 
-use App\Enums\OrderStatus;
-use App\Enums\PaymentStatus;
+use App\Domain\Orders\Contracts\OrderRepositoryInterface;
+use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
+use App\Domain\Orders\Exceptions\NoSucceededPaymentException;
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\RefundStatus;
 use App\Models\Order;
 use App\Models\Refund;
 use App\Notifications\RefundConfirmation;
-use App\Services\StripeService;
 use Illuminate\Support\Facades\DB;
-use RuntimeException;
 
 /**
  * Rembourse une commande via l'API Stripe (docs/ARCHITECTURE.md §4). Supporte
@@ -21,39 +21,38 @@ use RuntimeException;
  */
 class RefundOrder
 {
-    public function __construct(private readonly StripeService $stripe) {}
+    public function __construct(
+        private readonly PaymentGatewayInterface $gateway,
+        private readonly OrderRepositoryInterface $orders,
+        private readonly PaymentRepositoryInterface $payments,
+    ) {}
 
     public function __invoke(Order $order, int $amountCents, ?string $reason = null): Refund
     {
-        $payment = $order->payments()
-            ->where('status', PaymentStatus::Succeeded)
-            ->latest('paid_at')
-            ->first();
+        $payment = $this->payments->findLatestSucceeded($order);
 
         if (! $payment) {
-            throw new RuntimeException('Aucun paiement réussi à rembourser pour cette commande.');
+            throw NoSucceededPaymentException::forOrder();
         }
 
-        $stripeRefund = $this->stripe->refundPayment($payment->provider_payment_id, $amountCents);
+        $result = $this->gateway->refund($payment->provider_payment_id, $amountCents);
 
-        $refund = DB::transaction(function () use ($order, $payment, $amountCents, $reason, $stripeRefund) {
-            $refund = Refund::query()->create([
+        $refund = DB::transaction(function () use ($order, $payment, $amountCents, $reason, $result) {
+            $refund = $this->orders->createRefund([
                 'order_id' => $order->id,
                 'payment_id' => $payment->id,
                 'amount_cents' => $amountCents,
                 'reason' => $reason,
-                'status' => $stripeRefund->status === 'succeeded' ? RefundStatus::Succeeded : RefundStatus::Pending,
+                'status' => $result->status === 'succeeded' ? RefundStatus::Succeeded : RefundStatus::Pending,
                 'created_at' => now(),
             ]);
 
             if ($refund->status === RefundStatus::Succeeded) {
-                $totalRefundedCents = $order->refunds()
-                    ->where('status', RefundStatus::Succeeded)
-                    ->sum('amount_cents');
+                $totalRefundedCents = $this->orders->totalSucceededRefundCents($order);
 
                 if ($totalRefundedCents >= $order->total_cents) {
-                    $order->update(['status' => OrderStatus::Refunded]);
-                    $payment->update(['status' => PaymentStatus::Refunded]);
+                    $this->orders->markRefunded($order);
+                    $this->payments->markRefunded($payment);
                 }
             }
 
