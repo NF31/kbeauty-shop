@@ -1,7 +1,10 @@
 <?php
 
+use App\Models\Order;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\User;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
@@ -64,5 +67,33 @@ test('creating addresses in the account is rate limited', function () {
     }
 
     $this->actingAs($user)->post(route('storefront.account.addresses.store'), [])
+        ->assertTooManyRequests();
+});
+
+test('admin refunds are rate limited', function () {
+    $this->seed(RolePermissionSeeder::class);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $order = Order::factory()->create();
+
+    for ($i = 0; $i < 10; $i++) {
+        $this->actingAs($admin)->post(route('admin.orders.refund', $order), []);
+    }
+
+    $this->actingAs($admin)->post(route('admin.orders.refund', $order), [])
+        ->assertTooManyRequests();
+});
+
+test('admin product image uploads are rate limited', function () {
+    $this->seed(RolePermissionSeeder::class);
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $product = Product::factory()->create();
+
+    for ($i = 0; $i < 20; $i++) {
+        $this->actingAs($admin)->post(route('admin.products.images.store', $product), []);
+    }
+
+    $this->actingAs($admin)->post(route('admin.products.images.store', $product), [])
         ->assertTooManyRequests();
 });
