@@ -13,6 +13,37 @@ use Inertia\Response;
 
 class AccountController extends Controller
 {
+    /**
+     * Page d'accueil de l'espace client apres connexion : dernieres commandes
+     * et raccourcis vers commandes/adresses (les admins/staff/support sont
+     * eux redirigés vers /admin par App\Http\Responses\LoginResponse).
+     */
+    public function dashboard(Request $request, CloudinaryService $cloudinary): Response
+    {
+        $user = $request->user();
+
+        $recentOrders = $user->orders()
+            ->with('items')
+            ->orderByDesc('placed_at')
+            ->limit(3)
+            ->get();
+
+        return Inertia::render('storefront/dashboard', [
+            'ordersCount' => $user->orders()->count(),
+            'addressesCount' => $user->addresses()->count(),
+            'recentOrders' => $recentOrders->map(fn (Order $order) => [
+                'id' => $order->id,
+                'orderNumber' => $order->order_number,
+                'status' => $order->status->value,
+                'statusLabel' => $order->status->label(),
+                'totalCents' => $order->total_cents,
+                'currency' => $order->currency,
+                'placedAt' => $order->placed_at?->toIso8601String(),
+                'items' => $order->items->map(fn (OrderItem $item) => $this->formatItem($item, $cloudinary)),
+            ]),
+        ]);
+    }
+
     public function orders(Request $request, CloudinaryService $cloudinary): Response
     {
         $orders = $request->user()
