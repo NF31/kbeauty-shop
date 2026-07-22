@@ -79,7 +79,13 @@ export default function AccountAddressesPage({
             return;
         }
 
-        router.delete(addressesRoutes.destroy(address.id).url);
+        router.delete(addressesRoutes.destroy(address.id).url, {
+            onError: (errors) => {
+                if (errors.address) {
+                    alert(errors.address);
+                }
+            },
+        });
     };
 
     return (
