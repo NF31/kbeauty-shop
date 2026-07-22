@@ -10,24 +10,11 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatMoney } from '@/lib/money';
 
-const addressSchema = z.object({
-    fullName: z.string().min(1, 'Le nom complet est requis.'),
-    line1: z.string().min(1, "L'adresse est requise."),
-    line2: z.string().optional(),
-    postalCode: z.string().min(1, 'Le code postal est requis.'),
-    city: z.string().min(1, 'La ville est requise.'),
-    countryCode: z
-        .string()
-        .length(2, 'Code pays sur 2 lettres (ex. FR).')
-        .toUpperCase(),
-    phone: z.string().optional(),
-});
-
-// Pas de `.min(1)` ici : `addressSchema.partial()` ne dispenserait que les
-// clés absentes, pas les chaînes vides envoyées par le formulaire quand la
-// facturation est masquée — la contrainte de présence est gérée uniquement
-// par le `superRefine` ci-dessous, selon `billingSameAsShipping`.
-const billingFieldsSchema = z.object({
+// Pas de `.min(1)` ici : les champs restent optionnels au niveau du schéma
+// dès qu'une adresse enregistrée est sélectionnée (mode "saved") ou que la
+// section est masquée (facturation = livraison) — la contrainte de présence
+// est gérée uniquement par le `superRefine` ci-dessous, selon le mode actif.
+const addressFieldsSchema = z.object({
     fullName: z.string().optional(),
     line1: z.string().optional(),
     line2: z.string().optional(),
@@ -37,36 +24,66 @@ const billingFieldsSchema = z.object({
     phone: z.string().optional(),
 });
 
+const requiredAddressFields: (keyof z.infer<typeof addressFieldsSchema>)[] = [
+    'fullName',
+    'line1',
+    'postalCode',
+    'city',
+    'countryCode',
+];
+
 const checkoutSchema = z
     .object({
-        shipping: addressSchema,
+        shippingMode: z.enum(['saved', 'new']),
+        shippingAddressId: z.number().nullable(),
+        shipping: addressFieldsSchema,
         billingSameAsShipping: z.boolean(),
-        billing: billingFieldsSchema,
+        billingMode: z.enum(['saved', 'new']),
+        billingAddressId: z.number().nullable(),
+        billing: addressFieldsSchema,
     })
-    // `billing` n'est requis que si l'adresse de facturation diffère de la
-    // livraison — sinon ses champs restent vides (masqués côté UI) et ne
-    // doivent pas faire échouer la validation (miroir de la règle
-    // `required_if:billing_same_as_shipping,false` côté backend).
     .superRefine((data, ctx) => {
+        if (data.shippingMode === 'saved') {
+            if (!data.shippingAddressId) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ['shippingAddressId'],
+                    message: 'Choisissez une adresse.',
+                });
+            }
+        } else {
+            for (const field of requiredAddressFields) {
+                if (!data.shipping[field]) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        path: ['shipping', field],
+                        message: 'Ce champ est requis.',
+                    });
+                }
+            }
+        }
+
         if (data.billingSameAsShipping) {
             return;
         }
 
-        const requiredFields: (keyof z.infer<typeof addressSchema>)[] = [
-            'fullName',
-            'line1',
-            'postalCode',
-            'city',
-            'countryCode',
-        ];
-
-        for (const field of requiredFields) {
-            if (!data.billing[field]) {
+        if (data.billingMode === 'saved') {
+            if (!data.billingAddressId) {
                 ctx.addIssue({
                     code: z.ZodIssueCode.custom,
-                    path: ['billing', field],
-                    message: 'Ce champ est requis.',
+                    path: ['billingAddressId'],
+                    message: 'Choisissez une adresse.',
                 });
+            }
+        } else {
+            for (const field of requiredAddressFields) {
+                if (!data.billing[field]) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        path: ['billing', field],
+                        message: 'Ce champ est requis.',
+                    });
+                }
             }
         }
     });
@@ -74,6 +91,7 @@ const checkoutSchema = z
 type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
 export type AddressProp = {
+    id?: number;
     full_name: string;
     line1: string;
     line2: string | null;
@@ -81,6 +99,7 @@ export type AddressProp = {
     city: string;
     country_code: string;
     phone: string | null;
+    is_default?: boolean;
 };
 
 type CheckoutPageProps = {
@@ -91,7 +110,8 @@ type CheckoutPageProps = {
         currency: string;
         itemCount: number;
     };
-    defaultShippingAddress: AddressProp | null;
+    savedShippingAddresses: AddressProp[];
+    savedBillingAddresses: AddressProp[];
     shippingAddress: AddressProp | null;
     billingAddress: AddressProp | null;
     order?: {
@@ -116,7 +136,8 @@ const emptyAddress = {
 export default function CheckoutPage({
     step,
     cart,
-    defaultShippingAddress,
+    savedShippingAddresses,
+    savedBillingAddresses,
     shippingAddress,
     billingAddress,
     order,
@@ -138,7 +159,8 @@ export default function CheckoutPage({
 
                 {step === 'address' && (
                     <AddressStep
-                        defaultShippingAddress={defaultShippingAddress}
+                        savedShippingAddresses={savedShippingAddresses}
+                        savedBillingAddresses={savedBillingAddresses}
                     />
                 )}
 
@@ -211,11 +233,41 @@ function AddressSummary({
     );
 }
 
+function defaultModeAndId(addresses: AddressProp[]): {
+    mode: 'saved' | 'new';
+    id: number | null;
+} {
+    if (addresses.length === 0) {
+        return { mode: 'new', id: null };
+    }
+
+    const defaultAddress = addresses.find((a) => a.is_default) ?? addresses[0];
+
+    return { mode: 'saved', id: defaultAddress.id ?? null };
+}
+
+function toAddressPayload(values: z.infer<typeof addressFieldsSchema>) {
+    return {
+        full_name: values.fullName,
+        line1: values.line1,
+        line2: values.line2 || null,
+        postal_code: values.postalCode,
+        city: values.city,
+        country_code: values.countryCode,
+        phone: values.phone || null,
+    };
+}
+
 function AddressStep({
-    defaultShippingAddress,
+    savedShippingAddresses,
+    savedBillingAddresses,
 }: {
-    defaultShippingAddress: AddressProp | null;
+    savedShippingAddresses: AddressProp[];
+    savedBillingAddresses: AddressProp[];
 }) {
+    const defaultShipping = defaultModeAndId(savedShippingAddresses);
+    const defaultBilling = defaultModeAndId(savedBillingAddresses);
+
     const {
         control,
         register,
@@ -226,47 +278,41 @@ function AddressStep({
     } = useForm<CheckoutFormValues>({
         resolver: zodResolver(checkoutSchema),
         defaultValues: {
-            shipping: defaultShippingAddress
-                ? {
-                      fullName: defaultShippingAddress.full_name,
-                      line1: defaultShippingAddress.line1,
-                      line2: defaultShippingAddress.line2 ?? '',
-                      postalCode: defaultShippingAddress.postal_code,
-                      city: defaultShippingAddress.city,
-                      countryCode: defaultShippingAddress.country_code,
-                      phone: defaultShippingAddress.phone ?? '',
-                  }
-                : emptyAddress,
+            shippingMode: defaultShipping.mode,
+            shippingAddressId: defaultShipping.id,
+            shipping: emptyAddress,
             billingSameAsShipping: true,
+            billingMode: defaultBilling.mode,
+            billingAddressId: defaultBilling.id,
             billing: emptyAddress,
         },
     });
 
+    const shippingMode = watch('shippingMode');
+    const shippingAddressId = watch('shippingAddressId');
     const billingSameAsShipping = watch('billingSameAsShipping');
+    const billingMode = watch('billingMode');
+    const billingAddressId = watch('billingAddressId');
 
     const onSubmit = (values: CheckoutFormValues) => {
         router.post('/commande/adresse', {
-            shipping: {
-                full_name: values.shipping.fullName,
-                line1: values.shipping.line1,
-                line2: values.shipping.line2 || null,
-                postal_code: values.shipping.postalCode,
-                city: values.shipping.city,
-                country_code: values.shipping.countryCode,
-                phone: values.shipping.phone || null,
-            },
+            shipping_address_id:
+                values.shippingMode === 'saved'
+                    ? values.shippingAddressId
+                    : undefined,
+            shipping:
+                values.shippingMode === 'new'
+                    ? toAddressPayload(values.shipping)
+                    : undefined,
             billing_same_as_shipping: values.billingSameAsShipping,
-            billing: values.billingSameAsShipping
-                ? undefined
-                : {
-                      full_name: values.billing.fullName,
-                      line1: values.billing.line1,
-                      line2: values.billing.line2 || null,
-                      postal_code: values.billing.postalCode,
-                      city: values.billing.city,
-                      country_code: values.billing.countryCode,
-                      phone: values.billing.phone || null,
-                  },
+            billing_address_id:
+                !values.billingSameAsShipping && values.billingMode === 'saved'
+                    ? values.billingAddressId
+                    : undefined,
+            billing:
+                !values.billingSameAsShipping && values.billingMode === 'new'
+                    ? toAddressPayload(values.billing)
+                    : undefined,
         });
     };
 
@@ -276,13 +322,23 @@ function AddressStep({
                 <legend className="mb-2 text-lg font-medium">
                     Adresse de livraison
                 </legend>
-                <AddressFields
+                <AddressChoice
                     prefix="shipping"
-                    register={register}
-                    control={control}
+                    savedAddresses={savedShippingAddresses}
+                    mode={shippingMode}
+                    selectedId={shippingAddressId}
                     setValue={setValue}
-                    errors={errors.shipping}
+                    error={errors.shippingAddressId?.message}
                 />
+                {shippingMode === 'new' && (
+                    <AddressFields
+                        prefix="shipping"
+                        register={register}
+                        control={control}
+                        setValue={setValue}
+                        errors={errors.shipping}
+                    />
+                )}
             </fieldset>
 
             <div className="flex items-center gap-2">
@@ -309,13 +365,23 @@ function AddressStep({
                     <legend className="mb-2 text-lg font-medium">
                         Adresse de facturation
                     </legend>
-                    <AddressFields
+                    <AddressChoice
                         prefix="billing"
-                        register={register}
-                        control={control}
+                        savedAddresses={savedBillingAddresses}
+                        mode={billingMode}
+                        selectedId={billingAddressId}
                         setValue={setValue}
-                        errors={errors.billing}
+                        error={errors.billingAddressId?.message}
                     />
+                    {billingMode === 'new' && (
+                        <AddressFields
+                            prefix="billing"
+                            register={register}
+                            control={control}
+                            setValue={setValue}
+                            errors={errors.billing}
+                        />
+                    )}
                 </fieldset>
             )}
 
@@ -326,8 +392,83 @@ function AddressStep({
     );
 }
 
+function AddressChoice({
+    prefix,
+    savedAddresses,
+    mode,
+    selectedId,
+    setValue,
+    error,
+}: {
+    prefix: 'shipping' | 'billing';
+    savedAddresses: AddressProp[];
+    mode: 'saved' | 'new';
+    selectedId: number | null;
+    setValue: ReturnType<typeof useForm<CheckoutFormValues>>['setValue'];
+    error?: string;
+}) {
+    if (savedAddresses.length === 0) {
+        return null;
+    }
+
+    const modeFieldName = `${prefix}Mode` as const;
+    const idFieldName = `${prefix}AddressId` as const;
+
+    return (
+        <div className="space-y-2">
+            {savedAddresses.map((address) => (
+                <label
+                    key={address.id}
+                    className="flex cursor-pointer items-start gap-3 rounded-lg border p-3 text-sm has-[:checked]:border-foreground"
+                >
+                    <input
+                        type="radio"
+                        className="mt-1"
+                        name={`${prefix}-address-choice`}
+                        checked={mode === 'saved' && selectedId === address.id}
+                        onChange={() => {
+                            setValue(modeFieldName, 'saved');
+                            setValue(idFieldName, address.id ?? null);
+                        }}
+                    />
+                    <span className="space-y-0.5">
+                        <p className="font-medium text-foreground">
+                            {address.full_name}
+                        </p>
+                        <p className="text-muted-foreground">
+                            {address.line1}
+                            {address.line2 ? `, ${address.line2}` : ''}
+                        </p>
+                        <p className="text-muted-foreground">
+                            {address.postal_code} {address.city},{' '}
+                            {address.country_code}
+                        </p>
+                    </span>
+                </label>
+            ))}
+
+            <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-3 text-sm has-[:checked]:border-foreground">
+                <input
+                    type="radio"
+                    name={`${prefix}-address-choice`}
+                    checked={mode === 'new'}
+                    onChange={() => {
+                        setValue(modeFieldName, 'new');
+                        setValue(idFieldName, null);
+                    }}
+                />
+                <span className="font-medium text-foreground">
+                    Nouvelle adresse
+                </span>
+            </label>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
+        </div>
+    );
+}
+
 type AddressFieldErrors = {
-    [K in keyof z.infer<typeof addressSchema>]?: { message?: string };
+    [K in keyof z.infer<typeof addressFieldsSchema>]?: { message?: string };
 };
 
 function AddressFields({
