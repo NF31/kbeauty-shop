@@ -6,9 +6,11 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\User;
+use App\Notifications\RefundConfirmation;
 use App\Services\StripeService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Stripe\Refund as StripeRefund;
 
 uses(RefreshDatabase::class);
@@ -78,6 +80,7 @@ test('the refunded status cannot be set manually', function () {
 });
 
 test('a partial refund does not change the order or payment status', function () {
+    Notification::fake();
     mockStripeRefund();
 
     $order = Order::factory()->create(['status' => OrderStatus::Paid, 'total_cents' => 5000]);
@@ -94,9 +97,12 @@ test('a partial refund does not change the order or payment status', function ()
     expect($order->fresh()->status)->toBe(OrderStatus::Paid);
     expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
     expect(Refund::query()->where('order_id', $order->id)->sum('amount_cents'))->toBe(1000);
+
+    Notification::assertSentTo($order->user, RefundConfirmation::class);
 });
 
 test('refunding the full remaining amount marks the order and payment as refunded', function () {
+    Notification::fake();
     mockStripeRefund();
 
     $order = Order::factory()->create(['status' => OrderStatus::Paid, 'total_cents' => 5000]);
@@ -112,6 +118,26 @@ test('refunding the full remaining amount marks the order and payment as refunde
 
     expect($order->fresh()->status)->toBe(OrderStatus::Refunded);
     expect($payment->fresh()->status)->toBe(PaymentStatus::Refunded);
+
+    Notification::assertSentTo($order->user, RefundConfirmation::class);
+});
+
+test('a pending (non-succeeded) refund does not notify the customer', function () {
+    Notification::fake();
+    mockStripeRefund('pending');
+
+    $order = Order::factory()->create(['status' => OrderStatus::Paid, 'total_cents' => 5000]);
+    Payment::factory()->create([
+        'order_id' => $order->id,
+        'status' => PaymentStatus::Succeeded,
+        'amount_cents' => 5000,
+    ]);
+
+    $this->actingAs($this->admin)
+        ->post("/admin/orders/{$order->id}/refund", ['amount_cents' => 1000])
+        ->assertRedirect();
+
+    Notification::assertNothingSent();
 });
 
 test('a refund amount greater than what remains refundable is rejected', function () {

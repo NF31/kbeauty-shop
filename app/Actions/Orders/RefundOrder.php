@@ -7,6 +7,7 @@ use App\Enums\PaymentStatus;
 use App\Enums\RefundStatus;
 use App\Models\Order;
 use App\Models\Refund;
+use App\Notifications\RefundConfirmation;
 use App\Services\StripeService;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -35,7 +36,7 @@ class RefundOrder
 
         $stripeRefund = $this->stripe->refundPayment($payment->provider_payment_id, $amountCents);
 
-        return DB::transaction(function () use ($order, $payment, $amountCents, $reason, $stripeRefund) {
+        $refund = DB::transaction(function () use ($order, $payment, $amountCents, $reason, $stripeRefund) {
             $refund = Refund::query()->create([
                 'order_id' => $order->id,
                 'payment_id' => $payment->id,
@@ -58,5 +59,11 @@ class RefundOrder
 
             return $refund;
         });
+
+        if ($refund->status === RefundStatus::Succeeded) {
+            $order->user->notify(new RefundConfirmation($refund));
+        }
+
+        return $refund;
     }
 }
