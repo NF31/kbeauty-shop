@@ -7,6 +7,7 @@ use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Payment;
+use App\Notifications\OrderConfirmation;
 use App\Services\StockService;
 use App\Services\StripeService;
 use Illuminate\Http\Request;
@@ -50,7 +51,7 @@ class StripeWebhookController extends Controller
     private function markAsPaid(PaymentIntent $paymentIntent, StockService $stockService): void
     {
         $payment = Payment::query()
-            ->with('order.items')
+            ->with('order.items', 'order.user')
             ->where('provider_payment_id', $paymentIntent->id)
             ->first();
 
@@ -81,5 +82,7 @@ class StripeWebhookController extends Controller
                 );
             }
         });
+
+        $payment->order->user->notify(new OrderConfirmation($payment->order));
     }
 }

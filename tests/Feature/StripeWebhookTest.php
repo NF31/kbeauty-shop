@@ -7,8 +7,10 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\ProductVariant;
+use App\Notifications\OrderConfirmation;
 use App\Services\StripeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Notification;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 
@@ -84,6 +86,62 @@ test('payment_intent.succeeded marks the order/payment as paid and decrements st
     expect($payment->fresh()->paid_at)->not->toBeNull();
     expect($variant->fresh()->stock_quantity)->toBe(7);
     expect(InventoryMovement::query()->where('product_variant_id', $variant->id)->count())->toBe(1);
+});
+
+test('payment_intent.succeeded sends an order confirmation email to the order owner', function () {
+    Notification::fake();
+
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
+    $order = Order::factory()->create(['status' => OrderStatus::Pending]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_variant_id' => $variant->id,
+        'quantity' => 3,
+    ]);
+    Payment::factory()->create([
+        'order_id' => $order->id,
+        'provider_payment_id' => 'pi_fake123',
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    $this->mock(StripeService::class, function ($mock) {
+        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn(
+            fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
+        );
+    });
+
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])
+        ->assertOk();
+
+    Notification::assertSentTo($order->user, OrderConfirmation::class);
+});
+
+test('replaying the same succeeded event does not resend the confirmation email', function () {
+    Notification::fake();
+
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
+    $order = Order::factory()->create(['status' => OrderStatus::Pending]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_variant_id' => $variant->id,
+        'quantity' => 3,
+    ]);
+    Payment::factory()->create([
+        'order_id' => $order->id,
+        'provider_payment_id' => 'pi_fake123',
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    $this->mock(StripeService::class, function ($mock) {
+        $mock->shouldReceive('constructWebhookEvent')->twice()->andReturn(
+            fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
+        );
+    });
+
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])->assertOk();
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])->assertOk();
+
+    Notification::assertSentToTimes($order->user, OrderConfirmation::class, 1);
 });
 
 test('replaying the same succeeded event does not decrement stock twice', function () {
