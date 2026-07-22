@@ -1,3 +1,5 @@
+import { Link } from '@inertiajs/react';
+
 export function StorefrontFooter() {
     return (
         <footer className="border-t border-sidebar-border/80">
@@ -12,8 +14,16 @@ export function StorefrontFooter() {
                 <div>
                     <h3 className="mb-3 font-semibold">Aide</h3>
                     <ul className="space-y-2 text-muted-foreground">
-                        <li>Livraison</li>
-                        <li>Retours</li>
+                        <li>
+                            <Link href="/livraison" className="hover:underline">
+                                Livraison
+                            </Link>
+                        </li>
+                        <li>
+                            <Link href="/retours" className="hover:underline">
+                                Retours
+                            </Link>
+                        </li>
                         <li>Contact</li>
                     </ul>
                 </div>
@@ -21,9 +31,27 @@ export function StorefrontFooter() {
                 <div>
                     <h3 className="mb-3 font-semibold">Légal</h3>
                     <ul className="space-y-2 text-muted-foreground">
-                        <li>CGV</li>
-                        <li>Confidentialité</li>
-                        <li>Mentions légales</li>
+                        <li>
+                            <Link href="/cgv" className="hover:underline">
+                                CGV
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/confidentialite"
+                                className="hover:underline"
+                            >
+                                Confidentialité
+                            </Link>
+                        </li>
+                        <li>
+                            <Link
+                                href="/mentions-legales"
+                                className="hover:underline"
+                            >
+                                Mentions légales
+                            </Link>
+                        </li>
                     </ul>
                 </div>
 
