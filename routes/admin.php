@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\ProductOptionController;
@@ -36,5 +37,15 @@ Route::middleware(['auth', 'role:admin|staff|support'])
                 ->name('products.images.make-primary');
             Route::delete('products/{product}/images/{image}', [ProductImageController::class, 'destroy'])
                 ->name('products.images.destroy');
+        });
+
+        Route::middleware('permission:orders.manage')->group(function () {
+            Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
+            Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
+            Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+        });
+
+        Route::middleware('permission:orders.refund')->group(function () {
+            Route::post('orders/{order}/refund', [OrderController::class, 'refund'])->name('orders.refund');
         });
     });

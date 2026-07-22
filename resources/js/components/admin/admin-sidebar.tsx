@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Package, Tags } from 'lucide-react';
+import { LayoutGrid, Package, ShoppingCart, Tags } from 'lucide-react';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
+import OrderController from '@/actions/App/Http/Controllers/Admin/OrderController';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
@@ -28,6 +29,11 @@ export function AdminSidebar() {
             title: 'Dashboard',
             href: admin.dashboard(),
             icon: LayoutGrid,
+        },
+        {
+            title: 'Commandes',
+            href: OrderController.index.url(),
+            icon: ShoppingCart,
         },
         ...(canManageProducts
             ? [
