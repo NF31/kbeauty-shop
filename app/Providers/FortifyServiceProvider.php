@@ -8,6 +8,7 @@ use App\Http\Responses\LoginResponse;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rules\Password;
@@ -34,6 +35,13 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureActions();
         $this->configureViews();
         $this->configureRateLimiting();
+
+        // Différé via booted() : sans ce bootstrap/app.php custom (pas de
+        // RouteServiceProvider legacy), rien n'appelle jamais refreshNameLookups()
+        // automatiquement, donc getByName() reste sur l'index construit avant que
+        // Fortify ne chaîne ->name(...) sur ses routes — d'où le refresh explicite
+        // dans throttleUnprotectedRoutes() ci-dessous.
+        $this->app->booted(fn () => $this->throttleUnprotectedRoutes());
     }
 
     /**
@@ -98,5 +106,22 @@ class FortifyServiceProvider extends ServiceProvider
                 ($request->input('credential.id') ?: $request->session()->getId()).'|'.$request->ip(),
             );
         });
+    }
+
+    /**
+     * Fortify ne throttle nativement que login/two-factor/passkeys/verification
+     * (voir config('fortify.limiters')) — register et password.email (demande de
+     * lien de reset) n'ont aucun throttle par défaut, alors qu'ils permettent
+     * respectivement de spammer la création de comptes et de faire de l'email
+     * bombing sur une victime. On attache le throttle directement sur les routes
+     * déjà enregistrées par Fortify plutôt que de les redéfinir.
+     */
+    private function throttleUnprotectedRoutes(): void
+    {
+        $routes = Route::getRoutes();
+        $routes->refreshNameLookups();
+
+        $routes->getByName('register.store')?->middleware('throttle:10,1,register');
+        $routes->getByName('password.email')?->middleware('throttle:5,1,password-email');
     }
 }

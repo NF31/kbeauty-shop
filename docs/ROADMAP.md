@@ -24,7 +24,9 @@ Phase 4 (livraison, 11.1-11.2, P1), Phase 5 complète (12-13), Phase 9 complète
 Phase 7 P0 (16.1-16.3, admin Inertia/React : dashboard, CRUD produits, gestion commandes) pour pouvoir
 opérer le site au quotidien sans passer par la base de données directement. Monitoring Sentry
 (22.1, P1) à activer avant l'ouverture publique — pas en Jalon 4, contrairement à une lecture
-rapide des priorités.
+rapide des priorités. Rate limiting (22.3, P0) déjà en place sur les endpoints publics/sensibles
+(register, reset password, panier, checkout, adresses compte, webhook Stripe) — traité par
+anticipation plutôt qu'attendu ici, un site marchand public ne devrait jamais être exposé sans.
 
 ## Jalon 3 — Post-lancement rapide (V1.1)
 
