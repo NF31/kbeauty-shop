@@ -40,13 +40,16 @@ class CheckoutController extends Controller
         $shippingAddress = $this->sessionAddress($request, self::SESSION_SHIPPING_ADDRESS_ID);
         $billingAddress = $this->sessionAddress($request, self::SESSION_BILLING_ADDRESS_ID);
 
+        $addresses = $request->user()?->addresses()->orderByDesc('is_default')->orderByDesc('id')->get();
+
         return Inertia::render('storefront/checkout', [
             'step' => $shippingAddress && $billingAddress ? 'recap' : 'address',
             'cart' => CartPresenter::present($cart, $cloudinary),
-            'defaultShippingAddress' => $request->user()?->addresses()
-                ->where('type', AddressType::Shipping)
-                ->where('is_default', true)
-                ->first(),
+            // Adresses déjà enregistrées dans l'espace client (9.6) — permet
+            // de choisir une adresse existante plutôt que d'en ressaisir une
+            // nouvelle à chaque commande.
+            'savedShippingAddresses' => $addresses?->where('type', AddressType::Shipping)->values() ?? [],
+            'savedBillingAddresses' => $addresses?->where('type', AddressType::Billing)->values() ?? [],
             'shippingAddress' => $shippingAddress,
             'billingAddress' => $billingAddress,
         ]);
@@ -56,25 +59,39 @@ class CheckoutController extends Controller
     {
         $userId = $request->user()?->id;
 
-        $shipping = Address::query()->create([
-            ...$request->validated('shipping'),
-            'user_id' => $userId,
-            'type' => AddressType::Shipping,
-        ]);
+        $shipping = $request->filled('shipping_address_id')
+            ? Address::query()->findOrFail($request->integer('shipping_address_id'))
+            : Address::query()->create([
+                ...$request->validated('shipping'),
+                'user_id' => $userId,
+                'type' => AddressType::Shipping,
+            ]);
 
         $billingSameAsShipping = $request->boolean('billing_same_as_shipping', true);
 
-        $billing = $billingSameAsShipping
-            ? Address::query()->create([
-                ...$request->validated('shipping'),
+        // "Même adresse que la livraison" duplique toujours la ligne en une
+        // nouvelle adresse de type billing (même quand `shipping` vient d'une
+        // adresse déjà enregistrée) — cohérent avec le comportement d'origine
+        // où chaque commande dispose de sa propre ligne `billing`.
+        $billing = match (true) {
+            $billingSameAsShipping => Address::query()->create([
+                'full_name' => $shipping->full_name,
+                'line1' => $shipping->line1,
+                'line2' => $shipping->line2,
+                'postal_code' => $shipping->postal_code,
+                'city' => $shipping->city,
+                'country_code' => $shipping->country_code,
+                'phone' => $shipping->phone,
                 'user_id' => $userId,
                 'type' => AddressType::Billing,
-            ])
-            : Address::query()->create([
+            ]),
+            $request->filled('billing_address_id') => Address::query()->findOrFail($request->integer('billing_address_id')),
+            default => Address::query()->create([
                 ...$request->validated('billing'),
                 'user_id' => $userId,
                 'type' => AddressType::Billing,
-            ]);
+            ]),
+        };
 
         $request->session()->put(self::SESSION_SHIPPING_ADDRESS_ID, $shipping->id);
         $request->session()->put(self::SESSION_BILLING_ADDRESS_ID, $billing->id);

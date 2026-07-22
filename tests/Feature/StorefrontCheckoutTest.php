@@ -172,3 +172,76 @@ test('an authenticated user checkout address is attached to their account', func
 
     expect(Address::query()->where('type', AddressType::Shipping)->sole()->user_id)->toBe($user->id);
 });
+
+test('/commande exposes the user saved addresses grouped by type', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = addAndReachCheckout($variant);
+
+    Address::factory()->for($user)->create(['type' => AddressType::Shipping, 'full_name' => 'Adresse livraison']);
+    Address::factory()->for($user)->create(['type' => AddressType::Billing, 'full_name' => 'Adresse facturation']);
+
+    $this->actingAs($user)
+        ->get('/commande')
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/checkout')
+            ->has('savedShippingAddresses', 1)
+            ->has('savedBillingAddresses', 1)
+            ->where('savedShippingAddresses.0.full_name', 'Adresse livraison')
+            ->where('savedBillingAddresses.0.full_name', 'Adresse facturation')
+        );
+});
+
+test('a user can select an existing saved address instead of creating a new one', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = addAndReachCheckout($variant);
+
+    $savedShipping = Address::factory()->for($user)->create(['type' => AddressType::Shipping]);
+
+    $this->actingAs($user)
+        ->post('/commande/adresse', [
+            'shipping_address_id' => $savedShipping->id,
+            'billing_same_as_shipping' => true,
+        ])
+        ->assertRedirect();
+
+    // Le tunnel duplique toujours l'adresse choisie vers une nouvelle ligne
+    // `billing` (comportement inchangé), donc aucune nouvelle ligne shipping
+    // n'a été créée mais une ligne billing a bien été ajoutée.
+    expect(Address::query()->where('type', AddressType::Shipping)->count())->toBe(1);
+    expect(Address::query()->where('type', AddressType::Billing)->count())->toBe(1);
+});
+
+test('a saved address belonging to another user cannot be selected', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = addAndReachCheckout($variant);
+
+    $otherUsersAddress = Address::factory()->create(['type' => AddressType::Shipping]);
+
+    $this->actingAs($user)
+        ->post('/commande/adresse', [
+            'shipping_address_id' => $otherUsersAddress->id,
+            'billing_same_as_shipping' => true,
+        ])
+        ->assertSessionHasErrors(['shipping_address_id']);
+});
+
+test('a user can select distinct saved addresses for shipping and billing', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = addAndReachCheckout($variant);
+
+    $savedShipping = Address::factory()->for($user)->create(['type' => AddressType::Shipping]);
+    $savedBilling = Address::factory()->for($user)->create(['type' => AddressType::Billing]);
+
+    $this->actingAs($user)
+        ->post('/commande/adresse', [
+            'shipping_address_id' => $savedShipping->id,
+            'billing_same_as_shipping' => false,
+            'billing_address_id' => $savedBilling->id,
+        ])
+        ->assertRedirect();
+
+    // Aucune nouvelle adresse ne doit avoir été créée : les deux lignes
+    // existantes ont été directement réutilisées comme shipping/billing.
+    expect(Address::query()->count())->toBe(2);
+});
