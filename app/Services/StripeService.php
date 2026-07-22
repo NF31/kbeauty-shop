@@ -6,6 +6,7 @@ use App\Models\Order;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
+use Stripe\Refund;
 use Stripe\StripeClient;
 use Stripe\Webhook;
 
@@ -50,6 +51,19 @@ class StripeService
     public function updatePaymentIntentAmount(string $paymentIntentId, int $amountCents): PaymentIntent
     {
         return $this->stripe->paymentIntents->update($paymentIntentId, [
+            'amount' => $amountCents,
+        ]);
+    }
+
+    /**
+     * Rembourse tout ou partie d'un paiement déjà capturé. `amountCents` est
+     * toujours fourni explicitement (jamais le montant total du `PaymentIntent`
+     * par défaut) pour supporter aussi bien un remboursement partiel que total.
+     */
+    public function refundPayment(string $paymentIntentId, int $amountCents): Refund
+    {
+        return $this->stripe->refunds->create([
+            'payment_intent' => $paymentIntentId,
             'amount' => $amountCents,
         ]);
     }
