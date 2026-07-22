@@ -2,6 +2,12 @@
 
 namespace App\Providers;
 
+use App\Domain\Orders\Contracts\OrderRepositoryInterface;
+use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
+use App\Infrastructure\Orders\EloquentOrderRepository;
+use App\Infrastructure\Orders\EloquentPaymentRepository;
+use App\Infrastructure\Payments\StripePaymentGateway;
 use App\Listeners\MergeGuestCartOnLogin;
 use App\Models\User;
 use App\Support\Salutation;
@@ -28,6 +34,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(Cloudinary::class, fn () => new Cloudinary(config('services.cloudinary.url')));
 
         $this->app->singleton(StripeClient::class, fn () => new StripeClient(config('services.stripe.secret')));
+
+        $this->app->bind(OrderRepositoryInterface::class, EloquentOrderRepository::class);
+        $this->app->bind(PaymentRepositoryInterface::class, EloquentPaymentRepository::class);
+        $this->app->bind(PaymentGatewayInterface::class, StripePaymentGateway::class);
     }
 
     /**

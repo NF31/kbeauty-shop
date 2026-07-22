@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
+use App\Domain\Payments\RefundResult;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Order;
@@ -7,11 +9,9 @@ use App\Models\Payment;
 use App\Models\Refund;
 use App\Models\User;
 use App\Notifications\RefundConfirmation;
-use App\Services\StripeService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
-use Stripe\Refund as StripeRefund;
 
 uses(RefreshDatabase::class);
 
@@ -23,9 +23,9 @@ beforeEach(function () {
 
 function mockStripeRefund(string $status = 'succeeded'): void
 {
-    test()->mock(StripeService::class, function ($mock) use ($status) {
-        $mock->shouldReceive('refundPayment')->once()->andReturn(
-            StripeRefund::constructFrom(['id' => 're_fake123', 'status' => $status])
+    test()->mock(PaymentGatewayInterface::class, function ($mock) use ($status) {
+        $mock->shouldReceive('refund')->once()->andReturn(
+            new RefundResult(id: 're_fake123', status: $status)
         );
     });
 }

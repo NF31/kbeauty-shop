@@ -2,12 +2,17 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Enums\RefundStatus;
+use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Models\Order;
 use Illuminate\Foundation\Http\FormRequest;
 
 class RefundOrderRequest extends FormRequest
 {
+    public function __construct(private readonly OrderRepositoryInterface $orders)
+    {
+        parent::__construct();
+    }
+
     /**
      * @return array<string, list<mixed>>
      */
@@ -16,9 +21,7 @@ class RefundOrderRequest extends FormRequest
         /** @var Order $order */
         $order = $this->route('order');
 
-        $alreadyRefundedCents = $order->refunds()
-            ->where('status', RefundStatus::Succeeded)
-            ->sum('amount_cents');
+        $alreadyRefundedCents = $this->orders->totalSucceededRefundCents($order);
 
         return [
             'amount_cents' => [

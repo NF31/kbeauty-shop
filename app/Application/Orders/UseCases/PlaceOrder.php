@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Actions\Orders;
+namespace App\Application\Orders\UseCases;
 
+use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Enums\OrderStatus;
 use App\Models\Address;
 use App\Models\Cart;
@@ -16,6 +17,8 @@ use Illuminate\Support\Facades\DB;
  */
 class PlaceOrder
 {
+    public function __construct(private readonly OrderRepositoryInterface $orders) {}
+
     public function __invoke(Cart $cart, Address $shippingAddress, Address $billingAddress, ?Order $existingOrder = null): Order
     {
         return DB::transaction(function () use ($cart, $shippingAddress, $billingAddress, $existingOrder) {
@@ -23,18 +26,15 @@ class PlaceOrder
             $totalCents = $cart->totalCents();
 
             if ($existingOrder && $existingOrder->status === OrderStatus::Pending) {
-                $existingOrder->update([
+                $order = $this->orders->updatePending($existingOrder, [
                     'shipping_address_id' => $shippingAddress->id,
                     'billing_address_id' => $billingAddress->id,
                     'subtotal_cents' => $subtotalCents,
                     'total_cents' => $totalCents,
                 ]);
-                $existingOrder->items()->delete();
-                $order = $existingOrder;
             } else {
-                $order = Order::query()->create([
+                $order = $this->orders->createPending([
                     'user_id' => $cart->user_id,
-                    'order_number' => 'PENDING',
                     'status' => OrderStatus::Pending,
                     'shipping_address_id' => $shippingAddress->id,
                     'billing_address_id' => $billingAddress->id,
@@ -47,16 +47,16 @@ class PlaceOrder
                     'currency' => $cart->currency,
                     'placed_at' => now(),
                 ]);
-
-                $order->update(['order_number' => sprintf('KB-%d-%05d', now()->year, $order->id)]);
             }
 
             $cart->loadMissing(['items.variant.product.primaryImage', 'items.variant.optionValues']);
 
+            $itemRows = [];
+
             foreach ($cart->items as $item) {
                 $variantLabel = $item->variant->optionValues->pluck('value')->implode(' / ');
 
-                $order->items()->create([
+                $itemRows[] = [
                     'product_variant_id' => $item->product_variant_id,
                     'product_name' => $item->variant->product->name,
                     'variant_label' => $variantLabel !== '' ? $variantLabel : $item->variant->sku,
@@ -65,8 +65,10 @@ class PlaceOrder
                     'quantity' => $item->quantity,
                     'total_cents' => $item->lineTotalCents($cart->currency),
                     'is_gift' => false,
-                ]);
+                ];
             }
+
+            $this->orders->replaceItems($order, $itemRows);
 
             $order->load('items');
 

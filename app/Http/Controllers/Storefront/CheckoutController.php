@@ -2,18 +2,18 @@
 
 namespace App\Http\Controllers\Storefront;
 
-use App\Actions\Orders\PlaceOrder;
+use App\Application\Orders\UseCases\PlaceOrder;
+use App\Domain\Orders\Contracts\OrderRepositoryInterface;
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\AddressType;
 use App\Enums\PaymentProvider;
 use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutAddressRequest;
 use App\Models\Address;
-use App\Models\Order;
 use App\Models\Payment;
 use App\Services\CartService;
 use App\Services\CloudinaryService;
-use App\Services\StripeService;
 use App\Support\CartPresenter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -109,7 +109,8 @@ class CheckoutController extends Controller
         Request $request,
         CartService $cartService,
         CloudinaryService $cloudinary,
-        StripeService $stripe,
+        PaymentGatewayInterface $gateway,
+        OrderRepositoryInterface $orders,
         PlaceOrder $placeOrder,
     ): Response|RedirectResponse {
         $cart = $cartService->current($request);
@@ -123,7 +124,7 @@ class CheckoutController extends Controller
         }
 
         $orderId = $request->session()->get(self::SESSION_ORDER_ID);
-        $existingOrder = $orderId ? Order::query()->find((int) $orderId) : null;
+        $existingOrder = $orderId ? $orders->find((int) $orderId) : null;
 
         $order = $placeOrder($cart, $shippingAddress, $billingAddress, $existingOrder);
 
@@ -142,19 +143,19 @@ class CheckoutController extends Controller
             // un paiement réussi). Stripe refuse de modifier le montant d'un
             // PaymentIntent qui n'est plus modifiable, donc on vérifie son
             // statut réel avant de le mettre à jour.
-            $intent = $stripe->retrievePaymentIntent($payment->provider_payment_id);
+            $intent = $gateway->retrievePaymentIntent($payment->provider_payment_id);
 
             if ($intent->status === 'succeeded') {
                 return redirect()->route('storefront.checkout.confirmation');
             }
 
             if (in_array($intent->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
-                $intent = $stripe->updatePaymentIntentAmount($payment->provider_payment_id, $order->total_cents);
+                $intent = $gateway->updatePaymentIntentAmount($payment->provider_payment_id, $order->total_cents);
 
                 $payment->update(['amount_cents' => $order->total_cents]);
             }
         } else {
-            $intent = $stripe->createPaymentIntent($order);
+            $intent = $gateway->createPaymentIntent($order);
 
             $payment = Payment::query()->create([
                 'order_id' => $order->id,
@@ -175,7 +176,7 @@ class CheckoutController extends Controller
                 'totalCents' => $order->total_cents,
                 'currency' => $order->currency,
             ],
-            'clientSecret' => $intent->client_secret,
+            'clientSecret' => $intent->clientSecret,
             'stripeKey' => config('services.stripe.key'),
             // Préremplit le Payment Element avec ce qu'on a déjà collecté à
             // l'étape adresse — inutile de redemander nom/adresse/téléphone,
@@ -194,17 +195,17 @@ class CheckoutController extends Controller
      * confirmé côté Stripe — sinon le client le retrouverait plein en
      * retournant sur /panier après avoir payé.
      */
-    public function confirmation(Request $request, CartService $cartService, StripeService $stripe): Response
+    public function confirmation(Request $request, CartService $cartService, PaymentGatewayInterface $gateway, OrderRepositoryInterface $orders): Response
     {
         $orderId = $request->session()->get(self::SESSION_ORDER_ID);
-        $order = $orderId ? Order::query()->find((int) $orderId) : null;
+        $order = $orderId ? $orders->find((int) $orderId) : null;
 
         $paymentConfirmed = false;
 
         if ($order) {
             $payment = Payment::query()->where('order_id', $order->id)->latest('id')->first();
 
-            $paymentConfirmed = $payment && $stripe->retrievePaymentIntent($payment->provider_payment_id)->status === 'succeeded';
+            $paymentConfirmed = $payment && $gateway->retrievePaymentIntent($payment->provider_payment_id)->status === 'succeeded';
 
             if ($paymentConfirmed) {
                 $cartService->findExisting($request)?->items()->delete();

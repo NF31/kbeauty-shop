@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Actions\Orders\RefundOrder;
+use App\Application\Orders\UseCases\RefundOrder;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\RefundStatus;

@@ -1,7 +1,10 @@
 <?php
 
-namespace App\Services;
+namespace App\Infrastructure\Payments;
 
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
+use App\Domain\Payments\PaymentIntentResult;
+use App\Domain\Payments\RefundResult;
 use App\Models\Order;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
@@ -10,7 +13,7 @@ use Stripe\Refund;
 use Stripe\StripeClient;
 use Stripe\Webhook;
 
-class StripeService
+class StripePaymentGateway implements PaymentGatewayInterface
 {
     public function __construct(private readonly StripeClient $stripe) {}
 
@@ -20,9 +23,9 @@ class StripeService
      * selon la configuration du dashboard (docs/ARCHITECTURE.md §4), sans lister
      * les méthodes une à une côté code.
      */
-    public function createPaymentIntent(Order $order): PaymentIntent
+    public function createPaymentIntent(Order $order): PaymentIntentResult
     {
-        return $this->stripe->paymentIntents->create([
+        $intent = $this->stripe->paymentIntents->create([
             'amount' => $order->total_cents,
             'currency' => strtolower($order->currency),
             'automatic_payment_methods' => ['enabled' => true],
@@ -31,15 +34,17 @@ class StripeService
                 'order_number' => $order->order_number,
             ],
         ]);
+
+        return $this->toPaymentIntentResult($intent);
     }
 
     /**
      * Ré-utilisée quand une commande a déjà un `PaymentIntent` en attente
      * (rechargement de la page de paiement) plutôt que d'en recréer un.
      */
-    public function retrievePaymentIntent(string $paymentIntentId): PaymentIntent
+    public function retrievePaymentIntent(string $paymentIntentId): PaymentIntentResult
     {
-        return $this->stripe->paymentIntents->retrieve($paymentIntentId);
+        return $this->toPaymentIntentResult($this->stripe->paymentIntents->retrieve($paymentIntentId));
     }
 
     /**
@@ -48,11 +53,13 @@ class StripeService
      * onglet) — on resynchronise plutôt que de faire confiance à un montant
      * potentiellement obsolète.
      */
-    public function updatePaymentIntentAmount(string $paymentIntentId, int $amountCents): PaymentIntent
+    public function updatePaymentIntentAmount(string $paymentIntentId, int $amountCents): PaymentIntentResult
     {
-        return $this->stripe->paymentIntents->update($paymentIntentId, [
+        $intent = $this->stripe->paymentIntents->update($paymentIntentId, [
             'amount' => $amountCents,
         ]);
+
+        return $this->toPaymentIntentResult($intent);
     }
 
     /**
@@ -60,12 +67,14 @@ class StripeService
      * toujours fourni explicitement (jamais le montant total du `PaymentIntent`
      * par défaut) pour supporter aussi bien un remboursement partiel que total.
      */
-    public function refundPayment(string $paymentIntentId, int $amountCents): Refund
+    public function refund(string $paymentIntentId, int $amountCents): RefundResult
     {
-        return $this->stripe->refunds->create([
+        $refund = $this->stripe->refunds->create([
             'payment_intent' => $paymentIntentId,
             'amount' => $amountCents,
         ]);
+
+        return $this->toRefundResult($refund);
     }
 
     /**
@@ -75,8 +84,25 @@ class StripeService
      *
      * @throws SignatureVerificationException si la signature est invalide/absente.
      */
-    public function constructWebhookEvent(string $payload, string $signature): Event
+    public function verifyWebhookSignature(string $payload, string $signature): Event
     {
         return Webhook::constructEvent($payload, $signature, config('services.stripe.webhook_secret'));
+    }
+
+    private function toPaymentIntentResult(PaymentIntent $intent): PaymentIntentResult
+    {
+        return new PaymentIntentResult(
+            id: $intent->id,
+            clientSecret: $intent->client_secret,
+            status: $intent->status,
+        );
+    }
+
+    private function toRefundResult(Refund $refund): RefundResult
+    {
+        return new RefundResult(
+            id: $refund->id,
+            status: $refund->status,
+        );
     }
 }

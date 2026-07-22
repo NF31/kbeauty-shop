@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Payments\Contracts\PaymentGatewayInterface;
+use App\Domain\Payments\PaymentIntentResult;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Models\Cart;
@@ -7,19 +9,17 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\ProductVariant;
 use App\Models\User;
-use App\Services\StripeService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Stripe\PaymentIntent;
 
 uses(RefreshDatabase::class);
 
-function fakePaymentIntent(string $id = 'pi_fake123', string $status = 'requires_payment_method'): PaymentIntent
+function fakePaymentIntent(string $id = 'pi_fake123', string $status = 'requires_payment_method'): PaymentIntentResult
 {
-    return PaymentIntent::constructFrom([
-        'id' => $id,
-        'client_secret' => $id.'_secret',
-        'status' => $status,
-    ]);
+    return new PaymentIntentResult(
+        id: $id,
+        clientSecret: $id.'_secret',
+        status: $status,
+    );
 }
 
 function reachPaymentStep(ProductVariant $variant): User
@@ -61,7 +61,7 @@ test('paying creates a pending order, its items and a payment tied to a Stripe P
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5, 'price_cents' => 2500]);
     $user = reachPaymentStep($variant);
 
-    $this->mock(StripeService::class, function ($mock) {
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent());
     });
 
@@ -90,7 +90,7 @@ test('reloading the payment step with a GET request re-renders it instead of ret
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
-    $this->mock(StripeService::class, function ($mock) {
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent());
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent());
         $mock->shouldReceive('updatePaymentIntentAmount')->once()->andReturn(fakePaymentIntent());
@@ -113,7 +113,7 @@ test('paying twice reuses the same pending order instead of creating a duplicate
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
-    $this->mock(StripeService::class, function ($mock) {
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
         $mock->shouldReceive('updatePaymentIntentAmount')->once()->andReturn(fakePaymentIntent('pi_first'));
@@ -130,7 +130,7 @@ test('visiting the confirmation page empties the cart once the PaymentIntent has
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
-    $this->mock(StripeService::class, function ($mock) {
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done', 'succeeded'));
     });
@@ -150,7 +150,7 @@ test('a new cart started after a completed order does not reuse the old paid ord
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
-    $this->mock(StripeService::class, function ($mock) {
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done', 'succeeded'));
     });
@@ -179,7 +179,7 @@ test('paying again after the PaymentIntent already succeeded redirects to the co
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
-    $this->mock(StripeService::class, function ($mock) {
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_paid'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_paid', 'succeeded'));
         $mock->shouldNotReceive('updatePaymentIntentAmount');
