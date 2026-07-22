@@ -3,6 +3,7 @@
 use App\Models\User;
 use Illuminate\Auth\Notifications\ResetPassword;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Mail\Markdown;
 use Illuminate\Support\Facades\Notification;
 use Laravel\Fortify\Features;
 
@@ -78,4 +79,16 @@ test('password cannot be reset with invalid token', function () {
     ]);
 
     $response->assertSessionHasErrors('email');
+});
+
+test('reset password notification renders through the real markdown theme without errors', function () {
+    $user = User::factory()->create();
+
+    $mail = (new ResetPassword('test-token'))->toMail($user);
+
+    $rendered = (string) app(Markdown::class)->render($mail->markdown ?? 'notifications::email', $mail->data());
+
+    expect($rendered)
+        ->toContain($mail->actionText)
+        ->and($mail->actionUrl)->toContain('test-token');
 });
