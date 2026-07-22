@@ -1,5 +1,11 @@
 import { Link, router } from '@inertiajs/react';
-import { LogOut, MapPin, Package, Settings } from 'lucide-react';
+import {
+    LayoutDashboard,
+    LogOut,
+    MapPin,
+    Package,
+    Settings,
+} from 'lucide-react';
 import {
     DropdownMenuGroup,
     DropdownMenuItem,
@@ -8,7 +14,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
-import { logout } from '@/routes';
+import { dashboard, logout } from '@/routes';
 import { edit } from '@/routes/profile';
 import accountRoutes from '@/routes/storefront/account';
 import type { User } from '@/types';
@@ -34,6 +40,17 @@ export function UserMenuContent({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
+                <DropdownMenuItem asChild>
+                    <Link
+                        className="block w-full cursor-pointer"
+                        href={dashboard()}
+                        prefetch
+                        onClick={cleanup}
+                    >
+                        <LayoutDashboard className="mr-2" />
+                        Tableau de bord
+                    </Link>
+                </DropdownMenuItem>
                 <DropdownMenuItem asChild>
                     <Link
                         className="block w-full cursor-pointer"
