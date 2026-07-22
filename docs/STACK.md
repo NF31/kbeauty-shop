@@ -105,7 +105,7 @@ starter.
 
 | Package | Pourquoi celui-ci plutôt qu'un autre |
 | --- | --- |
-| `bumbummen99/shoppingcart` | panier serveur prêt à l'emploi (successeur maintenu de `gloudemans/shoppingcart`), évite de réinventer la gestion panier/session |
+| `CartService` (natif, `app/Services/CartService.php`) | `bumbummen99/shoppingcart` abandonné/incompatible Laravel 13, `darryldecode/cart` et `binafy/laravel-cart` écartés aussi (voir `FEATURES.md` 8.1) — panier serveur maison sur les tables `carts`/`cart_items` |
 | `brick/money` | calculs monétaires précis (évite les erreurs d'arrondi float), complète le panier et les totaux de commande |
 | `laravel/scout` + `meilisearch/meilisearch-php` | recherche catalogue tolérante aux fautes de frappe — voir note de séquencement dans `ARCHITECTURE.md` (pas indispensable dès le tout premier lancement) |
 | `spatie/laravel-sluggable` | slugs SEO auto-générés pour produits/catégories/articles |
@@ -120,7 +120,7 @@ starter.
 
 ```env
 MAIL_MAILER=resend
-RESEND_KEY=re_xxxxxxxxxxxx
+RESEND_API_KEY=re_xxxxxxxxxxxx
 ```
 
 ### Base de données (PostgreSQL)

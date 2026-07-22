@@ -5,9 +5,9 @@ inspiré de [uniikon.com](https://uniikon.com).
 
 ## Stack
 
-Laravel 12 + Inertia.js + React 19 + TypeScript, Tailwind CSS, PostgreSQL, Filament (admin),
-Stripe, Spatie Permission, Cloudinary, Resend, Redis/Horizon, Meilisearch. Détail complet et
-justification des choix dans [`docs/STACK.md`](docs/STACK.md).
+Laravel 13 + Inertia.js + React 19 + TypeScript, Tailwind CSS, PostgreSQL, admin Inertia/React
+custom (pas de Filament/Livewire), Stripe, Spatie Permission, Cloudinary, Resend, Redis/Horizon,
+Meilisearch. Détail complet et justification des choix dans [`docs/STACK.md`](docs/STACK.md).
 
 Le projet part du [starter officiel Laravel React](https://github.com/laravel/react-starter-kit)
 (auth Fortify, passkeys, 2FA, shadcn/ui déjà scaffoldés) — le domaine e-commerce est construit
