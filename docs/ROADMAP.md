@@ -10,12 +10,13 @@ Fondations (1-3), catalogue produit (4-7), panier/checkout/paiement Stripe (8-9,
 sont P1). Livrable : un client peut parcourir le catalogue, ajouter au panier et payer une commande
 réelle.
 
-**Sortie de ce jalon** : les items **P0 et P1** des Phases 4-5 (livraison, emails transactionnels)
-et tous les items P0 de la Phase 9 (pages légales) doivent être terminés en parallèle avant toute
-mise en ligne publique — un site marchand ne peut pas être lancé sans CGV, RGPD, ni email de
-confirmation de commande. Contrairement aux autres jalons, ici la contrainte n'est pas "P0
-uniquement" : la Phase 4 (livraison) n'a aucun item P0 dans `FEATURES.md` (11.1/11.2 sont P1) mais
-reste indispensable pour livrer une vraie commande.
+**Sortie de ce jalon** : les items **P0 et P1** des Phases 4-5 (livraison, emails transactionnels —
+dont les tâches 12.4/12.5/12.8/12.9/12.10 ajoutées après coup : vérif compte, reset password réel,
+notifs admin commande/avis/remboursement) et tous les items P0 de la Phase 9 (pages légales)
+doivent être terminés en parallèle avant toute mise en ligne publique — un site marchand ne peut
+pas être lancé sans CGV, RGPD, ni email de confirmation de commande. Contrairement aux autres
+jalons, ici la contrainte n'est pas "P0 uniquement" : la Phase 4 (livraison) n'a aucun item P0 dans
+`FEATURES.md` (11.1/11.2 sont P1) mais reste indispensable pour livrer une vraie commande.
 
 ## Jalon 2 — Lancement public
 
@@ -29,18 +30,20 @@ rapide des priorités.
 
 Tous les items **P1** restants : prix barré + slugs SEO + recherche + filtres catalogue (6.4, 7.1,
 7.2, 7.3), Apple Pay/Google Pay (9.3), historique commandes (9.5), génération étiquettes déjà
-couvertes en Jalon 2 (11.2), email expédition + queues Horizon (12.3, 13.1), avis clients (14-15,
-Phase 6 est P1 dans son ensemble), sitemap/SEO (19.1-19.2), relance panier abandonné (24.1),
-bundles (24.2), mega-menu (24.3), pixels marketing (27.1), facturation PDF (17.1), debug local
+couvertes en Jalon 2 (11.2), email expédition (12.3), avis clients (14-15, Phase 6 est P1 dans son
+ensemble), sitemap/SEO (19.1-19.2), relance panier abandonné (24.1), bundles (24.2), mega-menu
+(24.3), formulaire de contact (26.5), pixels marketing (27.1), facturation PDF (17.1), debug local
 (22.2), tests Pest sur le domaine e-commerce (21.1).
 
 ## Jalon 4 — Croissance (V2)
 
-Éléments **P2** : coupons (10.1), cadeaux à paliers (10.2), Q&A produit (15.4), export CSV + KPIs
-admin (17.2-17.3), blog (18.1-18.2), guide de choix produit (6.5), alertes stock bas (4.5), recherche
-Meilisearch si le catalogue le justifie (7.2 passe de la recherche SQL basique à Meilisearch),
-fidélisation/parrainage/gift cards/recommandations (23.1-23.3, 24.4), multi-langue (25.1), support
-client + portail retours + wishlist partageable (26.1-26.3), permissions admin fines (27.2).
+Éléments **P2** : coupons (10.1), cadeaux à paliers (10.2), thème mail personnalisé (12.6), alerte
+jobs Horizon en échec (12.11), double opt-in newsletter (13.3), Q&A produit (15.4), export CSV +
+KPIs admin (17.2-17.3), blog (18.1-18.2), guide de choix produit (6.5), alertes stock bas (4.5),
+recherche Meilisearch si le catalogue le justifie (7.2 passe de la recherche SQL basique à
+Meilisearch), fidélisation/parrainage/gift cards/recommandations (23.1-23.3, 24.4), multi-langue
+(25.1), support client + portail retours + wishlist partageable (26.1-26.3), permissions admin
+fines (27.2).
 
 ## Jalon 5 — Ambitions long terme (V3, P3)
 
