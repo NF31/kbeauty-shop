@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Storefront\AccountAddressController;
 use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
@@ -57,4 +58,16 @@ Route::middleware('auth')->group(function () {
 
     Route::get('mon-compte/commandes/{order}', [AccountController::class, 'show'])
         ->name('storefront.account.orders.show');
+
+    Route::get('mon-compte/adresses', [AccountAddressController::class, 'index'])
+        ->name('storefront.account.addresses.index');
+
+    Route::post('mon-compte/adresses', [AccountAddressController::class, 'store'])
+        ->name('storefront.account.addresses.store');
+
+    Route::put('mon-compte/adresses/{address}', [AccountAddressController::class, 'update'])
+        ->name('storefront.account.addresses.update');
+
+    Route::delete('mon-compte/adresses/{address}', [AccountAddressController::class, 'destroy'])
+        ->name('storefront.account.addresses.destroy');
 });
