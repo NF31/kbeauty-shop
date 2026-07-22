@@ -7,14 +7,21 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\ProductVariant;
+use App\Models\User;
+use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
 use App\Services\StripeService;
+use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
 use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 
 uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->seed(RolePermissionSeeder::class);
+});
 
 function fakeStripeEvent(string $type, array $paymentIntentOverrides = []): Event
 {
@@ -169,6 +176,40 @@ test('replaying the same succeeded event does not decrement stock twice', functi
 
     expect($variant->fresh()->stock_quantity)->toBe(7);
     expect(InventoryMovement::query()->where('product_variant_id', $variant->id)->count())->toBe(1);
+});
+
+test('payment_intent.succeeded notifies admins of the new paid order', function () {
+    Notification::fake();
+
+    $admin = User::factory()->create();
+    $admin->assignRole('admin');
+    $staff = User::factory()->create();
+    $staff->assignRole('staff');
+
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
+    $order = Order::factory()->create(['status' => OrderStatus::Pending]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_variant_id' => $variant->id,
+        'quantity' => 3,
+    ]);
+    Payment::factory()->create([
+        'order_id' => $order->id,
+        'provider_payment_id' => 'pi_fake123',
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    $this->mock(StripeService::class, function ($mock) {
+        $mock->shouldReceive('constructWebhookEvent')->once()->andReturn(
+            fakeStripeEvent('payment_intent.succeeded', ['id' => 'pi_fake123'])
+        );
+    });
+
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])
+        ->assertOk();
+
+    Notification::assertSentTo($admin, NewPaidOrderAlert::class);
+    Notification::assertNotSentTo($staff, NewPaidOrderAlert::class);
 });
 
 test('a succeeded PaymentIntent with no matching Payment is acknowledged without error', function () {
