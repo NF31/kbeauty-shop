@@ -3,6 +3,8 @@
 namespace App\Notifications;
 
 use App\Models\ProductVariant;
+use App\Models\User;
+use App\Support\Salutation;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -22,13 +24,13 @@ class LowStockAlert extends Notification implements ShouldQueue
         return ['mail'];
     }
 
-    public function toMail(object $notifiable): MailMessage
+    public function toMail(User $notifiable): MailMessage
     {
         $productName = $this->variant->product->name;
 
         return (new MailMessage)
             ->subject("Stock bas : {$this->variant->sku}")
-            ->greeting('Alerte stock bas')
+            ->greeting(Salutation::pour($notifiable).',')
             ->line("Le produit « {$productName} » (variante {$this->variant->sku}) est en stock bas.")
             ->line("Stock restant : {$this->variant->stock_quantity}.")
             ->line('Pensez à passer une commande de réassort.');
