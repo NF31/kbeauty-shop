@@ -1,10 +1,10 @@
 <?php
 
+use App\Application\Stock\UseCases\RecordStockMovement;
 use App\Enums\InventoryMovementType;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Notifications\LowStockAlert;
-use App\Services\StockService;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -25,7 +25,7 @@ test('crossing the low stock threshold notifies admins only', function () {
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
 
-    app(StockService::class)->recordMovement($variant, InventoryMovementType::Sale, -7);
+    (app(RecordStockMovement::class))($variant, InventoryMovementType::Sale, -7);
 
     expect($variant->fresh()->stock_quantity)->toBe(3);
 
@@ -41,7 +41,7 @@ test('a sale that stays above the threshold does not notify', function () {
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
 
-    app(StockService::class)->recordMovement($variant, InventoryMovementType::Sale, -2);
+    (app(RecordStockMovement::class))($variant, InventoryMovementType::Sale, -2);
 
     Notification::assertNothingSent();
 });
@@ -53,9 +53,9 @@ test('a sale that stays below the threshold does not re-notify', function () {
     $admin->assignRole('admin');
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 4]);
-    $service = app(StockService::class);
+    $recordStockMovement = app(RecordStockMovement::class);
 
-    $service->recordMovement($variant, InventoryMovementType::Sale, -1);
+    $recordStockMovement($variant, InventoryMovementType::Sale, -1);
 
     Notification::assertNothingSent();
 });
@@ -68,7 +68,7 @@ test('a restock crossing back above the threshold does not notify', function () 
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 2]);
 
-    app(StockService::class)->recordMovement($variant, InventoryMovementType::Restock, 20);
+    (app(RecordStockMovement::class))($variant, InventoryMovementType::Restock, 20);
 
     Notification::assertNothingSent();
 });
