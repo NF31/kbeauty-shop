@@ -9,6 +9,7 @@ use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Shared\Contracts\UnitOfWorkInterface;
+use App\Domain\Stock\Contracts\StockRepositoryInterface;
 use App\Infrastructure\Cart\EloquentCartRepository;
 use App\Infrastructure\Orders\DompdfInvoiceRenderer;
 use App\Infrastructure\Orders\EloquentInvoiceRepository;
@@ -16,6 +17,7 @@ use App\Infrastructure\Orders\EloquentOrderRepository;
 use App\Infrastructure\Orders\EloquentPaymentRepository;
 use App\Infrastructure\Payments\StripePaymentGateway;
 use App\Infrastructure\Shared\DatabaseUnitOfWork;
+use App\Infrastructure\Stock\EloquentStockRepository;
 use App\Listeners\MergeGuestCartOnLogin;
 use App\Models\User;
 use App\Support\Salutation;
@@ -50,6 +52,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(InvoiceRepositoryInterface::class, EloquentInvoiceRepository::class);
         $this->app->bind(InvoicePdfRendererInterface::class, DompdfInvoiceRenderer::class);
         $this->app->bind(CartRepositoryInterface::class, EloquentCartRepository::class);
+        $this->app->bind(StockRepositoryInterface::class, EloquentStockRepository::class);
     }
 
     /**
