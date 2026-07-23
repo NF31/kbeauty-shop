@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Application\Cart\UseCases\AddCartItem;
+use App\Application\Cart\UseCases\RemoveCartItem;
+use App\Application\Cart\UseCases\UpdateCartItemQuantity;
 use App\Exceptions\InsufficientStockException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\AddCartItemRequest;
@@ -26,13 +29,13 @@ class CartController extends Controller
         return Inertia::render('storefront/cart', CartPresenter::present($cart, $cloudinary));
     }
 
-    public function store(AddCartItemRequest $request, CartService $cartService): RedirectResponse
+    public function store(AddCartItemRequest $request, CartService $cartService, AddCartItem $addCartItem): RedirectResponse
     {
         $cart = $cartService->current($request);
         $variant = ProductVariant::query()->findOrFail((int) $request->validated('product_variant_id'));
 
         try {
-            $cartService->addItem($cart, $variant, (int) $request->validated('quantity'));
+            $addCartItem($cart, $variant, (int) $request->validated('quantity'));
         } catch (InsufficientStockException $e) {
             throw ValidationException::withMessages(['quantity' => $e->getMessage()]);
         }
@@ -42,12 +45,12 @@ class CartController extends Controller
         return back();
     }
 
-    public function update(UpdateCartItemRequest $request, CartItem $cartItem, CartService $cartService): RedirectResponse
+    public function update(UpdateCartItemRequest $request, CartItem $cartItem, CartService $cartService, UpdateCartItemQuantity $updateCartItemQuantity): RedirectResponse
     {
         $this->authorizeCartItem($request, $cartItem, $cartService);
 
         try {
-            $cartService->updateQuantity($cartItem, (int) $request->validated('quantity'));
+            $updateCartItemQuantity($cartItem, (int) $request->validated('quantity'));
         } catch (InsufficientStockException $e) {
             throw ValidationException::withMessages(['quantity' => $e->getMessage()]);
         }
@@ -55,11 +58,11 @@ class CartController extends Controller
         return back();
     }
 
-    public function destroy(Request $request, CartItem $cartItem, CartService $cartService): RedirectResponse
+    public function destroy(Request $request, CartItem $cartItem, CartService $cartService, RemoveCartItem $removeCartItem): RedirectResponse
     {
         $this->authorizeCartItem($request, $cartItem, $cartService);
 
-        $cartService->removeItem($cartItem);
+        $removeCartItem($cartItem);
 
         return back();
     }

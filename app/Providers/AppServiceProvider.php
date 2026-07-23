@@ -2,12 +2,14 @@
 
 namespace App\Providers;
 
+use App\Domain\Cart\Contracts\CartRepositoryInterface;
 use App\Domain\Orders\Contracts\InvoicePdfRendererInterface;
 use App\Domain\Orders\Contracts\InvoiceRepositoryInterface;
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Shared\Contracts\UnitOfWorkInterface;
+use App\Infrastructure\Cart\EloquentCartRepository;
 use App\Infrastructure\Orders\DompdfInvoiceRenderer;
 use App\Infrastructure\Orders\EloquentInvoiceRepository;
 use App\Infrastructure\Orders\EloquentOrderRepository;
@@ -47,6 +49,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UnitOfWorkInterface::class, DatabaseUnitOfWork::class);
         $this->app->bind(InvoiceRepositoryInterface::class, EloquentInvoiceRepository::class);
         $this->app->bind(InvoicePdfRendererInterface::class, DompdfInvoiceRenderer::class);
+        $this->app->bind(CartRepositoryInterface::class, EloquentCartRepository::class);
     }
 
     /**
