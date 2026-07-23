@@ -82,6 +82,7 @@ type OrderDetail = {
     items: OrderItem[];
     payments: PaymentRow[];
     refunds: RefundRow[];
+    hasInvoice: boolean;
 };
 
 type StatusOption = { value: string; label: string };
@@ -162,7 +163,19 @@ export default function OrderShow({
                             </p>
                         )}
                     </div>
-                    <Badge>{order.statusLabel}</Badge>
+                    <div className="flex items-center gap-3">
+                        <Badge>{order.statusLabel}</Badge>
+                        {order.hasInvoice && (
+                            <a
+                                href={OrderController.downloadInvoice.url(
+                                    order.id,
+                                )}
+                                className="text-sm text-primary underline"
+                            >
+                                Télécharger la facture
+                            </a>
+                        )}
+                    </div>
                 </div>
 
                 <div className="rounded-lg border">

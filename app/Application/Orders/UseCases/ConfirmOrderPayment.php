@@ -26,6 +26,7 @@ class ConfirmOrderPayment
         private readonly OrderRepositoryInterface $orders,
         private readonly StockService $stock,
         private readonly UnitOfWorkInterface $unitOfWork,
+        private readonly GenerateOrderInvoice $generateInvoice,
     ) {}
 
     public function __invoke(string $providerPaymentId): void
@@ -60,7 +61,11 @@ class ConfirmOrderPayment
             }
         });
 
-        $payment->order->user->notify(new OrderConfirmation($payment->order));
-        Notification::send(User::role('admin')->get(), new NewPaidOrderAlert($payment->order));
+        $order = $payment->order;
+
+        ($this->generateInvoice)($order);
+
+        $order->user?->notify(new OrderConfirmation($order));
+        Notification::send(User::role('admin')->get(), new NewPaidOrderAlert($order));
     }
 }

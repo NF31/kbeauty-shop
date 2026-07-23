@@ -60,6 +60,22 @@ return [
             'report' => false,
         ],
 
+        // Disque dédié aux factures : "local" en dev (aucun compte requis),
+        // "s3" (Cloudflare R2, compatible S3) en prod via INVOICES_DISK=s3.
+        // Les clés AWS_* sont réutilisées : R2 parle le protocole S3.
+        'invoices' => [
+            'driver' => env('INVOICES_DISK', 'local'),
+            'root' => storage_path('app/private/invoices'),
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('AWS_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

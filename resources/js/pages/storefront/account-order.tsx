@@ -35,6 +35,7 @@ type OrderDetail = {
     shippingAddress: Address | null;
     billingAddress: Address | null;
     items: OrderItem[];
+    hasInvoice: boolean;
 };
 
 function AddressBlock({
@@ -106,7 +107,19 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                             </p>
                         )}
                     </div>
-                    <p className="text-sm font-medium">{order.statusLabel}</p>
+                    <div className="flex items-center gap-3">
+                        <p className="text-sm font-medium">
+                            {order.statusLabel}
+                        </p>
+                        {order.hasInvoice && (
+                            <a
+                                href={`/mon-compte/commandes/${order.id}/facture`}
+                                className="text-sm text-primary underline"
+                            >
+                                Télécharger ma facture
+                            </a>
+                        )}
+                    </div>
                 </div>
 
                 <div className="rounded-lg border">
