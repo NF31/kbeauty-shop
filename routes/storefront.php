@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Storefront\AccountAddressController;
 use App\Http\Controllers\Storefront\AccountController;
+use App\Http\Controllers\Storefront\BrandController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CheckoutController;
@@ -97,6 +98,12 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
             ->name('storefront.checkout.confirmation');
     });
 });
+
+Route::get('marques', [BrandController::class, 'index'])
+    ->name('storefront.brands.index');
+
+Route::get('marques/{brand:slug}', [BrandController::class, 'show'])
+    ->name('storefront.brands.show');
 
 Route::get('guide-de-choix', [SkinGuideController::class, 'index'])
     ->name('storefront.skin-guide');

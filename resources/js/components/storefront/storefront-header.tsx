@@ -37,7 +37,7 @@ import type { NavItem } from '@/types';
  * MegaMenu sans changer la structure du header. Vide tant que le catalogue
  * (Phase 2) n'existe pas.
  */
-const categoryNavItems: NavItem[] = [];
+const categoryNavItems: NavItem[] = [{ title: 'Marques', href: '/marques' }];
 
 export function StorefrontHeader() {
     const { auth, cart } = usePage().props;
