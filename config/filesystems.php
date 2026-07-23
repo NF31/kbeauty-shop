@@ -65,7 +65,7 @@ return [
         // Les clés AWS_* sont réutilisées : R2 parle le protocole S3.
         'invoices' => [
             'driver' => env('INVOICES_DISK', 'local'),
-            'root' => storage_path('app/private/invoices'),
+            'root' => env('INVOICES_DISK', 'local') === 'local' ? storage_path('app/private/invoices') : null,
             'key' => env('AWS_ACCESS_KEY_ID'),
             'secret' => env('AWS_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
