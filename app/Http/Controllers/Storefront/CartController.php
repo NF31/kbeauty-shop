@@ -40,7 +40,7 @@ class CartController extends Controller
             throw ValidationException::withMessages(['quantity' => $e->getMessage()]);
         }
 
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Produit ajouté au panier.']);
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Produit ajouté au panier.')]);
 
         return back();
     }

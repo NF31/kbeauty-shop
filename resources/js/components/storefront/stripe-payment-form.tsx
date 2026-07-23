@@ -1,3 +1,4 @@
+import { usePage } from '@inertiajs/react';
 import {
     Elements,
     PaymentElement,
@@ -5,6 +6,7 @@ import {
     useStripe,
 } from '@stripe/react-stripe-js';
 import { loadStripe } from '@stripe/stripe-js';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { formatMoney } from '@/lib/money';
@@ -27,17 +29,24 @@ export function StripePaymentForm({
     billingAddress: AddressProp | null;
     customerEmail?: string | null;
 }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     if (!stripePromise) {
         return (
             <p className="text-sm text-destructive">
-                Le paiement est momentanément indisponible (clé Stripe
-                manquante).
+                {t(
+                    'Le paiement est momentanément indisponible (clé Stripe manquante).',
+                )}
             </p>
         );
     }
 
     return (
-        <Elements stripe={stripePromise} options={{ clientSecret }}>
+        <Elements
+            stripe={stripePromise}
+            options={{ clientSecret, locale: locale === 'en' ? 'en' : 'fr' }}
+        >
             <PaymentForm
                 totalCents={totalCents}
                 currency={currency}
@@ -59,6 +68,8 @@ function PaymentForm({
     billingAddress: AddressProp | null;
     customerEmail?: string | null;
 }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
     const stripe = useStripe();
     const elements = useElements();
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -71,7 +82,9 @@ function PaymentForm({
 
         if (!stripe || !elements || !isElementReady) {
             setErrorMessage(
-                'Le formulaire de paiement est encore en cours de chargement, réessayez dans un instant.',
+                t(
+                    'Le formulaire de paiement est encore en cours de chargement, réessayez dans un instant.',
+                ),
             );
 
             return;
@@ -83,13 +96,13 @@ function PaymentForm({
         const { error } = await stripe.confirmPayment({
             elements,
             confirmParams: {
-                return_url: `${window.location.origin}/commande/confirmation`,
+                return_url: `${window.location.origin}${locale === 'en' ? '/en' : ''}/commande/confirmation`,
             },
         });
 
         if (error) {
             setErrorMessage(
-                error.message ?? 'Le paiement a échoué. Veuillez réessayer.',
+                error.message ?? t('Le paiement a échoué. Veuillez réessayer.'),
             );
             setIsSubmitting(false);
         }
@@ -99,7 +112,7 @@ function PaymentForm({
         <form onSubmit={onSubmit} className="space-y-6">
             {!isElementReady && !loadError && (
                 <p className="text-sm text-muted-foreground">
-                    Chargement du formulaire de paiement…
+                    {t('Chargement du formulaire de paiement…')}
                 </p>
             )}
 
@@ -130,7 +143,9 @@ function PaymentForm({
                 onLoadError={(event) =>
                     setLoadError(
                         event.error.message ??
-                            "Le formulaire de paiement n'a pas pu se charger.",
+                            t(
+                                "Le formulaire de paiement n'a pas pu se charger.",
+                            ),
                     )
                 }
             />
@@ -146,7 +161,9 @@ function PaymentForm({
                 }
                 className="w-full"
             >
-                Payer {formatMoney(totalCents, currency)}
+                {t('Payer :amount', {
+                    amount: formatMoney(totalCents, currency),
+                })}
             </Button>
         </form>
     );

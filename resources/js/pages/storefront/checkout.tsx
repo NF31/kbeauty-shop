@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AddressAutocompleteInput } from '@/components/storefront/address-autocomplete-input';
@@ -144,14 +145,17 @@ export default function CheckoutPage({
     clientSecret,
     customerEmail,
 }: CheckoutPageProps) {
+    const { t, tChoice } = useLaravelReactI18n();
+
     return (
         <>
-            <Head title="Commande" />
+            <Head title={t('Commande')} />
             <div className="mx-auto max-w-2xl p-4 md:p-8">
-                <h1 className="mb-6 text-3xl font-semibold">Commande</h1>
+                <h1 className="mb-6 text-3xl font-semibold">{t('Commande')}</h1>
 
                 <p className="mb-6 text-sm text-muted-foreground">
-                    {cart.itemCount} article(s) — Total :{' '}
+                    {tChoice(':count article|:count articles', cart.itemCount)}{' '}
+                    — {t('Total :')}{' '}
                     <span className="font-medium text-foreground">
                         {formatMoney(cart.totalCents, cart.currency)}
                     </span>
@@ -192,18 +196,29 @@ function RecapStep({
     shippingAddress: AddressProp | null;
     billingAddress: AddressProp | null;
 }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     const onPay = () => {
-        router.post('/commande/paiement');
+        router.post(
+            locale === 'en' ? '/en/commande/paiement' : '/commande/paiement',
+        );
     };
 
     return (
         <div className="space-y-8">
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-                <AddressSummary title="Livraison" address={shippingAddress} />
-                <AddressSummary title="Facturation" address={billingAddress} />
+                <AddressSummary
+                    title={t('Livraison')}
+                    address={shippingAddress}
+                />
+                <AddressSummary
+                    title={t('Facturation')}
+                    address={billingAddress}
+                />
             </div>
 
-            <Button onClick={onPay}>Passer au paiement</Button>
+            <Button onClick={onPay}>{t('Passer au paiement')}</Button>
         </div>
     );
 }
@@ -265,6 +280,8 @@ function AddressStep({
     savedShippingAddresses: AddressProp[];
     savedBillingAddresses: AddressProp[];
 }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
     const defaultShipping = defaultModeAndId(savedShippingAddresses);
     const defaultBilling = defaultModeAndId(savedBillingAddresses);
 
@@ -295,32 +312,37 @@ function AddressStep({
     const billingAddressId = watch('billingAddressId');
 
     const onSubmit = (values: CheckoutFormValues) => {
-        router.post('/commande/adresse', {
-            shipping_address_id:
-                values.shippingMode === 'saved'
-                    ? values.shippingAddressId
-                    : undefined,
-            shipping:
-                values.shippingMode === 'new'
-                    ? toAddressPayload(values.shipping)
-                    : undefined,
-            billing_same_as_shipping: values.billingSameAsShipping,
-            billing_address_id:
-                !values.billingSameAsShipping && values.billingMode === 'saved'
-                    ? values.billingAddressId
-                    : undefined,
-            billing:
-                !values.billingSameAsShipping && values.billingMode === 'new'
-                    ? toAddressPayload(values.billing)
-                    : undefined,
-        });
+        router.post(
+            locale === 'en' ? '/en/commande/adresse' : '/commande/adresse',
+            {
+                shipping_address_id:
+                    values.shippingMode === 'saved'
+                        ? values.shippingAddressId
+                        : undefined,
+                shipping:
+                    values.shippingMode === 'new'
+                        ? toAddressPayload(values.shipping)
+                        : undefined,
+                billing_same_as_shipping: values.billingSameAsShipping,
+                billing_address_id:
+                    !values.billingSameAsShipping &&
+                    values.billingMode === 'saved'
+                        ? values.billingAddressId
+                        : undefined,
+                billing:
+                    !values.billingSameAsShipping &&
+                    values.billingMode === 'new'
+                        ? toAddressPayload(values.billing)
+                        : undefined,
+            },
+        );
     };
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             <fieldset className="space-y-4">
                 <legend className="mb-2 text-lg font-medium">
-                    Adresse de livraison
+                    {t('Adresse de livraison')}
                 </legend>
                 <AddressChoice
                     prefix="shipping"
@@ -328,7 +350,10 @@ function AddressStep({
                     mode={shippingMode}
                     selectedId={shippingAddressId}
                     setValue={setValue}
-                    error={errors.shippingAddressId?.message}
+                    error={
+                        errors.shippingAddressId?.message &&
+                        t(errors.shippingAddressId.message)
+                    }
                 />
                 {shippingMode === 'new' && (
                     <AddressFields
@@ -356,14 +381,14 @@ function AddressStep({
                     )}
                 />
                 <Label htmlFor="billingSameAsShipping">
-                    Utiliser la même adresse pour la facturation
+                    {t('Utiliser la même adresse pour la facturation')}
                 </Label>
             </div>
 
             {!billingSameAsShipping && (
                 <fieldset className="space-y-4">
                     <legend className="mb-2 text-lg font-medium">
-                        Adresse de facturation
+                        {t('Adresse de facturation')}
                     </legend>
                     <AddressChoice
                         prefix="billing"
@@ -371,7 +396,10 @@ function AddressStep({
                         mode={billingMode}
                         selectedId={billingAddressId}
                         setValue={setValue}
-                        error={errors.billingAddressId?.message}
+                        error={
+                            errors.billingAddressId?.message &&
+                            t(errors.billingAddressId.message)
+                        }
                     />
                     {billingMode === 'new' && (
                         <AddressFields
@@ -386,7 +414,7 @@ function AddressStep({
             )}
 
             <Button type="submit" disabled={isSubmitting}>
-                Continuer
+                {t('Continuer')}
             </Button>
         </form>
     );
@@ -407,6 +435,8 @@ function AddressChoice({
     setValue: ReturnType<typeof useForm<CheckoutFormValues>>['setValue'];
     error?: string;
 }) {
+    const { t } = useLaravelReactI18n();
+
     if (savedAddresses.length === 0) {
         return null;
     }
@@ -458,7 +488,7 @@ function AddressChoice({
                     }}
                 />
                 <span className="font-medium text-foreground">
-                    Nouvelle adresse
+                    {t('Nouvelle adresse')}
                 </span>
             </label>
 
@@ -484,23 +514,25 @@ function AddressFields({
     setValue: ReturnType<typeof useForm<CheckoutFormValues>>['setValue'];
     errors?: AddressFieldErrors;
 }) {
+    const { t } = useLaravelReactI18n();
+
     return (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="sm:col-span-2">
-                <Label htmlFor={`${prefix}.fullName`}>Nom complet</Label>
+                <Label htmlFor={`${prefix}.fullName`}>{t('Nom complet')}</Label>
                 <Input
                     id={`${prefix}.fullName`}
                     {...register(`${prefix}.fullName`)}
                 />
                 {errors?.fullName && (
                     <p className="mt-1 text-sm text-destructive">
-                        {errors.fullName.message}
+                        {t(errors.fullName.message ?? '')}
                     </p>
                 )}
             </div>
 
             <div className="sm:col-span-2">
-                <Label htmlFor={`${prefix}.line1`}>Adresse</Label>
+                <Label htmlFor={`${prefix}.line1`}>{t('Adresse')}</Label>
                 <Controller
                     name={`${prefix}.line1`}
                     control={control}
@@ -523,14 +555,14 @@ function AddressFields({
                 />
                 {errors?.line1 && (
                     <p className="mt-1 text-sm text-destructive">
-                        {errors.line1.message}
+                        {t(errors.line1.message ?? '')}
                     </p>
                 )}
             </div>
 
             <div className="sm:col-span-2">
                 <Label htmlFor={`${prefix}.line2`}>
-                    Complément (optionnel)
+                    {t('Complément (optionnel)')}
                 </Label>
                 <Input
                     id={`${prefix}.line2`}
@@ -539,30 +571,34 @@ function AddressFields({
             </div>
 
             <div>
-                <Label htmlFor={`${prefix}.postalCode`}>Code postal</Label>
+                <Label htmlFor={`${prefix}.postalCode`}>
+                    {t('Code postal')}
+                </Label>
                 <Input
                     id={`${prefix}.postalCode`}
                     {...register(`${prefix}.postalCode`)}
                 />
                 {errors?.postalCode && (
                     <p className="mt-1 text-sm text-destructive">
-                        {errors.postalCode.message}
+                        {t(errors.postalCode.message ?? '')}
                     </p>
                 )}
             </div>
 
             <div>
-                <Label htmlFor={`${prefix}.city`}>Ville</Label>
+                <Label htmlFor={`${prefix}.city`}>{t('Ville')}</Label>
                 <Input id={`${prefix}.city`} {...register(`${prefix}.city`)} />
                 {errors?.city && (
                     <p className="mt-1 text-sm text-destructive">
-                        {errors.city.message}
+                        {t(errors.city.message ?? '')}
                     </p>
                 )}
             </div>
 
             <div>
-                <Label htmlFor={`${prefix}.countryCode`}>Pays (code)</Label>
+                <Label htmlFor={`${prefix}.countryCode`}>
+                    {t('Pays (code)')}
+                </Label>
                 <Input
                     id={`${prefix}.countryCode`}
                     maxLength={2}
@@ -570,13 +606,15 @@ function AddressFields({
                 />
                 {errors?.countryCode && (
                     <p className="mt-1 text-sm text-destructive">
-                        {errors.countryCode.message}
+                        {t(errors.countryCode.message ?? '')}
                     </p>
                 )}
             </div>
 
             <div>
-                <Label htmlFor={`${prefix}.phone`}>Téléphone (optionnel)</Label>
+                <Label htmlFor={`${prefix}.phone`}>
+                    {t('Téléphone (optionnel)')}
+                </Label>
                 <Input
                     id={`${prefix}.phone`}
                     {...register(`${prefix}.phone`)}

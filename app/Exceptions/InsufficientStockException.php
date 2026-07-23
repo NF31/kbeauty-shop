@@ -9,11 +9,13 @@ class InsufficientStockException extends RuntimeException
 {
     public function __construct(ProductVariant $variant, int $requestedQuantity)
     {
-        parent::__construct(sprintf(
-            "Stock insuffisant pour la variante '%s' (stock actuel : %d, quantité demandée : %d).",
-            $variant->sku,
-            $variant->stock_quantity,
-            abs($requestedQuantity)
+        parent::__construct(__(
+            "Stock insuffisant pour la variante ':sku' (stock actuel : :stock, quantité demandée : :requested).",
+            [
+                'sku' => $variant->sku,
+                'stock' => $variant->stock_quantity,
+                'requested' => abs($requestedQuantity),
+            ]
         ));
     }
 }

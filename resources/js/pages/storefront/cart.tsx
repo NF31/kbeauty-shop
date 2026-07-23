@@ -1,4 +1,5 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
@@ -20,6 +21,9 @@ export default function CartPage({
     totalCents,
     currency,
 }: CartPageProps) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+    const localePrefix = locale === 'en' ? '/en' : '';
     const storeItems = useCartStore((state) => state.items);
     const storeTotalCents = useCartStore((state) => state.totalCents);
     const storeCurrency = useCartStore((state) => state.currency);
@@ -32,15 +36,20 @@ export default function CartPage({
 
     return (
         <>
-            <Head title="Panier" />
+            <Head title={t('Panier')} />
             <div className="mx-auto max-w-4xl p-4 md:p-8">
-                <h1 className="mb-6 text-3xl font-semibold">Mon panier</h1>
+                <h1 className="mb-6 text-3xl font-semibold">
+                    {t('Mon panier')}
+                </h1>
 
                 {storeItems.length === 0 ? (
                     <p className="text-muted-foreground">
-                        Votre panier est vide.{' '}
-                        <Link href="/produits" className="underline">
-                            Continuer mes achats
+                        {t('Votre panier est vide.')}{' '}
+                        <Link
+                            href={`${localePrefix}/produits`}
+                            className="underline"
+                        >
+                            {t('Continuer mes achats')}
                         </Link>
                     </p>
                 ) : (
@@ -63,7 +72,7 @@ export default function CartPage({
 
                                     <div className="min-w-0 flex-1">
                                         <Link
-                                            href={`/produits/${item.productSlug}`}
+                                            href={`${localePrefix}/produits/${item.productSlug}`}
                                             className="font-medium hover:underline"
                                         >
                                             {item.productName}
@@ -76,7 +85,7 @@ export default function CartPage({
                                                 item.unitPriceCents,
                                                 storeCurrency,
                                             )}{' '}
-                                            / unité
+                                            {t('/ unité')}
                                         </p>
                                     </div>
 
@@ -97,7 +106,7 @@ export default function CartPage({
 
                                     <button
                                         type="button"
-                                        aria-label="Retirer du panier"
+                                        aria-label={t('Retirer du panier')}
                                         className="text-muted-foreground hover:text-destructive"
                                         onClick={() => removeItem(item.id)}
                                     >
@@ -109,14 +118,14 @@ export default function CartPage({
 
                         <div className="mt-6 flex items-center justify-end gap-4">
                             <p className="text-lg font-semibold">
-                                Total :{' '}
+                                {t('Total :')}{' '}
                                 {formatMoney(storeTotalCents, storeCurrency)}
                             </p>
                             <Link
-                                href="/commande"
+                                href={`${localePrefix}/commande`}
                                 className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
                             >
-                                Passer la commande
+                                {t('Passer la commande')}
                             </Link>
                         </div>
                     </>

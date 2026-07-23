@@ -33,7 +33,7 @@ class CheckoutController extends Controller
         $cart->loadMissing('items');
 
         if ($cart->items->isEmpty()) {
-            return redirect()->route('storefront.cart.index');
+            return redirect()->route($this->localizedRoute('storefront.cart.index'));
         }
 
         $shippingAddress = $this->sessionAddress($request, self::SESSION_SHIPPING_ADDRESS_ID);
@@ -119,7 +119,7 @@ class CheckoutController extends Controller
         $billingAddress = $this->sessionAddress($request, self::SESSION_BILLING_ADDRESS_ID);
 
         if ($cart->items->isEmpty() || ! $shippingAddress || ! $billingAddress) {
-            return redirect()->route('storefront.checkout.index');
+            return redirect()->route($this->localizedRoute('storefront.checkout.index'));
         }
 
         $orderId = $request->session()->get(self::SESSION_ORDER_ID);
@@ -132,7 +132,7 @@ class CheckoutController extends Controller
         $result = $processCheckoutPayment($order);
 
         if ($result->alreadySucceeded) {
-            return redirect()->route('storefront.checkout.confirmation');
+            return redirect()->route($this->localizedRoute('storefront.checkout.confirmation'));
         }
 
         return Inertia::render('storefront/checkout', [
@@ -206,5 +206,17 @@ class CheckoutController extends Controller
         $id = $request->session()->get($sessionKey);
 
         return $id ? Address::query()->find((int) $id) : null;
+    }
+
+    /**
+     * Les routes EN du tunnel d'achat (25.1) partagent le meme nom que leur
+     * equivalent FR, prefixe `en.` (voir routes/storefront.php). Sans ce
+     * prefixage, `route('storefront.cart.index')` resoudrait toujours vers
+     * la version FR meme depuis une requete /en/..., cassant la continuite
+     * de langue sur les redirections internes.
+     */
+    private function localizedRoute(string $name): string
+    {
+        return app()->getLocale() === 'en' ? "en.{$name}" : $name;
     }
 }

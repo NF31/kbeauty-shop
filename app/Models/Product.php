@@ -65,7 +65,7 @@ class Product extends Model
     /**
      * @var array<int, string>
      */
-    public array $translatable = ['name'];
+    public array $translatable = ['name', 'short_description', 'description', 'ingredients_inci', 'how_to_use'];
 
     /**
      * Get the attributes that should be cast.

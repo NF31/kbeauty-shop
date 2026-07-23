@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import { Menu, Search } from 'lucide-react';
 import { useEffect } from 'react';
 import AppLogo from '@/components/app-logo';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { MiniCartSheet } from '@/components/storefront/mini-cart-sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -120,6 +121,7 @@ export function StorefrontHeader() {
                 </div>
 
                 <div className="ml-auto flex items-center space-x-2">
+                    <LanguageSwitcher />
                     <Button variant="ghost" size="icon" className="h-9 w-9">
                         <Search className="!size-5 opacity-80" />
                     </Button>
