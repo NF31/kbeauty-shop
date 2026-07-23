@@ -40,16 +40,28 @@ Inertia — ne pas mélanger les deux dans les mêmes classes.
 ```text
 Kbeauty/
 ├── app/                                # Backend Laravel
-│   ├── Actions/                        # Logique métier isolée et réutilisable (Action pattern)
+│   ├── Actions/                        # Logique métier isolée et réutilisable (Action pattern),
+│   │   │                               # modules non encore passés en Clean Architecture pragmatique (§3bis)
 │   │   ├── Fortify/                    # Déjà présent (auth)
-│   │   ├── Cart/
-│   │   │   ├── SyncThresholdGifts.php  # Cadeaux à paliers (voir DATA_MODEL.md)
-│   │   │   └── ApplyCoupon.php
-│   │   ├── Orders/
-│   │   │   ├── PlaceOrder.php
-│   │   │   └── RefundOrder.php
 │   │   └── Reviews/
 │   │       └── SubmitReview.php
+│   ├── Domain/                         # Clean Architecture pragmatique (§3bis) — Cart/Orders/Payments/Stock/Shared
+│   │   ├── Cart/Contracts/
+│   │   ├── Orders/Contracts/           # + Exceptions/
+│   │   ├── Payments/                   # Contracts/ + DTOs (PaymentIntentResult, RefundResult...)
+│   │   ├── Stock/Contracts/
+│   │   └── Shared/Contracts/           # UnitOfWorkInterface
+│   ├── Application/                    # Use cases invocables, un module par sous-dossier
+│   │   ├── Cart/UseCases/               # AddCartItem, UpdateCartItemQuantity, RemoveCartItem, MergeGuestCartIntoUserCart
+│   │   ├── Orders/UseCases/             # PlaceOrder, ConfirmOrderPayment, ProcessCheckoutPayment, RefundOrder, GenerateOrderInvoice
+│   │   └── Stock/UseCases/              # RecordStockMovement
+│   ├── Infrastructure/                 # Implémentations Eloquent/SDK des contrats Domain
+│   │   ├── Cart/EloquentCartRepository.php
+│   │   ├── Orders/                     # EloquentOrderRepository, EloquentPaymentRepository, EloquentInvoiceRepository, DompdfInvoiceRenderer
+│   │   ├── Payments/StripePaymentGateway.php
+│   │   ├── Stock/EloquentStockRepository.php
+│   │   └── Shared/DatabaseUnitOfWork.php
+│   ├── Support/                        # Extraction pragmatique hors Clean Architecture (catalogue) — CatalogQuery, CatalogPresenter, CartPresenter
 │   ├── Console/Commands/               # Déjà présent
 │   ├── Enums/                          # OrderStatus, PaymentStatus, ReviewStatus... (PHP natifs)
 │   ├── Http/
@@ -163,6 +175,38 @@ Request), il n'y a pas de génération automatique façon Filament — d'où l'i
 ressource. Le routing des permissions admin (qui voit quoi dans `/admin`) est géré par
 `spatie/laravel-permission` via un middleware de rôle sur `routes/admin.php`, voir §8 Sécurité &
 conformité.
+
+### 3bis. Clean Architecture pragmatique (Orders/paiement, Cart, Stock)
+
+**Hors périmètre du plan initial**, introduite en cours de route (choix assumé du porteur du
+projet, pas un besoin technique urgent vu la taille de l'app). Trois modules à forte valeur métier
+sont passés en couches Domain/Application/Infrastructure : Orders/paiement (module pilote), puis
+Cart et Stock sur le même principe. Catalog et Checkout n'ont eu qu'une extraction pragmatique
+(`app/Support/CatalogQuery`/`CatalogPresenter`) sans devenir des modules à part entière.
+
+Principe retenu — **pragmatique plutôt que Clean Architecture stricte** : Eloquent reste le
+mécanisme de persistance (les repositories retournent des modèles Eloquent, pas des entités POPO
+mappées à la main). Ce qui compte : plus aucune classe de logique métier ne parle à Eloquent ou au
+SDK Stripe directement, elle passe par une interface (`Domain/*/Contracts/*`), liée à son
+implémentation concrète dans `AppServiceProvider::register()`.
+
+- **`Domain/`** : contrats (interfaces de repository/gateway) + DTOs readonly (`PaymentIntentResult`,
+  `RefundResult`, `CheckoutPaymentResult`, `WebhookEvent`) qui évitent d'exposer les types SDK
+  (Stripe) aux use cases/controllers, + exceptions métier nommées.
+- **`Application/*/UseCases/`** : logique métier invocable (une classe = une action), remplace les
+  anciennes classes `app/Actions/Orders/*` pour les modules migrés. `DB::transaction()` reste
+  appelé directement depuis les use cases (pas d'abstraction "Unit of Work" stricte au-delà de
+  `UnitOfWorkInterface`/`DatabaseUnitOfWork`, jugée suffisante).
+- **`Infrastructure/`** : implémentations Eloquent des repositories et `StripePaymentGateway`
+  (remplace `Services/StripeService.php`), seules classes du périmètre à toucher Eloquent/le SDK
+  directement.
+
+Les services qui ne portaient pas de règle métier (résolution d'identité HTTP, intégrations
+tierces) sont volontairement laissés tels quels : `CartService` réduit à `current()`/
+`findExisting()`, `StockService` entièrement remplacé par `RecordStockMovement` (une seule
+responsabilité), `CloudinaryService`/`SendcloudService` non touchés. Les controllers lecture-seule
+(`Admin\OrderController::index/show/updateStatus`) ne sont pas non plus passés par une interface —
+seules les écritures avec règles métier le justifient.
 
 Découpage des routes dans `routes/web.php` (schéma, pas le fichier final) :
 
