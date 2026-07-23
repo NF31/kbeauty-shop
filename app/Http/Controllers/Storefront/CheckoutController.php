@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Storefront;
 
 use App\Application\Orders\UseCases\PlaceOrder;
+use App\Application\Orders\UseCases\ProcessCheckoutPayment;
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\AddressType;
-use App\Enums\PaymentProvider;
-use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutAddressRequest;
 use App\Models\Address;
@@ -109,9 +108,9 @@ class CheckoutController extends Controller
         Request $request,
         CartService $cartService,
         CloudinaryService $cloudinary,
-        PaymentGatewayInterface $gateway,
         OrderRepositoryInterface $orders,
         PlaceOrder $placeOrder,
+        ProcessCheckoutPayment $processCheckoutPayment,
     ): Response|RedirectResponse {
         $cart = $cartService->current($request);
         $cart->loadMissing('items');
@@ -130,40 +129,10 @@ class CheckoutController extends Controller
 
         $request->session()->put(self::SESSION_ORDER_ID, $order->id);
 
-        $payment = Payment::query()
-            ->where('order_id', $order->id)
-            ->where('status', PaymentStatus::Pending)
-            ->latest('id')
-            ->first();
+        $result = $processCheckoutPayment($order);
 
-        if ($payment) {
-            // Le statut local reste `pending` tant que le webhook (9.4) n'a
-            // pas confirmé le paiement — mais côté Stripe le PaymentIntent
-            // peut déjà être `succeeded` (ex. rechargement de la page après
-            // un paiement réussi). Stripe refuse de modifier le montant d'un
-            // PaymentIntent qui n'est plus modifiable, donc on vérifie son
-            // statut réel avant de le mettre à jour.
-            $intent = $gateway->retrievePaymentIntent($payment->provider_payment_id);
-
-            if ($intent->status === 'succeeded') {
-                return redirect()->route('storefront.checkout.confirmation');
-            }
-
-            if (in_array($intent->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
-                $intent = $gateway->updatePaymentIntentAmount($payment->provider_payment_id, $order->total_cents);
-
-                $payment->update(['amount_cents' => $order->total_cents]);
-            }
-        } else {
-            $intent = $gateway->createPaymentIntent($order);
-
-            $payment = Payment::query()->create([
-                'order_id' => $order->id,
-                'provider' => PaymentProvider::Stripe,
-                'provider_payment_id' => $intent->id,
-                'status' => PaymentStatus::Pending,
-                'amount_cents' => $order->total_cents,
-            ]);
+        if ($result->alreadySucceeded) {
+            return redirect()->route('storefront.checkout.confirmation');
         }
 
         return Inertia::render('storefront/checkout', [
@@ -176,7 +145,7 @@ class CheckoutController extends Controller
                 'totalCents' => $order->total_cents,
                 'currency' => $order->currency,
             ],
-            'clientSecret' => $intent->clientSecret,
+            'clientSecret' => $result->intent->clientSecret,
             'stripeKey' => config('services.stripe.key'),
             // Préremplit le Payment Element avec ce qu'on a déjà collecté à
             // l'étape adresse — inutile de redemander nom/adresse/téléphone,
