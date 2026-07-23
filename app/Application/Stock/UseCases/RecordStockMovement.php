@@ -1,33 +1,39 @@
 <?php
 
-namespace App\Services;
+namespace App\Application\Stock\UseCases;
 
+use App\Domain\Shared\Contracts\UnitOfWorkInterface;
+use App\Domain\Stock\Contracts\StockRepositoryInterface;
 use App\Enums\InventoryMovementType;
 use App\Exceptions\InsufficientStockException;
 use App\Models\InventoryMovement;
 use App\Models\ProductVariant;
 use App\Models\User;
 use App\Notifications\LowStockAlert;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
 
-class StockService
+/**
+ * Enregistre un mouvement de stock et applique son delta signé à
+ * `stock_quantity` de façon atomique (verrou pessimiste : deux ventes
+ * concurrentes sur la même variante ne peuvent pas passer le stock en
+ * négatif). `$quantity` est signé : positif pour un réassort/retour,
+ * négatif pour une vente.
+ */
+class RecordStockMovement
 {
-    /**
-     * Enregistre un mouvement de stock et applique son delta signé à
-     * `stock_quantity` de façon atomique (verrou pessimiste : deux ventes
-     * concurrentes sur la même variante ne peuvent pas passer le stock en
-     * négatif). `$quantity` est signé : positif pour un réassort/retour,
-     * négatif pour une vente.
-     */
-    public function recordMovement(
+    public function __construct(
+        private readonly StockRepositoryInterface $stock,
+        private readonly UnitOfWorkInterface $unitOfWork,
+    ) {}
+
+    public function __invoke(
         ProductVariant $variant,
         InventoryMovementType $type,
         int $quantity,
         ?string $note = null,
     ): InventoryMovement {
-        return DB::transaction(function () use ($variant, $type, $quantity, $note) {
-            $locked = ProductVariant::query()->lockForUpdate()->findOrFail($variant->id);
+        return $this->unitOfWork->run(function () use ($variant, $type, $quantity, $note) {
+            $locked = $this->stock->lockVariant($variant->id);
 
             $newStock = $locked->stock_quantity + $quantity;
 
@@ -37,14 +43,9 @@ class StockService
 
             $previousStock = $locked->stock_quantity;
 
-            $locked->update(['stock_quantity' => $newStock]);
+            $this->stock->updateQuantity($locked, $newStock);
 
-            $movement = InventoryMovement::create([
-                'product_variant_id' => $locked->id,
-                'type' => $type,
-                'quantity' => $quantity,
-                'note' => $note,
-            ]);
+            $movement = $this->stock->createMovement($locked, $type, $quantity, $note);
 
             $this->notifyIfCrossingLowStockThreshold($locked, $previousStock, $newStock);
 

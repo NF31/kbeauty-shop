@@ -2,6 +2,7 @@
 
 namespace App\Application\Orders\UseCases;
 
+use App\Application\Stock\UseCases\RecordStockMovement;
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Shared\Contracts\UnitOfWorkInterface;
@@ -10,7 +11,6 @@ use App\Enums\PaymentStatus;
 use App\Models\User;
 use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
-use App\Services\StockService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -24,7 +24,7 @@ class ConfirmOrderPayment
     public function __construct(
         private readonly PaymentRepositoryInterface $payments,
         private readonly OrderRepositoryInterface $orders,
-        private readonly StockService $stock,
+        private readonly RecordStockMovement $recordStockMovement,
         private readonly UnitOfWorkInterface $unitOfWork,
         private readonly GenerateOrderInvoice $generateInvoice,
     ) {}
@@ -52,7 +52,7 @@ class ConfirmOrderPayment
             $this->orders->markPaid($order);
 
             foreach ($order->items as $item) {
-                $this->stock->recordMovement(
+                ($this->recordStockMovement)(
                     $item->variant,
                     InventoryMovementType::Sale,
                     -$item->quantity,
