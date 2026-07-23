@@ -34,8 +34,11 @@ Tous les items **P1** restants : prix barré + slugs SEO + recherche + filtres c
 7.2, 7.3), Apple Pay/Google Pay (9.3), historique commandes (9.5), génération étiquettes déjà
 couvertes en Jalon 2 (11.2), email expédition (12.3), avis clients (14-15, Phase 6 est P1 dans son
 ensemble), sitemap/SEO (19.1-19.2), relance panier abandonné (24.1), bundles (24.2), mega-menu
-(24.3), formulaire de contact (26.5), pixels marketing (27.1), facturation PDF (17.1), debug local
+(24.3), formulaire de contact (26.5), pixels marketing (27.1), debug local
 (22.2), tests Pest sur le domaine e-commerce (21.1).
+
+Facturation PDF (17.1) déjà livrée (génération + téléchargement client/admin), retirée de la liste
+ci-dessus.
 
 ## Jalon 4 — Croissance (V2)
 
@@ -43,9 +46,11 @@ ensemble), sitemap/SEO (19.1-19.2), relance panier abandonné (24.1), bundles (2
 jobs Horizon en échec (12.11), double opt-in newsletter (13.3), Q&A produit (15.4), export CSV +
 KPIs admin (17.2-17.3), blog (18.1-18.2), guide de choix produit (6.5), alertes stock bas (4.5),
 recherche Meilisearch si le catalogue le justifie (7.2 passe de la recherche SQL basique à
-Meilisearch), fidélisation/parrainage/gift cards/recommandations (23.1-23.3, 24.4), multi-langue
-(25.1), support client + portail retours + wishlist partageable (26.1-26.3), permissions admin
-fines (27.2).
+Meilisearch), fidélisation/parrainage/gift cards/recommandations (23.1-23.3, 24.4), support client,
+portail retours et wishlist partageable (26.1-26.3), permissions admin fines (27.2).
+
+Multi-langue (25.1) anticipée par rapport à ce jalon (P2) : infra i18n FR/EN + catalogue + tunnel
+d'achat déjà traduits (🟡 en cours) — reste compte client, auth/settings, pages légales, emails.
 
 ## Jalon 5 — Ambitions long terme (V3, P3)
 
