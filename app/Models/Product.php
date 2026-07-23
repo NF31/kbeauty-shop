@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
 use Spatie\Sluggable\Attributes\Sluggable;
+use Spatie\Translatable\HasTranslations;
 
 /**
  * @property int $id
@@ -59,7 +60,12 @@ use Spatie\Sluggable\Attributes\Sluggable;
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, Searchable, SoftDeletes;
+    use HasFactory, HasTranslations, Searchable, SoftDeletes;
+
+    /**
+     * @var array<int, string>
+     */
+    public array $translatable = ['name'];
 
     /**
      * Get the attributes that should be cast.

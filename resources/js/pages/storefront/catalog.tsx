@@ -1,8 +1,17 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
+import { FlagFr, FlagGb } from '@/components/flag-icons';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
 
 type CatalogProduct = {
     id: number;
@@ -47,8 +56,14 @@ function applyFilters(patch: Record<string, string | null>) {
         }
     });
 
+    // Reste sur la meme locale : /en/produits si on filtre depuis la page
+    // anglaise, /produits sinon (locale par defaut, sans prefixe).
+    const basePath = window.location.pathname.startsWith('/en/')
+        ? '/en/produits'
+        : '/produits';
+
     router.get(
-        `/produits${params.toString() ? `?${params.toString()}` : ''}`,
+        `${basePath}${params.toString() ? `?${params.toString()}` : ''}`,
         {},
         { preserveState: true, preserveScroll: true, replace: true },
     );
@@ -67,6 +82,8 @@ export default function CatalogPage({
     categoryOptions,
     brandOptions,
 }: CatalogPageProps) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
     const [priceMinInput, setPriceMinInput] = useState(priceMin ?? '');
     const [priceMaxInput, setPriceMaxInput] = useState(priceMax ?? '');
     const [searchInput, setSearchInput] = useState(search ?? '');
@@ -126,30 +143,99 @@ export default function CatalogPage({
 
     const activeFiltersQueryString = activeFiltersQuery.toString();
 
+    // Bascule de langue : meme page, memes filtres, autre prefixe d'URL
+    // (voir routes/storefront.php — /en/produits n'existe que pour cette
+    // page pilote i18n, 25.1).
+    const localeFilterSuffix = activeFiltersQueryString
+        ? `?${activeFiltersQueryString}`
+        : '';
+    const localeHrefs = {
+        fr: `/produits${localeFilterSuffix}`,
+        en: `/en/produits${localeFilterSuffix}`,
+    } as const;
+
+    // Precharge la page dans l'autre langue pour que la bascule du
+    // selecteur soit instantanee (servie depuis le cache Inertia) plutot
+    // que de declencher un aller-retour serveur visible au clic.
+    useEffect(() => {
+        const otherLocale = locale === 'en' ? 'fr' : 'en';
+
+        router.prefetch(
+            localeHrefs[otherLocale],
+            { method: 'get' },
+            { cacheFor: '30s' },
+        );
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [locale, localeFilterSuffix]);
+
     return (
         <>
-            <Head title="Catalogue" />
+            <Head title={t('Catalogue')} />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
                     <h1 className="text-3xl font-semibold">
-                        Tous nos produits
+                        {t('Tous nos produits')}
                     </h1>
-                    <Link
-                        href="/guide-de-choix"
-                        className="text-sm text-muted-foreground underline"
-                    >
-                        Besoin d'aide pour choisir ?
-                    </Link>
+                    <div className="flex items-center gap-4">
+                        <Link
+                            href="/guide-de-choix"
+                            className="text-sm text-muted-foreground underline"
+                        >
+                            {t("Besoin d'aide pour choisir ?")}
+                        </Link>
+                        <Select
+                            value={locale}
+                            onValueChange={(value) =>
+                                router.get(localeHrefs[value as 'fr' | 'en'])
+                            }
+                        >
+                            <SelectTrigger
+                                size="sm"
+                                aria-label={t('Choisir la langue')}
+                            >
+                                {/* Contenu fourni explicitement plutot que
+                                laisse au mapping automatique de Radix
+                                (SelectItem -> SelectValue), qui ne peut pas
+                                se resoudre correctement au rendu serveur
+                                (portail non monte) et provoque un mismatch
+                                d'hydratation. */}
+                                <SelectValue>
+                                    {locale === 'en' ? (
+                                        <>
+                                            <FlagGb className="size-4 rounded-sm" />
+                                            English
+                                        </>
+                                    ) : (
+                                        <>
+                                            <FlagFr className="size-4 rounded-sm" />
+                                            Français
+                                        </>
+                                    )}
+                                </SelectValue>
+                            </SelectTrigger>
+                            <SelectContent>
+                                {/* Noms de langue non traduits (endonymes) — convention standard des selecteurs de langue */}
+                                <SelectItem value="fr">
+                                    <FlagFr className="size-4 rounded-sm" />
+                                    Français
+                                </SelectItem>
+                                <SelectItem value="en">
+                                    <FlagGb className="size-4 rounded-sm" />
+                                    English
+                                </SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
                 </div>
 
                 <label className="mb-6 flex flex-col gap-1 text-sm">
-                    Rechercher
+                    {t('Rechercher')}
                     <div className="relative">
                         <Search className="pointer-events-none absolute top-1/2 left-2 size-4 -translate-y-1/2 opacity-60" />
                         <input
                             type="search"
                             className="w-full rounded-md border bg-background p-2 pl-8"
-                            placeholder="Nom du produit..."
+                            placeholder={t('Nom du produit...')}
                             value={searchInput}
                             onChange={(e) => setSearchInput(e.target.value)}
                         />
@@ -158,7 +244,7 @@ export default function CatalogPage({
 
                 <div className="mb-6 flex flex-wrap items-end gap-4 border-b pb-6">
                     <label className="flex flex-col gap-1 text-sm">
-                        Catégorie
+                        {t('Catégorie')}
                         <select
                             className="rounded-md border bg-background p-2"
                             value={activeCategory?.slug ?? ''}
@@ -168,7 +254,7 @@ export default function CatalogPage({
                                 })
                             }
                         >
-                            <option value="">Toutes</option>
+                            <option value="">{t('Toutes')}</option>
                             {categoryOptions.map((option) => (
                                 <option key={option.slug} value={option.slug}>
                                     {option.name}
@@ -178,7 +264,7 @@ export default function CatalogPage({
                     </label>
 
                     <label className="flex flex-col gap-1 text-sm">
-                        Marque
+                        {t('Marque')}
                         <select
                             className="rounded-md border bg-background p-2"
                             value={activeBrand?.slug ?? ''}
@@ -186,7 +272,7 @@ export default function CatalogPage({
                                 applyFilters({ brand: e.target.value || null })
                             }
                         >
-                            <option value="">Toutes</option>
+                            <option value="">{t('Toutes')}</option>
                             {brandOptions.map((option) => (
                                 <option key={option.slug} value={option.slug}>
                                     {option.name}
@@ -196,7 +282,7 @@ export default function CatalogPage({
                     </label>
 
                     <label className="flex flex-col gap-1 text-sm">
-                        Type de peau
+                        {t('Type de peau')}
                         <select
                             className="rounded-md border bg-background p-2"
                             value={activeSkinType?.value ?? ''}
@@ -206,7 +292,7 @@ export default function CatalogPage({
                                 })
                             }
                         >
-                            <option value="">Tous</option>
+                            <option value="">{t('Tous')}</option>
                             {skinTypeOptions.map((option) => (
                                 <option key={option.value} value={option.value}>
                                     {option.label}
@@ -216,7 +302,7 @@ export default function CatalogPage({
                     </label>
 
                     <label className="flex flex-col gap-1 text-sm">
-                        Prix min (€)
+                        {t('Prix min (€)')}
                         <input
                             type="number"
                             min="0"
@@ -232,7 +318,7 @@ export default function CatalogPage({
                     </label>
 
                     <label className="flex flex-col gap-1 text-sm">
-                        Prix max (€)
+                        {t('Prix max (€)')}
                         <input
                             type="number"
                             min="0"
@@ -248,7 +334,7 @@ export default function CatalogPage({
                     </label>
 
                     <label className="flex flex-col gap-1 text-sm">
-                        Trier par
+                        {t('Trier par')}
                         <select
                             className="rounded-md border bg-background p-2"
                             value={sort ?? ''}
@@ -256,26 +342,32 @@ export default function CatalogPage({
                                 applyFilters({ sort: e.target.value || null })
                             }
                         >
-                            <option value="">Plus récents</option>
-                            <option value="price_asc">Prix croissant</option>
-                            <option value="price_desc">Prix décroissant</option>
-                            <option value="name_asc">Nom (A-Z)</option>
+                            <option value="">{t('Plus récents')}</option>
+                            <option value="price_asc">
+                                {t('Prix croissant')}
+                            </option>
+                            <option value="price_desc">
+                                {t('Prix décroissant')}
+                            </option>
+                            <option value="name_asc">{t('Nom (A-Z)')}</option>
                         </select>
                     </label>
 
                     {hasActiveFilters && (
                         <Link
-                            href="/produits"
+                            href={
+                                locale === 'en' ? '/en/produits' : '/produits'
+                            }
                             className="text-sm text-muted-foreground underline"
                         >
-                            Réinitialiser les filtres
+                            {t('Réinitialiser les filtres')}
                         </Link>
                     )}
                 </div>
 
                 {products.data.length === 0 ? (
                     <p className="text-muted-foreground">
-                        Aucun produit disponible pour le moment.
+                        {t('Aucun produit disponible pour le moment.')}
                     </p>
                 ) : (
                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
