@@ -4,13 +4,13 @@ namespace App\Application\Orders\UseCases;
 
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
+use App\Domain\Shared\Contracts\UnitOfWorkInterface;
 use App\Enums\InventoryMovementType;
 use App\Enums\PaymentStatus;
 use App\Models\User;
 use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
 use App\Services\StockService;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
 
@@ -25,6 +25,7 @@ class ConfirmOrderPayment
         private readonly PaymentRepositoryInterface $payments,
         private readonly OrderRepositoryInterface $orders,
         private readonly StockService $stock,
+        private readonly UnitOfWorkInterface $unitOfWork,
     ) {}
 
     public function __invoke(string $providerPaymentId): void
@@ -43,7 +44,7 @@ class ConfirmOrderPayment
             return;
         }
 
-        DB::transaction(function () use ($payment) {
+        $this->unitOfWork->run(function () use ($payment) {
             $this->payments->markSucceeded($payment);
 
             $order = $payment->order;

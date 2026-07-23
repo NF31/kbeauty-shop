@@ -5,8 +5,8 @@ namespace App\Infrastructure\Payments;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Payments\PaymentIntentResult;
 use App\Domain\Payments\RefundResult;
+use App\Domain\Payments\WebhookEvent;
 use App\Models\Order;
-use Stripe\Event;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\PaymentIntent;
 use Stripe\Refund;
@@ -80,13 +80,21 @@ class StripePaymentGateway implements PaymentGatewayInterface
     /**
      * Vérifie que la requête de webhook provient bien de Stripe (signature
      * `Stripe-Signature`) avant de faire confiance à son contenu — jamais
-     * traiter un payload de webhook sans cette vérification.
+     * traiter un payload de webhook sans cette vérification. Le `\Stripe\Event`
+     * du SDK est converti en DTO ici : c'est la seule classe du projet qui a
+     * besoin de connaître sa forme, tout le reste du code métier ne dépend que
+     * de `WebhookEvent`.
      *
      * @throws SignatureVerificationException si la signature est invalide/absente.
      */
-    public function verifyWebhookSignature(string $payload, string $signature): Event
+    public function verifyWebhookSignature(string $payload, string $signature): WebhookEvent
     {
-        return Webhook::constructEvent($payload, $signature, config('services.stripe.webhook_secret'));
+        $event = Webhook::constructEvent($payload, $signature, config('services.stripe.webhook_secret'));
+
+        return new WebhookEvent(
+            type: $event->type,
+            paymentIntentId: $event->data->object->id ?? null,
+        );
     }
 
     private function toPaymentIntentResult(PaymentIntent $intent): PaymentIntentResult

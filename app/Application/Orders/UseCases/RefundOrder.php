@@ -6,11 +6,11 @@ use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Orders\Exceptions\NoSucceededPaymentException;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
+use App\Domain\Shared\Contracts\UnitOfWorkInterface;
 use App\Enums\RefundStatus;
 use App\Models\Order;
 use App\Models\Refund;
 use App\Notifications\RefundConfirmation;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Rembourse une commande via l'API Stripe (docs/ARCHITECTURE.md §4). Supporte
@@ -25,6 +25,7 @@ class RefundOrder
         private readonly PaymentGatewayInterface $gateway,
         private readonly OrderRepositoryInterface $orders,
         private readonly PaymentRepositoryInterface $payments,
+        private readonly UnitOfWorkInterface $unitOfWork,
     ) {}
 
     public function __invoke(Order $order, int $amountCents, ?string $reason = null): Refund
@@ -37,7 +38,7 @@ class RefundOrder
 
         $result = $this->gateway->refund($payment->provider_payment_id, $amountCents);
 
-        $refund = DB::transaction(function () use ($order, $payment, $amountCents, $reason, $result) {
+        $refund = $this->unitOfWork->run(function () use ($order, $payment, $amountCents, $reason, $result) {
             $refund = $this->orders->createRefund([
                 'order_id' => $order->id,
                 'payment_id' => $payment->id,
