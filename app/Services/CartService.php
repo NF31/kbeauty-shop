@@ -26,7 +26,10 @@ class CartService
     public function current(Request $request): Cart
     {
         if ($request->user()) {
-            return Cart::query()->firstOrCreate(['user_id' => $request->user()->id]);
+            return Cart::query()->firstOrCreate(
+                ['user_id' => $request->user()->id],
+                ['currency' => 'EUR'],
+            );
         }
 
         $token = $request->cookie(self::COOKIE_NAME);
@@ -43,7 +46,7 @@ class CartService
 
         Cookie::queue(Cookie::make(self::COOKIE_NAME, $token, self::COOKIE_LIFETIME_MINUTES));
 
-        return Cart::query()->create(['session_token' => $token]);
+        return Cart::query()->create(['session_token' => $token, 'currency' => 'EUR']);
     }
 
     /**

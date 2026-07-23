@@ -2,16 +2,8 @@ import { Head, Link, router, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
-import { FlagFr, FlagGb } from '@/components/flag-icons';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from '@/components/ui/select';
 
 type CatalogProduct = {
     id: number;
@@ -143,31 +135,6 @@ export default function CatalogPage({
 
     const activeFiltersQueryString = activeFiltersQuery.toString();
 
-    // Bascule de langue : meme page, memes filtres, autre prefixe d'URL
-    // (voir routes/storefront.php — /en/produits n'existe que pour cette
-    // page pilote i18n, 25.1).
-    const localeFilterSuffix = activeFiltersQueryString
-        ? `?${activeFiltersQueryString}`
-        : '';
-    const localeHrefs = {
-        fr: `/produits${localeFilterSuffix}`,
-        en: `/en/produits${localeFilterSuffix}`,
-    } as const;
-
-    // Precharge la page dans l'autre langue pour que la bascule du
-    // selecteur soit instantanee (servie depuis le cache Inertia) plutot
-    // que de declencher un aller-retour serveur visible au clic.
-    useEffect(() => {
-        const otherLocale = locale === 'en' ? 'fr' : 'en';
-
-        router.prefetch(
-            localeHrefs[otherLocale],
-            { method: 'get' },
-            { cacheFor: '30s' },
-        );
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [locale, localeFilterSuffix]);
-
     return (
         <>
             <Head title={t('Catalogue')} />
@@ -176,56 +143,12 @@ export default function CatalogPage({
                     <h1 className="text-3xl font-semibold">
                         {t('Tous nos produits')}
                     </h1>
-                    <div className="flex items-center gap-4">
-                        <Link
-                            href="/guide-de-choix"
-                            className="text-sm text-muted-foreground underline"
-                        >
-                            {t("Besoin d'aide pour choisir ?")}
-                        </Link>
-                        <Select
-                            value={locale}
-                            onValueChange={(value) =>
-                                router.get(localeHrefs[value as 'fr' | 'en'])
-                            }
-                        >
-                            <SelectTrigger
-                                size="sm"
-                                aria-label={t('Choisir la langue')}
-                            >
-                                {/* Contenu fourni explicitement plutot que
-                                laisse au mapping automatique de Radix
-                                (SelectItem -> SelectValue), qui ne peut pas
-                                se resoudre correctement au rendu serveur
-                                (portail non monte) et provoque un mismatch
-                                d'hydratation. */}
-                                <SelectValue>
-                                    {locale === 'en' ? (
-                                        <>
-                                            <FlagGb className="size-4 rounded-sm" />
-                                            English
-                                        </>
-                                    ) : (
-                                        <>
-                                            <FlagFr className="size-4 rounded-sm" />
-                                            Français
-                                        </>
-                                    )}
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {/* Noms de langue non traduits (endonymes) — convention standard des selecteurs de langue */}
-                                <SelectItem value="fr">
-                                    <FlagFr className="size-4 rounded-sm" />
-                                    Français
-                                </SelectItem>
-                                <SelectItem value="en">
-                                    <FlagGb className="size-4 rounded-sm" />
-                                    English
-                                </SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
+                    <Link
+                        href="/guide-de-choix"
+                        className="text-sm text-muted-foreground underline"
+                    >
+                        {t("Besoin d'aide pour choisir ?")}
+                    </Link>
                 </div>
 
                 <label className="mb-6 flex flex-col gap-1 text-sm">
@@ -376,8 +299,8 @@ export default function CatalogPage({
                                 key={product.id}
                                 href={
                                     activeFiltersQueryString
-                                        ? `/produits/${product.slug}?${activeFiltersQueryString}`
-                                        : `/produits/${product.slug}`
+                                        ? `${locale === 'en' ? '/en' : ''}/produits/${product.slug}?${activeFiltersQueryString}`
+                                        : `${locale === 'en' ? '/en' : ''}/produits/${product.slug}`
                                 }
                                 className="group flex flex-col gap-2"
                             >

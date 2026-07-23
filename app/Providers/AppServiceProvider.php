@@ -32,6 +32,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
+use Spatie\Translatable\Translatable;
 use Stripe\StripeClient;
 
 class AppServiceProvider extends ServiceProvider
@@ -64,6 +65,13 @@ class AppServiceProvider extends ServiceProvider
         $this->configureAuthMailNotifications();
 
         Event::listen(Login::class, MergeGuestCartOnLogin::class);
+
+        // Sans ca, assigner `null` a un champ traduisible (short_description,
+        // ingredients_inci, how_to_use — tous nullable) revient en lecture
+        // comme une chaine vide plutot que null (comportement par defaut de
+        // spatie/laravel-translatable), ce qui casse la distinction "valeur
+        // absente" attendue par le reste de l'app (blank(), toBeNull(), etc.).
+        app(Translatable::class)->allowNullForTranslation();
     }
 
     /**

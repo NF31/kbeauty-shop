@@ -1,4 +1,5 @@
 import { Head, Link, router, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import type { ProductGalleryImage } from '@/components/storefront/product-gallery';
 import { ProductGallery } from '@/components/storefront/product-gallery';
@@ -35,11 +36,13 @@ export default function ProductPage({
     stockQuantity,
     images,
 }: ProductPageProps) {
+    const { t } = useLaravelReactI18n();
     const [quantity, setQuantity] = useState(1);
     const [isAdding, setIsAdding] = useState(false);
     const [addError, setAddError] = useState<string | null>(null);
     const inStock = (stockQuantity ?? 0) > 0;
-    const { url } = usePage();
+    const { url, props } = usePage();
+    const { locale } = props;
     const activeFiltersQueryString = url.split('?')[1] ?? '';
 
     const addToCart = () => {
@@ -51,14 +54,14 @@ export default function ProductPage({
         setAddError(null);
 
         router.post(
-            '/panier',
+            locale === 'en' ? '/en/panier' : '/panier',
             { product_variant_id: defaultVariantId, quantity },
             {
                 preserveScroll: true,
                 onError: (errors) =>
                     setAddError(
                         errors.quantity ??
-                            "Impossible d'ajouter ce produit au panier.",
+                            t("Impossible d'ajouter ce produit au panier."),
                     ),
                 onFinish: () => setIsAdding(false),
             },
@@ -74,10 +77,10 @@ export default function ProductPage({
                 <div className="flex flex-col gap-4">
                     {activeFiltersQueryString && (
                         <Link
-                            href={`/produits?${activeFiltersQueryString}`}
+                            href={`${locale === 'en' ? '/en' : ''}/produits?${activeFiltersQueryString}`}
                             className="text-sm text-muted-foreground underline"
                         >
-                            ← Retour au catalogue filtré
+                            ← {t('Retour au catalogue filtré')}
                         </Link>
                     )}
                     {product.brand && (
@@ -112,7 +115,7 @@ export default function ProductPage({
                                 onClick={addToCart}
                                 disabled={isAdding || !defaultVariantId}
                             >
-                                Ajouter au panier
+                                {t('Ajouter au panier')}
                             </Button>
 
                             {addError && (
@@ -123,7 +126,7 @@ export default function ProductPage({
                         </>
                     ) : (
                         <p className="text-sm text-muted-foreground">
-                            Rupture de stock.
+                            {t('Rupture de stock.')}
                         </p>
                     )}
                 </div>
@@ -132,17 +135,19 @@ export default function ProductPage({
             <div className="mx-auto max-w-5xl p-4 md:p-8">
                 <Tabs defaultValue="benefits">
                     <TabsList>
-                        <TabsTrigger value="benefits">Bénéfices</TabsTrigger>
+                        <TabsTrigger value="benefits">
+                            {t('Bénéfices')}
+                        </TabsTrigger>
                         <TabsTrigger value="description">
-                            Description
+                            {t('Description')}
                         </TabsTrigger>
                         <TabsTrigger value="ingredients">
-                            Ingrédients
+                            {t('Ingrédients')}
                         </TabsTrigger>
                         <TabsTrigger value="how-to-use">
-                            Mode d'emploi
+                            {t("Mode d'emploi")}
                         </TabsTrigger>
-                        <TabsTrigger value="reviews">Avis</TabsTrigger>
+                        <TabsTrigger value="reviews">{t('Avis')}</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="benefits">
@@ -152,7 +157,7 @@ export default function ProductPage({
                             </p>
                         ) : (
                             <p className="text-muted-foreground">
-                                Aucun bénéfice renseigné pour ce produit.
+                                {t('Aucun bénéfice renseigné pour ce produit.')}
                             </p>
                         )}
                     </TabsContent>
@@ -170,7 +175,9 @@ export default function ProductPage({
                             </p>
                         ) : (
                             <p className="text-muted-foreground">
-                                Liste INCI non renseignée pour ce produit.
+                                {t(
+                                    'Liste INCI non renseignée pour ce produit.',
+                                )}
                             </p>
                         )}
                     </TabsContent>
@@ -182,14 +189,16 @@ export default function ProductPage({
                             </p>
                         ) : (
                             <p className="text-muted-foreground">
-                                Mode d'emploi non renseigné pour ce produit.
+                                {t(
+                                    "Mode d'emploi non renseigné pour ce produit.",
+                                )}
                             </p>
                         )}
                     </TabsContent>
 
                     <TabsContent value="reviews">
                         <p className="text-muted-foreground">
-                            Aucun avis pour le moment.
+                            {t('Aucun avis pour le moment.')}
                         </p>
                     </TabsContent>
                 </Tabs>
