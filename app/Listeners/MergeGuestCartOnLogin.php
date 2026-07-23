@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Application\Cart\UseCases\MergeGuestCartIntoUserCart;
 use App\Models\Cart;
 use App\Models\User;
 use App\Services\CartService;
@@ -13,7 +14,7 @@ class MergeGuestCartOnLogin
 {
     public function __construct(
         private readonly Request $request,
-        private readonly CartService $cartService,
+        private readonly MergeGuestCartIntoUserCart $mergeGuestCartIntoUserCart,
     ) {}
 
     public function handle(Login $event): void
@@ -27,7 +28,7 @@ class MergeGuestCartOnLogin
         $guestCart = Cart::query()->where('session_token', $token)->first();
 
         if ($guestCart) {
-            $this->cartService->mergeIntoUserCart($guestCart, $event->user);
+            ($this->mergeGuestCartIntoUserCart)($guestCart, $event->user);
         }
 
         Cookie::queue(Cookie::forget(CartService::COOKIE_NAME));
