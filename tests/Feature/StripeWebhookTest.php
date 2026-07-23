@@ -4,6 +4,7 @@ use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Payments\WebhookEvent;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Jobs\SendPlacedOrderEventToKlaviyo;
 use App\Models\InventoryMovement;
 use App\Models\Invoice;
 use App\Models\Order;
@@ -15,6 +16,7 @@ use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Stripe\Exception\SignatureVerificationException;
@@ -202,6 +204,34 @@ test('payment_intent.succeeded notifies admins of the new paid order', function 
 
     Notification::assertSentTo($admin, NewPaidOrderAlert::class);
     Notification::assertNotSentTo($staff, NewPaidOrderAlert::class);
+});
+
+test('payment_intent.succeeded dispatches the Klaviyo Placed Order event job', function () {
+    Bus::fake();
+
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
+    $order = Order::factory()->create(['status' => OrderStatus::Pending]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_variant_id' => $variant->id,
+        'quantity' => 3,
+    ]);
+    Payment::factory()->create([
+        'order_id' => $order->id,
+        'provider_payment_id' => 'pi_fake123',
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
+            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+        );
+    });
+
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])
+        ->assertOk();
+
+    Bus::assertDispatched(SendPlacedOrderEventToKlaviyo::class, fn ($job) => $job->order->is($order));
 });
 
 test('a succeeded PaymentIntent with no matching Payment is acknowledged without error', function () {
