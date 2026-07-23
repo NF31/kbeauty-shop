@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
@@ -17,6 +18,7 @@ Route::middleware(['auth', 'role:admin|staff|support'])
 
         Route::middleware('permission:products.manage')->group(function () {
             Route::resource('categories', CategoryController::class)->except('show');
+            Route::resource('brands', BrandController::class)->except('show');
             Route::resource('products', ProductController::class)->except('show');
 
             Route::post('products/{product}/options', [ProductOptionController::class, 'store'])

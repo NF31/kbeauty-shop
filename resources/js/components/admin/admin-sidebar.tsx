@@ -1,5 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
-import { LayoutGrid, Package, ShoppingCart, Tags } from 'lucide-react';
+import {
+    BadgePercent,
+    LayoutGrid,
+    Package,
+    ShoppingCart,
+    Tags,
+} from 'lucide-react';
+import BrandController from '@/actions/App/Http/Controllers/Admin/BrandController';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
 import OrderController from '@/actions/App/Http/Controllers/Admin/OrderController';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
@@ -46,6 +53,11 @@ export function AdminSidebar() {
                       title: 'Catégories',
                       href: CategoryController.index.url(),
                       icon: Tags,
+                  },
+                  {
+                      title: 'Marques',
+                      href: BrandController.index.url(),
+                      icon: BadgePercent,
                   },
               ]
             : []),
