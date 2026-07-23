@@ -8,6 +8,7 @@ use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Shared\Contracts\UnitOfWorkInterface;
 use App\Enums\InventoryMovementType;
 use App\Enums\PaymentStatus;
+use App\Jobs\SendPlacedOrderEventToKlaviyo;
 use App\Models\User;
 use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
@@ -67,5 +68,7 @@ class ConfirmOrderPayment
 
         $order->user?->notify(new OrderConfirmation($order));
         Notification::send(User::role('admin')->get(), new NewPaidOrderAlert($order));
+
+        SendPlacedOrderEventToKlaviyo::dispatch($order);
     }
 }

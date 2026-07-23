@@ -45,4 +45,15 @@ return [
         'webhook_secret' => env('STRIPE_WEBHOOK_SECRET'),
     ],
 
+    'klaviyo' => [
+        'private_key' => env('KLAVIYO_PRIVATE_KEY'),
+        'public_key' => env('KLAVIYO_PUBLIC_KEY'),
+    ],
+
+    'trustpilot' => [
+        'business_unit_id' => env('TRUSTPILOT_BUSINESS_UNIT_ID'),
+        'api_key' => env('TRUSTPILOT_API_KEY'),
+        'api_secret' => env('TRUSTPILOT_API_SECRET'),
+    ],
+
 ];
