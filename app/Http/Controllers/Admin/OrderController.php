@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Application\Orders\UseCases\RefundOrder;
+use App\Domain\Orders\Contracts\InvoiceRepositoryInterface;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
 use App\Enums\RefundStatus;
@@ -16,9 +17,11 @@ use App\Models\Payment;
 use App\Models\Refund;
 use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
@@ -49,7 +52,7 @@ class OrderController extends Controller
         ]);
     }
 
-    public function show(Order $order, CloudinaryService $cloudinary): Response
+    public function show(Order $order, CloudinaryService $cloudinary, InvoiceRepositoryInterface $invoices): Response
     {
         $order->load([
             'user:id,name,email',
@@ -59,6 +62,8 @@ class OrderController extends Controller
             'payments',
             'refunds',
         ]);
+
+        $hasInvoice = (bool) $invoices->findForOrder($order);
 
         $formatAddress = fn (?Address $address) => $address ? [
             'fullName' => $address->full_name,
@@ -122,6 +127,7 @@ class OrderController extends Controller
                     'statusLabel' => $refund->status->label(),
                     'createdAt' => $refund->created_at?->toIso8601String(),
                 ]),
+                'hasInvoice' => $hasInvoice,
             ],
             'statusOptions' => array_map(
                 fn (OrderStatus $status) => ['value' => $status->value, 'label' => $status->label()],
@@ -137,6 +143,15 @@ class OrderController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Statut de la commande mis à jour.']);
 
         return to_route('admin.orders.show', $order);
+    }
+
+    public function downloadInvoice(Order $order, InvoiceRepositoryInterface $invoices): StreamedResponse
+    {
+        $invoice = $invoices->findForOrder($order);
+
+        abort_if(! $invoice, 404);
+
+        return Storage::disk('invoices')->download($invoice->path, "{$invoice->number}.pdf");
     }
 
     public function refund(RefundOrderRequest $request, Order $order, RefundOrder $refundOrder): RedirectResponse

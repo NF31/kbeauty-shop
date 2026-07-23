@@ -45,6 +45,7 @@ Route::middleware(['auth', 'role:admin|staff|support'])
             Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
             Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
             Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+            Route::get('orders/{order}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
         });
 
         Route::middleware('permission:orders.refund')->group(function () {

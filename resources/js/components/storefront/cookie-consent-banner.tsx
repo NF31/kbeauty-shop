@@ -1,18 +1,35 @@
 import { Link } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useSyncExternalStore } from 'react';
 import { Button } from '@/components/ui/button';
 import { getCookieConsent, setCookieConsent } from '@/lib/cookie-consent';
 
-export function CookieConsentBanner() {
-    const [visible, setVisible] = useState(() => getCookieConsent() === null);
+function subscribe() {
+    return () => {};
+}
 
-    if (!visible) {
+function getServerSnapshot(): ReturnType<typeof getCookieConsent> {
+    return null;
+}
+
+export function CookieConsentBanner() {
+    // Meme pattern que useIsMobile (hooks/use-mobile.tsx) : localStorage
+    // n'existe pas cote serveur, donc getServerSnapshot fournit une valeur
+    // par defaut identique au premier rendu client - React se resynchronise
+    // ensuite sans mismatch d'hydratation.
+    const consent = useSyncExternalStore(
+        subscribe,
+        getCookieConsent,
+        getServerSnapshot,
+    );
+    const [dismissed, setDismissed] = useState(false);
+
+    if (dismissed || consent !== null) {
         return null;
     }
 
     const choose = (value: 'accepted' | 'rejected') => {
         setCookieConsent(value);
-        setVisible(false);
+        setDismissed(true);
     };
 
     return (

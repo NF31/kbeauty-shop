@@ -85,6 +85,9 @@ Route::middleware('auth')->group(function () {
     Route::get('mon-compte/commandes/{order}', [AccountController::class, 'show'])
         ->name('storefront.account.orders.show');
 
+    Route::get('mon-compte/commandes/{order}/facture', [AccountController::class, 'downloadInvoice'])
+        ->name('storefront.account.orders.invoice');
+
     Route::get('mon-compte/adresses', [AccountAddressController::class, 'index'])
         ->name('storefront.account.addresses.index');
 

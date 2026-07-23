@@ -10,6 +10,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "barryvdh/laravel-dompdf": "^3.1",
         "brick/money": "^0.14.0",
         "cloudinary/cloudinary_php": "^3.1",
         "http-interop/http-factory-guzzle": "^1.2",
@@ -21,6 +22,7 @@
         "laravel/scout": "^11.3",
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
+        "league/flysystem-aws-s3-v3": "^3.35",
         "meilisearch/meilisearch-php": "^1.16",
         "predis/predis": "^3.5",
         "resend/resend-laravel": "^1.4",

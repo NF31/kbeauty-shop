@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Storefront;
 
+use App\Domain\Orders\Contracts\InvoiceRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AccountController extends Controller
 {
@@ -74,11 +77,12 @@ class AccountController extends Controller
      * Une commande n'est consultable que par son propriétaire — empêche de
      * voir le détail d'une commande d'un autre client en devinant son id.
      */
-    public function show(Request $request, Order $order, CloudinaryService $cloudinary): Response
+    public function show(Request $request, Order $order, CloudinaryService $cloudinary, InvoiceRepositoryInterface $invoices): Response
     {
         abort_if($order->user_id !== $request->user()->id, 403);
 
         $order->load(['items', 'shippingAddress', 'billingAddress', 'payments']);
+        $hasInvoice = (bool) $invoices->findForOrder($order);
 
         $formatAddress = fn (?Address $address) => $address ? [
             'fullName' => $address->full_name,
@@ -106,8 +110,24 @@ class AccountController extends Controller
                 'shippingAddress' => $formatAddress($order->shippingAddress),
                 'billingAddress' => $formatAddress($order->billingAddress),
                 'items' => $order->items->map(fn (OrderItem $item) => $this->formatItem($item, $cloudinary)),
+                'hasInvoice' => $hasInvoice,
             ],
         ]);
+    }
+
+    /**
+     * Une facture n'est consultable que par le propriétaire de la commande -
+     * même règle que show() ci-dessus.
+     */
+    public function downloadInvoice(Request $request, Order $order, InvoiceRepositoryInterface $invoices): StreamedResponse
+    {
+        abort_if($order->user_id !== $request->user()->id, 403);
+
+        $invoice = $invoices->findForOrder($order);
+
+        abort_if(! $invoice, 404);
+
+        return Storage::disk('invoices')->download($invoice->path, "{$invoice->number}.pdf");
     }
 
     /**
