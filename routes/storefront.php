@@ -11,7 +11,15 @@ use App\Http\Controllers\Storefront\SkinGuideController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('produits', [CatalogController::class, 'index'])
+    ->middleware('locale:fr')
     ->name('storefront.products.index');
+
+// Pilote i18n (25.1) : version anglaise de la meme page, prefixee /en.
+// Le francais reste la locale par defaut, sans prefixe (voir SetLocale).
+Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
+    Route::get('produits', [CatalogController::class, 'index'])
+        ->name('storefront.products.index');
+});
 
 Route::get('guide-de-choix', [SkinGuideController::class, 'index'])
     ->name('storefront.skin-guide');

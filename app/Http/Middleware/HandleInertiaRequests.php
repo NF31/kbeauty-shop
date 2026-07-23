@@ -48,6 +48,7 @@ class HandleInertiaRequests extends Middleware
                 'roles' => $user?->getRoleNames() ?? [],
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'locale' => fn () => app()->getLocale(),
             'cart' => fn () => CartPresenter::present(
                 app(CartService::class)->findExisting($request),
                 app(CloudinaryService::class),

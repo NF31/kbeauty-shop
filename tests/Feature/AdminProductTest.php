@@ -64,7 +64,7 @@ test('admin can create a draft product with an auto-generated slug and categorie
         'category_ids' => [$category->id],
     ])->assertRedirect();
 
-    $product = Product::query()->where('name', 'Sérum vitamine C')->firstOrFail();
+    $product = Product::query()->whereJsonContains('name->fr', 'Sérum vitamine C')->firstOrFail();
     expect($product->slug)->toBe('serum-vitamine-c');
     expect($product->categories->pluck('id')->all())->toBe([$category->id]);
 });
@@ -77,7 +77,7 @@ test('admin can create a product with skin types', function () {
         'skin_types' => ['sensible', 'seche'],
     ])->assertRedirect();
 
-    $product = Product::query()->where('name', 'Crème apaisante')->firstOrFail();
+    $product = Product::query()->whereJsonContains('name->fr', 'Crème apaisante')->firstOrFail();
     expect($product->skin_types)->toBe(['sensible', 'seche']);
 });
 
@@ -88,7 +88,7 @@ test('publishing a product without an INCI list is rejected', function () {
         'status' => 'published',
     ])->assertInvalid(['ingredients_inci']);
 
-    expect(Product::query()->where('name', 'Crème hydratante')->exists())->toBeFalse();
+    expect(Product::query()->whereJsonContains('name->fr', 'Crème hydratante')->exists())->toBeFalse();
 });
 
 test('publishing a product with an INCI list succeeds', function () {
@@ -99,7 +99,7 @@ test('publishing a product with an INCI list succeeds', function () {
         'ingredients_inci' => 'Aqua, Glycerin',
     ])->assertRedirect();
 
-    $product = Product::query()->where('name', 'Crème hydratante')->firstOrFail();
+    $product = Product::query()->whereJsonContains('name->fr', 'Crème hydratante')->firstOrFail();
     expect($product->status->value)->toBe('published');
 });
 

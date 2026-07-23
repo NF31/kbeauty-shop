@@ -17,15 +17,15 @@ enum SkinType: string
     public function label(): string
     {
         return match ($this) {
-            self::Dry => 'Peau sèche',
-            self::Oily => 'Peau grasse',
-            self::Combination => 'Peau mixte',
-            self::Sensitive => 'Peau sensible',
-            self::Normal => 'Peau normale',
-            self::Dull => 'Peau terne',
-            self::Mature => 'Peau mature',
-            self::Dehydrated => 'Peau déshydratée',
-            self::Acneic => 'Peau à tendance acnéique',
+            self::Dry => __('Peau sèche'),
+            self::Oily => __('Peau grasse'),
+            self::Combination => __('Peau mixte'),
+            self::Sensitive => __('Peau sensible'),
+            self::Normal => __('Peau normale'),
+            self::Dull => __('Peau terne'),
+            self::Mature => __('Peau mature'),
+            self::Dehydrated => __('Peau déshydratée'),
+            self::Acneic => __('Peau à tendance acnéique'),
         };
     }
 }

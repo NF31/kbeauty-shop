@@ -13,6 +13,7 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             auth: Auth;
+            locale: string;
             sidebarOpen: boolean;
             cart: {
                 items: CartStoreItem[];
