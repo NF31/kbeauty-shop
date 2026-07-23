@@ -3,11 +3,11 @@
 namespace App\Application\Orders\UseCases;
 
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
+use App\Domain\Shared\Contracts\UnitOfWorkInterface;
 use App\Enums\OrderStatus;
 use App\Models\Address;
 use App\Models\Cart;
 use App\Models\Order;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Crée (ou met à jour) la commande `pending` correspondant à un panier, en
@@ -17,11 +17,14 @@ use Illuminate\Support\Facades\DB;
  */
 class PlaceOrder
 {
-    public function __construct(private readonly OrderRepositoryInterface $orders) {}
+    public function __construct(
+        private readonly OrderRepositoryInterface $orders,
+        private readonly UnitOfWorkInterface $unitOfWork,
+    ) {}
 
     public function __invoke(Cart $cart, Address $shippingAddress, Address $billingAddress, ?Order $existingOrder = null): Order
     {
-        return DB::transaction(function () use ($cart, $shippingAddress, $billingAddress, $existingOrder) {
+        return $this->unitOfWork->run(function () use ($cart, $shippingAddress, $billingAddress, $existingOrder) {
             $subtotalCents = $cart->subtotalCents();
             $totalCents = $cart->totalCents();
 

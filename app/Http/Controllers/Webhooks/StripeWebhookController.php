@@ -8,7 +8,6 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Stripe\Exception\SignatureVerificationException;
-use Stripe\PaymentIntent;
 
 /**
  * Seule source de vérité pour la confirmation d'un paiement (docs/FEATURES.md
@@ -31,11 +30,8 @@ class StripeWebhookController extends Controller
             return response('Signature invalide.', 400);
         }
 
-        if ($event->type === 'payment_intent.succeeded') {
-            /** @var PaymentIntent $paymentIntent */
-            $paymentIntent = $event->data->object;
-
-            $confirmOrderPayment($paymentIntent->id);
+        if ($event->type === 'payment_intent.succeeded' && $event->paymentIntentId) {
+            $confirmOrderPayment($event->paymentIntentId);
         }
 
         return response('', 200);
