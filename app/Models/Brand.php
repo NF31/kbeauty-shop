@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Sluggable\Attributes\Sluggable;
 
 /**
  * @property int $id
@@ -17,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property string|null $country_of_origin
  */
 #[Fillable(['name', 'slug', 'description', 'logo_path', 'country_of_origin'])]
+#[Sluggable(from: 'name', to: 'slug')]
 class Brand extends Model
 {
     /** @use HasFactory<BrandFactory> */
