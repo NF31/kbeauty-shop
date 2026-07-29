@@ -3,7 +3,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <meta name="trustpilot-one-time-domain-verification-id" content="feebc0ef-61b0-4036-9a07-4e7aa31aec35"/>
+        <meta name="trustpilot-one-time-domain-verification-id" content="553b9a68-6a5c-4284-aacf-9a39d6ba7924"/>
 
         {{-- Inline script to detect system dark mode preference and apply it immediately --}}
         <script>
