@@ -18,6 +18,8 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useConfirmDelete } from '@/hooks/use-confirm-delete';
+import { productStatusLabels } from '@/lib/product-status';
 import admin from '@/routes/admin';
 
 type Option = { id: number; name: string };
@@ -75,12 +77,6 @@ type ProductsEditProps = {
     skinTypeOptions: SkinTypeOption[];
 };
 
-const statusLabels: Record<string, string> = {
-    draft: 'Brouillon',
-    published: 'Publié',
-    archived: 'Archivé',
-};
-
 function euros(cents: number): string {
     return (cents / 100).toFixed(2) + ' €';
 }
@@ -93,43 +89,32 @@ export default function ProductsEdit({
     statusOptions,
     skinTypeOptions,
 }: ProductsEditProps) {
-    const handleDeleteProduct = () => {
-        if (!confirm(`Supprimer le produit « ${product.name} » ?`)) {
-            return;
-        }
+    const confirmDelete = useConfirmDelete();
 
-        router.delete(ProductController.destroy.url(product.id));
+    const handleDeleteProduct = () => {
+        confirmDelete(
+            `Supprimer le produit « ${product.name} » ?`,
+            ProductController.destroy.url(product.id),
+        );
     };
 
     const handleDeleteOption = (option: ProductOptionData) => {
-        if (
-            !confirm(
-                `Supprimer l'axe « ${option.name} » ? Les variantes utilisant ses valeurs seront désassociées.`,
-            )
-        ) {
-            return;
-        }
-
-        router.delete(
+        confirmDelete(
+            `Supprimer l'axe « ${option.name} » ? Les variantes utilisant ses valeurs seront désassociées.`,
             ProductOptionController.destroy.url({
                 product: product.id,
                 option: option.id,
             }),
-            { preserveScroll: true },
         );
     };
 
     const handleDeleteVariant = (variant: ProductVariantData) => {
-        if (!confirm(`Supprimer la variante « ${variant.sku} » ?`)) {
-            return;
-        }
-
-        router.delete(
+        confirmDelete(
+            `Supprimer la variante « ${variant.sku} » ?`,
             ProductVariantController.destroy.url({
                 product: product.id,
                 variant: variant.id,
             }),
-            { preserveScroll: true },
         );
     };
 
@@ -145,16 +130,12 @@ export default function ProductsEdit({
     };
 
     const handleDeleteImage = (image: ProductImageData) => {
-        if (!confirm('Supprimer cette image ?')) {
-            return;
-        }
-
-        router.delete(
+        confirmDelete(
+            'Supprimer cette image ?',
             ProductImageController.destroy.url({
                 product: product.id,
                 image: image.id,
             }),
-            { preserveScroll: true },
         );
     };
 
@@ -362,7 +343,8 @@ export default function ProductsEdit({
                                                 key={option}
                                                 value={option}
                                             >
-                                                {statusLabels[option] ?? option}
+                                                {productStatusLabels[option] ??
+                                                    option}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>

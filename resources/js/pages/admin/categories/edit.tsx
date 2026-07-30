@@ -1,4 +1,4 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useConfirmDelete } from '@/hooks/use-confirm-delete';
 import admin from '@/routes/admin';
 
 type ParentOption = { id: number; name: string };
@@ -30,16 +31,13 @@ export default function CategoriesEdit({
     category,
     parentOptions,
 }: CategoriesEditProps) {
-    const handleDelete = () => {
-        if (
-            !confirm(
-                `Supprimer la catégorie « ${category.name} » ? Les sous-catégories deviendront des catégories racines.`,
-            )
-        ) {
-            return;
-        }
+    const confirmDelete = useConfirmDelete();
 
-        router.delete(CategoryController.destroy.url(category.id));
+    const handleDelete = () => {
+        confirmDelete(
+            `Supprimer la catégorie « ${category.name} » ? Les sous-catégories deviendront des catégories racines.`,
+            CategoryController.destroy.url(category.id),
+        );
     };
 
     return (

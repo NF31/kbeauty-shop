@@ -1,4 +1,4 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
 import type { DataTableColumn } from '@/components/admin/data-table';
 import { DataTable } from '@/components/admin/data-table';
@@ -6,6 +6,8 @@ import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useConfirmDelete } from '@/hooks/use-confirm-delete';
+import { productStatusLabels } from '@/lib/product-status';
 import admin from '@/routes/admin';
 
 type ProductRow = {
@@ -22,24 +24,17 @@ type ProductsIndexProps = {
     thumbnailUrls: Record<number, string>;
 };
 
-const statusLabels: Record<ProductRow['status'], string> = {
-    draft: 'Brouillon',
-    published: 'Publié',
-    archived: 'Archivé',
-};
-
 export default function ProductsIndex({
     products,
     thumbnailUrls,
 }: ProductsIndexProps) {
-    const handleDelete = (product: ProductRow) => {
-        if (!confirm(`Supprimer le produit « ${product.name} » ?`)) {
-            return;
-        }
+    const confirmDelete = useConfirmDelete();
 
-        router.delete(ProductController.destroy.url(product.id), {
-            preserveScroll: true,
-        });
+    const handleDelete = (product: ProductRow) => {
+        confirmDelete(
+            `Supprimer le produit « ${product.name} » ?`,
+            ProductController.destroy.url(product.id),
+        );
     };
 
     const columns: DataTableColumn<ProductRow>[] = [
@@ -76,7 +71,7 @@ export default function ProductsIndex({
                         row.status === 'published' ? 'default' : 'secondary'
                     }
                 >
-                    {statusLabels[row.status]}
+                    {productStatusLabels[row.status]}
                 </Badge>
             ),
         },

@@ -13,6 +13,7 @@ import {
     SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { productStatusLabels } from '@/lib/product-status';
 import admin from '@/routes/admin';
 
 type Option = { id: number; name: string };
@@ -24,12 +25,6 @@ type ProductsCreateProps = {
     categoryOptions: Option[];
     statusOptions: string[];
     skinTypeOptions: SkinTypeOption[];
-};
-
-const statusLabels: Record<string, string> = {
-    draft: 'Brouillon',
-    published: 'Publié',
-    archived: 'Archivé',
 };
 
 export default function ProductsCreate({
@@ -191,7 +186,8 @@ export default function ProductsCreate({
                                                 key={option}
                                                 value={option}
                                             >
-                                                {statusLabels[option] ?? option}
+                                                {productStatusLabels[option] ??
+                                                    option}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
