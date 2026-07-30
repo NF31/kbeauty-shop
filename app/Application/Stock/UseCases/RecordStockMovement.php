@@ -3,12 +3,12 @@
 namespace App\Application\Stock\UseCases;
 
 use App\Domain\Shared\Contracts\UnitOfWorkInterface;
+use App\Domain\Shared\Contracts\UserRepositoryInterface;
 use App\Domain\Stock\Contracts\StockRepositoryInterface;
 use App\Enums\InventoryMovementType;
 use App\Exceptions\InsufficientStockException;
 use App\Models\InventoryMovement;
 use App\Models\ProductVariant;
-use App\Models\User;
 use App\Notifications\LowStockAlert;
 use Illuminate\Support\Facades\Notification;
 
@@ -24,6 +24,7 @@ class RecordStockMovement
     public function __construct(
         private readonly StockRepositoryInterface $stock,
         private readonly UnitOfWorkInterface $unitOfWork,
+        private readonly UserRepositoryInterface $users,
     ) {}
 
     public function __invoke(
@@ -63,7 +64,7 @@ class RecordStockMovement
         $threshold = config('inventory.low_stock_threshold');
 
         if ($previousStock > $threshold && $newStock <= $threshold) {
-            Notification::send(User::role('admin')->get(), new LowStockAlert($variant));
+            Notification::send($this->users->admins(), new LowStockAlert($variant));
         }
     }
 }

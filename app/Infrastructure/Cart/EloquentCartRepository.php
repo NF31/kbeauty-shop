@@ -6,12 +6,21 @@ use App\Domain\Cart\Contracts\CartRepositoryInterface;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
+use Illuminate\Support\Collection;
 
 class EloquentCartRepository implements CartRepositoryInterface
 {
     public function findOrCreateForUser(int $userId): Cart
     {
         return Cart::query()->firstOrCreate(['user_id' => $userId]);
+    }
+
+    /**
+     * @return Collection<int, CartItem>
+     */
+    public function itemsWithVariant(Cart $cart): Collection
+    {
+        return $cart->items()->with('variant')->get();
     }
 
     public function lockVariant(int $variantId): ProductVariant

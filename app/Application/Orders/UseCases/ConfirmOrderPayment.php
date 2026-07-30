@@ -6,10 +6,10 @@ use App\Application\Stock\UseCases\RecordStockMovement;
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Shared\Contracts\UnitOfWorkInterface;
+use App\Domain\Shared\Contracts\UserRepositoryInterface;
 use App\Enums\InventoryMovementType;
 use App\Enums\PaymentStatus;
 use App\Jobs\SendPlacedOrderEventToKlaviyo;
-use App\Models\User;
 use App\Notifications\NewPaidOrderAlert;
 use App\Notifications\OrderConfirmation;
 use Illuminate\Support\Facades\Log;
@@ -28,6 +28,7 @@ class ConfirmOrderPayment
         private readonly RecordStockMovement $recordStockMovement,
         private readonly UnitOfWorkInterface $unitOfWork,
         private readonly GenerateOrderInvoice $generateInvoice,
+        private readonly UserRepositoryInterface $users,
     ) {}
 
     public function __invoke(string $providerPaymentId): void
@@ -67,7 +68,7 @@ class ConfirmOrderPayment
         ($this->generateInvoice)($order);
 
         $order->user?->notify(new OrderConfirmation($order));
-        Notification::send(User::role('admin')->get(), new NewPaidOrderAlert($order));
+        Notification::send($this->users->admins(), new NewPaidOrderAlert($order));
 
         SendPlacedOrderEventToKlaviyo::dispatch($order);
     }
