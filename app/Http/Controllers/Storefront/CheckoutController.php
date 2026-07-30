@@ -4,13 +4,14 @@ namespace App\Http\Controllers\Storefront;
 
 use App\Application\Orders\UseCases\PlaceOrder;
 use App\Application\Orders\UseCases\ProcessCheckoutPayment;
+use App\Domain\Orders\Contracts\AddressRepositoryInterface;
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
+use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\AddressType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutAddressRequest;
 use App\Models\Address;
-use App\Models\Payment;
 use App\Services\CartService;
 use App\Services\CloudinaryService;
 use App\Support\CartPresenter;
@@ -27,7 +28,7 @@ class CheckoutController extends Controller
 
     private const SESSION_ORDER_ID = 'checkout.order_id';
 
-    public function index(Request $request, CartService $cartService, CloudinaryService $cloudinary): Response|RedirectResponse
+    public function index(Request $request, CartService $cartService, CloudinaryService $cloudinary, AddressRepositoryInterface $addresses): Response|RedirectResponse
     {
         $cart = $cartService->current($request);
         $cart->loadMissing('items');
@@ -36,10 +37,10 @@ class CheckoutController extends Controller
             return redirect()->route($this->localizedRoute('storefront.cart.index'));
         }
 
-        $shippingAddress = $this->sessionAddress($request, self::SESSION_SHIPPING_ADDRESS_ID);
-        $billingAddress = $this->sessionAddress($request, self::SESSION_BILLING_ADDRESS_ID);
+        $shippingAddress = $this->sessionAddress($request, $addresses, self::SESSION_SHIPPING_ADDRESS_ID);
+        $billingAddress = $this->sessionAddress($request, $addresses, self::SESSION_BILLING_ADDRESS_ID);
 
-        $addresses = $request->user()?->addresses()->orderByDesc('is_default')->orderByDesc('id')->get();
+        $savedAddresses = $request->user()?->addresses()->orderByDesc('is_default')->orderByDesc('id')->get();
 
         return Inertia::render('storefront/checkout', [
             'step' => $shippingAddress && $billingAddress ? 'recap' : 'address',
@@ -47,20 +48,20 @@ class CheckoutController extends Controller
             // Adresses déjà enregistrées dans l'espace client (9.6) — permet
             // de choisir une adresse existante plutôt que d'en ressaisir une
             // nouvelle à chaque commande.
-            'savedShippingAddresses' => $addresses?->where('type', AddressType::Shipping)->values() ?? [],
-            'savedBillingAddresses' => $addresses?->where('type', AddressType::Billing)->values() ?? [],
+            'savedShippingAddresses' => $savedAddresses?->where('type', AddressType::Shipping)->values() ?? [],
+            'savedBillingAddresses' => $savedAddresses?->where('type', AddressType::Billing)->values() ?? [],
             'shippingAddress' => $shippingAddress,
             'billingAddress' => $billingAddress,
         ]);
     }
 
-    public function storeAddress(StoreCheckoutAddressRequest $request): RedirectResponse
+    public function storeAddress(StoreCheckoutAddressRequest $request, AddressRepositoryInterface $addresses): RedirectResponse
     {
         $userId = $request->user()?->id;
 
         $shipping = $request->filled('shipping_address_id')
-            ? Address::query()->findOrFail($request->integer('shipping_address_id'))
-            : Address::query()->create([
+            ? $addresses->findOrFail($request->integer('shipping_address_id'))
+            : $addresses->create([
                 ...$request->validated('shipping'),
                 'user_id' => $userId,
                 'type' => AddressType::Shipping,
@@ -73,7 +74,7 @@ class CheckoutController extends Controller
         // adresse déjà enregistrée) — cohérent avec le comportement d'origine
         // où chaque commande dispose de sa propre ligne `billing`.
         $billing = match (true) {
-            $billingSameAsShipping => Address::query()->create([
+            $billingSameAsShipping => $addresses->create([
                 'full_name' => $shipping->full_name,
                 'line1' => $shipping->line1,
                 'line2' => $shipping->line2,
@@ -84,8 +85,8 @@ class CheckoutController extends Controller
                 'user_id' => $userId,
                 'type' => AddressType::Billing,
             ]),
-            $request->filled('billing_address_id') => Address::query()->findOrFail($request->integer('billing_address_id')),
-            default => Address::query()->create([
+            $request->filled('billing_address_id') => $addresses->findOrFail($request->integer('billing_address_id')),
+            default => $addresses->create([
                 ...$request->validated('billing'),
                 'user_id' => $userId,
                 'type' => AddressType::Billing,
@@ -109,14 +110,15 @@ class CheckoutController extends Controller
         CartService $cartService,
         CloudinaryService $cloudinary,
         OrderRepositoryInterface $orders,
+        AddressRepositoryInterface $addresses,
         PlaceOrder $placeOrder,
         ProcessCheckoutPayment $processCheckoutPayment,
     ): Response|RedirectResponse {
         $cart = $cartService->current($request);
         $cart->loadMissing('items');
 
-        $shippingAddress = $this->sessionAddress($request, self::SESSION_SHIPPING_ADDRESS_ID);
-        $billingAddress = $this->sessionAddress($request, self::SESSION_BILLING_ADDRESS_ID);
+        $shippingAddress = $this->sessionAddress($request, $addresses, self::SESSION_SHIPPING_ADDRESS_ID);
+        $billingAddress = $this->sessionAddress($request, $addresses, self::SESSION_BILLING_ADDRESS_ID);
 
         if ($cart->items->isEmpty() || ! $shippingAddress || ! $billingAddress) {
             return redirect()->route($this->localizedRoute('storefront.checkout.index'));
@@ -164,7 +166,7 @@ class CheckoutController extends Controller
      * confirmé côté Stripe — sinon le client le retrouverait plein en
      * retournant sur /panier après avoir payé.
      */
-    public function confirmation(Request $request, CartService $cartService, PaymentGatewayInterface $gateway, OrderRepositoryInterface $orders): Response
+    public function confirmation(Request $request, CartService $cartService, PaymentGatewayInterface $gateway, OrderRepositoryInterface $orders, PaymentRepositoryInterface $payments): Response
     {
         $orderId = $request->session()->get(self::SESSION_ORDER_ID);
         $order = $orderId ? $orders->find((int) $orderId) : null;
@@ -172,7 +174,7 @@ class CheckoutController extends Controller
         $paymentConfirmed = false;
 
         if ($order) {
-            $payment = Payment::query()->where('order_id', $order->id)->latest('id')->first();
+            $payment = $payments->findLatest($order);
 
             $paymentConfirmed = $payment && $gateway->retrievePaymentIntent($payment->provider_payment_id)->status === 'succeeded';
 
@@ -201,11 +203,11 @@ class CheckoutController extends Controller
         ]);
     }
 
-    private function sessionAddress(Request $request, string $sessionKey): ?Address
+    private function sessionAddress(Request $request, AddressRepositoryInterface $addresses, string $sessionKey): ?Address
     {
         $id = $request->session()->get($sessionKey);
 
-        return $id ? Address::query()->find((int) $id) : null;
+        return $id ? $addresses->find((int) $id) : null;
     }
 
     /**

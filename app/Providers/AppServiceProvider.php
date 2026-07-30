@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Domain\Cart\Contracts\CartRepositoryInterface;
+use App\Domain\Orders\Contracts\AddressRepositoryInterface;
 use App\Domain\Orders\Contracts\InvoicePdfRendererInterface;
 use App\Domain\Orders\Contracts\InvoiceRepositoryInterface;
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
@@ -13,6 +14,7 @@ use App\Domain\Shared\Contracts\UserRepositoryInterface;
 use App\Domain\Stock\Contracts\StockRepositoryInterface;
 use App\Infrastructure\Cart\EloquentCartRepository;
 use App\Infrastructure\Orders\DompdfInvoiceRenderer;
+use App\Infrastructure\Orders\EloquentAddressRepository;
 use App\Infrastructure\Orders\EloquentInvoiceRepository;
 use App\Infrastructure\Orders\EloquentOrderRepository;
 use App\Infrastructure\Orders\EloquentPaymentRepository;
@@ -49,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(StripeClient::class, fn () => new StripeClient(config('services.stripe.secret')));
 
         $this->app->bind(OrderRepositoryInterface::class, EloquentOrderRepository::class);
+        $this->app->bind(AddressRepositoryInterface::class, EloquentAddressRepository::class);
         $this->app->bind(PaymentRepositoryInterface::class, EloquentPaymentRepository::class);
         $this->app->bind(PaymentGatewayInterface::class, StripePaymentGateway::class);
         $this->app->bind(UnitOfWorkInterface::class, DatabaseUnitOfWork::class);

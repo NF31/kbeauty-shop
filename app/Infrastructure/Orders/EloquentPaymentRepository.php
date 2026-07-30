@@ -25,6 +25,13 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
             ->first();
     }
 
+    public function findLatest(Order $order): ?Payment
+    {
+        return $order->payments()
+            ->latest('id')
+            ->first();
+    }
+
     /**
      * @param  array<int, string>  $with
      */
