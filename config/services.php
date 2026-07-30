@@ -54,6 +54,7 @@ return [
         'business_unit_id' => env('TRUSTPILOT_BUSINESS_UNIT_ID'),
         'api_key' => env('TRUSTPILOT_API_KEY'),
         'api_secret' => env('TRUSTPILOT_API_SECRET'),
+        'invitation_bcc' => env('TRUSTPILOT_INVITATION_BCC'),
     ],
 
 ];
