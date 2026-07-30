@@ -23,11 +23,13 @@ class ProductController extends Controller
             ->with(['brand:id,name', 'primaryImage'])
             ->withCount('variants')
             ->orderByDesc('created_at')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return Inertia::render('admin/products/index', [
             'products' => $products,
             'thumbnailUrls' => $products
+                ->getCollection()
                 ->filter(fn ($product) => $product->primaryImage !== null)
                 ->mapWithKeys(fn ($product) => [
                     $product->id => $cloudinary->url($product->primaryImage->path, 150, 150),

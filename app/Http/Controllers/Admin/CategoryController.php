@@ -19,7 +19,8 @@ class CategoryController extends Controller
             ->with('parent:id,name')
             ->orderBy('position')
             ->orderBy('name')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return Inertia::render('admin/categories/index', [
             'categories' => $categories,

@@ -29,7 +29,7 @@ test('admin can list brands with product count', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('admin/brands/index')
-            ->has('brands', 2)
+            ->has('brands.data', 2)
         );
 });
 
