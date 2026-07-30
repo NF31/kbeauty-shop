@@ -11,6 +11,8 @@ interface PaymentRepositoryInterface
 
     public function findLatestPending(Order $order): ?Payment;
 
+    public function findLatest(Order $order): ?Payment;
+
     /**
      * @param  array<int, string>  $with
      */
