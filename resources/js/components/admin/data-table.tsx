@@ -28,44 +28,46 @@ export function DataTable<Row>({
     emptyMessage = 'Aucun résultat.',
 }: DataTableProps<Row>) {
     return (
-        <Table>
-            <TableHeader>
-                <TableRow>
-                    {columns.map((column) => (
-                        <TableHead
-                            key={column.key}
-                            className={column.className}
-                        >
-                            {column.header}
-                        </TableHead>
-                    ))}
-                </TableRow>
-            </TableHeader>
-            <TableBody>
-                {rows.length === 0 ? (
+        <div className="overflow-hidden rounded-xl border bg-card">
+            <Table>
+                <TableHeader className="sticky top-0 z-10 bg-card">
                     <TableRow>
-                        <TableCell
-                            colSpan={columns.length}
-                            className="text-center text-muted-foreground"
-                        >
-                            {emptyMessage}
-                        </TableCell>
+                        {columns.map((column) => (
+                            <TableHead
+                                key={column.key}
+                                className={column.className}
+                            >
+                                {column.header}
+                            </TableHead>
+                        ))}
                     </TableRow>
-                ) : (
-                    rows.map((row) => (
-                        <TableRow key={rowKey(row)}>
-                            {columns.map((column) => (
-                                <TableCell
-                                    key={column.key}
-                                    className={column.className}
-                                >
-                                    {column.render(row)}
-                                </TableCell>
-                            ))}
+                </TableHeader>
+                <TableBody>
+                    {rows.length === 0 ? (
+                        <TableRow>
+                            <TableCell
+                                colSpan={columns.length}
+                                className="py-10 text-center text-muted-foreground"
+                            >
+                                {emptyMessage}
+                            </TableCell>
                         </TableRow>
-                    ))
-                )}
-            </TableBody>
-        </Table>
+                    ) : (
+                        rows.map((row) => (
+                            <TableRow key={rowKey(row)}>
+                                {columns.map((column) => (
+                                    <TableCell
+                                        key={column.key}
+                                        className={column.className}
+                                    >
+                                        {column.render(row)}
+                                    </TableCell>
+                                ))}
+                            </TableRow>
+                        ))
+                    )}
+                </TableBody>
+            </Table>
+        </div>
     );
 }

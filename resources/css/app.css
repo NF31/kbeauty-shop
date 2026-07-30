@@ -41,6 +41,14 @@
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
 
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+
+    --color-brand-sage: var(--brand-sage);
+    --color-brand-sage-foreground: var(--brand-sage-foreground);
+    --color-brand-gold: var(--brand-gold);
+    --color-brand-gold-foreground: var(--brand-gold-foreground);
+
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -61,75 +69,111 @@
     --color-sidebar-ring: var(--sidebar-ring);
 }
 
+/*
+ * Charte graphique K-beauty (docs/DESIGN_GUIDE.md) : fond blanc casse chaud,
+ * texte quasi-noir, accent signature rose poudre, succes/erreur adoucis.
+ * Couleurs codees ici uniquement (jamais en dur dans les composants).
+ *
+ * Echelle rose (du plus clair au plus sature) utilisee pour donner de la
+ * profondeur aux differents roles plutot qu'une seule teinte plate partout.
+ */
 :root {
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --destructive-foreground: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.87 0 0);
-    --chart-1: oklch(0.646 0.222 41.116);
-    --chart-2: oklch(0.6 0.118 184.704);
-    --chart-3: oklch(0.398 0.07 227.392);
-    --chart-4: oklch(0.828 0.189 84.429);
-    --chart-5: oklch(0.769 0.188 70.08);
+    --rose-50: #fbf3f3;
+    --rose-100: #f6e4e4;
+    --rose-200: #efd3d3;
+    --rose-300: #e8c4c4;
+    --rose-400: #dda8a8;
+    --rose-500: #cc8484;
+    --rose-600: #b86868;
+
+    --background: #faf9f7;
+    --foreground: #1a1a1a;
+    --card: #ffffff;
+    --card-foreground: #1a1a1a;
+    --popover: #ffffff;
+    --popover-foreground: #1a1a1a;
+    --primary: #1a1a1a;
+    --primary-foreground: #faf9f7;
+    --secondary: var(--rose-100);
+    --secondary-foreground: #1a1a1a;
+    --muted: #f3f1ee;
+    --muted-foreground: #6b6b6b;
+    --accent: var(--rose-200);
+    --accent-foreground: #1a1a1a;
+    --destructive: #c97064;
+    --destructive-foreground: #ffffff;
+    --success: #7a9b76;
+    --success-foreground: #ffffff;
+    --brand-sage: #e4e9e1;
+    --brand-sage-foreground: #4f6a49;
+    --brand-gold: #f3e3b8;
+    --brand-gold-foreground: #8a6a1a;
+    --border: #e7e2dc;
+    --input: #e7e2dc;
+    --ring: var(--rose-500);
+    --chart-1: var(--rose-300);
+    --chart-2: #b7c4b0;
+    --chart-3: #d9c7b8;
+    --chart-4: #c97064;
+    --chart-5: #7a9b76;
     --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.87 0 0);
+    --sidebar: #f5f1ec;
+    --sidebar-foreground: #1a1a1a;
+    --sidebar-primary: #1a1a1a;
+    --sidebar-primary-foreground: #faf9f7;
+    --sidebar-accent: var(--rose-100);
+    --sidebar-accent-foreground: #1a1a1a;
+    --sidebar-border: #e7e2dc;
+    --sidebar-ring: var(--rose-500);
 }
 
 .dark {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: oklch(0.985 0 0);
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: oklch(0.439 0 0);
-    --chart-1: oklch(0.488 0.243 264.376);
-    --chart-2: oklch(0.696 0.17 162.48);
-    --chart-3: oklch(0.769 0.188 70.08);
-    --chart-4: oklch(0.627 0.265 303.9);
-    --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    --rose-50: #4a3636;
+    --rose-100: #5c4141;
+    --rose-200: #714f4f;
+    --rose-300: #8a6262;
+    --rose-400: #b17f7f;
+    --rose-500: #cc9d9d;
+    --rose-600: #e0bcbc;
+
+    --background: #1a1a1a;
+    --foreground: #f5f1ec;
+    --card: #211f1d;
+    --card-foreground: #f5f1ec;
+    --popover: #211f1d;
+    --popover-foreground: #f5f1ec;
+    --primary: #f5f1ec;
+    --primary-foreground: #1a1a1a;
+    --secondary: var(--rose-100);
+    --secondary-foreground: #f5f1ec;
+    --muted: #2a2826;
+    --muted-foreground: #a8a29a;
+    --accent: var(--rose-200);
+    --accent-foreground: #f5f1ec;
+    --destructive: #c97064;
+    --destructive-foreground: #1a1a1a;
+    --success: #7a9b76;
+    --success-foreground: #1a1a1a;
+    --brand-sage: #3a4536;
+    --brand-sage-foreground: #c7d4c0;
+    --brand-gold: #4a3b15;
+    --brand-gold-foreground: #e8cd84;
+    --border: #3a3733;
+    --input: #3a3733;
+    --ring: var(--rose-500);
+    --chart-1: var(--rose-400);
+    --chart-2: #b7c4b0;
+    --chart-3: #d9c7b8;
+    --chart-4: #c97064;
+    --chart-5: #7a9b76;
+    --sidebar: #211f1d;
+    --sidebar-foreground: #f5f1ec;
+    --sidebar-primary: #f5f1ec;
+    --sidebar-primary-foreground: #1a1a1a;
+    --sidebar-accent: var(--rose-100);
+    --sidebar-accent-foreground: #f5f1ec;
+    --sidebar-border: #3a3733;
+    --sidebar-ring: var(--rose-500);
 }
 
 @layer base {

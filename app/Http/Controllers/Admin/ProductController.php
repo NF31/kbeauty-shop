@@ -12,17 +12,34 @@ use App\Models\Category;
 use App\Models\Product;
 use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function index(CloudinaryService $cloudinary): Response
+    public function index(Request $request, CloudinaryService $cloudinary): Response
     {
+        $search = trim((string) $request->query('search'));
+        $status = $request->query('status');
+        $sort = $request->query('sort', 'newest');
+
         $products = Product::query()
             ->with(['brand:id,name', 'primaryImage'])
             ->withCount('variants')
-            ->orderByDesc('created_at')
+            ->withMin('variants', 'price_cents')
+            ->when(
+                $search !== '',
+                fn ($query) => $query->where('name->'.app()->getLocale(), 'like', "%{$search}%"),
+            )
+            ->when(
+                is_string($status) && ProductStatus::tryFrom($status) !== null,
+                fn ($query) => $query->where('status', $status),
+            )
+            ->when($sort === 'price_asc', fn ($query) => $query->orderBy('variants_min_price_cents'))
+            ->when($sort === 'price_desc', fn ($query) => $query->orderByDesc('variants_min_price_cents'))
+            ->when($sort === 'name', fn ($query) => $query->orderBy('name->'.app()->getLocale()))
+            ->when($sort === 'newest' || ! in_array($sort, ['price_asc', 'price_desc', 'name'], true), fn ($query) => $query->orderByDesc('created_at'))
             ->paginate(20)
             ->withQueryString();
 
@@ -44,11 +61,14 @@ class ProductController extends Controller
             'is_featured' => $product->is_featured,
             'brand' => $product->brand,
             'variants_count' => $product->variants_count,
+            'priceFromCents' => $product->getAttribute('variants_min_price_cents'),
         ]);
 
         return Inertia::render('admin/products/index', [
             'products' => $products,
             'thumbnailUrls' => $thumbnailUrls,
+            'filters' => ['search' => $search, 'status' => $status, 'sort' => $sort],
+            'statusOptions' => ProductStatus::cases(),
         ]);
     }
 
