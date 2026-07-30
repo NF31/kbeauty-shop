@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Models\ProductVariant;
@@ -18,7 +17,7 @@ class DashboardController extends Controller
         return Inertia::render('admin/dashboard', [
             'stats' => [
                 'productsCount' => Product::query()->count(),
-                'publishedProductsCount' => Product::query()->where('status', ProductStatus::Published)->count(),
+                'publishedProductsCount' => Product::query()->published()->count(),
                 'lowStockVariantsCount' => ProductVariant::query()->where('stock_quantity', '<=', $lowStockThreshold)->count(),
             ],
         ]);

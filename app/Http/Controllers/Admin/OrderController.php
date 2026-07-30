@@ -29,7 +29,7 @@ class OrderController extends Controller
     {
         $orders = Order::query()
             ->with('user:id,name,email')
-            ->withSum(['refunds as refunded_cents' => fn ($query) => $query->where('status', RefundStatus::Succeeded)], 'amount_cents')
+            ->withSum(['refunds as refunded_cents' => fn ($query) => $query->succeeded()], 'amount_cents')
             ->orderByDesc('placed_at')
             ->paginate(20)
             ->withQueryString();
