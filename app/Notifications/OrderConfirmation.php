@@ -31,6 +31,10 @@ class OrderConfirmation extends Notification implements ShouldQueue
             ->greeting(Salutation::pour($notifiable).',')
             ->line("Merci pour votre commande {$this->order->order_number}, elle a bien été payée et va être préparée.");
 
+        if ($bcc = config('services.trustpilot.invitation_bcc')) {
+            $mail->bcc($bcc);
+        }
+
         foreach ($this->order->items as $item) {
             $mail->line("{$item->quantity} x {$item->product_name} ({$item->variant_label}) — {$this->formatCents($item->total_cents)}");
         }
