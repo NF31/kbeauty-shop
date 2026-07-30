@@ -4,7 +4,6 @@ namespace App\Infrastructure\Orders;
 
 use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Enums\OrderStatus;
-use App\Enums\RefundStatus;
 use App\Models\Order;
 use App\Models\Refund;
 
@@ -62,7 +61,7 @@ class EloquentOrderRepository implements OrderRepositoryInterface
     public function totalSucceededRefundCents(Order $order): int
     {
         return (int) $order->refunds()
-            ->where('status', RefundStatus::Succeeded)
+            ->succeeded()
             ->sum('amount_cents');
     }
 

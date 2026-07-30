@@ -2,7 +2,6 @@
 
 namespace App\Support;
 
-use App\Enums\ProductStatus;
 use App\Enums\SkinType;
 use App\Models\Brand;
 use App\Models\Category;
@@ -34,7 +33,7 @@ class CatalogQuery
         $priceMax = self::toCents($priceMaxEuros);
 
         $products = Product::query()
-            ->where('status', ProductStatus::Published)
+            ->published()
             ->when($searchIds !== null, fn ($query) => $query->whereIn('products.id', $searchIds))
             ->when($skinType, fn ($query) => $query->whereJsonContains('skin_types', $skinType->value))
             ->when($category, fn ($query) => $query->whereHas(
