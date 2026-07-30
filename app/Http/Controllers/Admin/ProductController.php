@@ -26,14 +26,29 @@ class ProductController extends Controller
             ->paginate(20)
             ->withQueryString();
 
+        $thumbnailUrls = $products
+            ->getCollection()
+            ->filter(fn (Product $product) => $product->primaryImage !== null)
+            ->mapWithKeys(fn (Product $product) => [
+                $product->id => $cloudinary->url($product->primaryImage->path, 150, 150),
+            ]);
+
+        // `name` est traduisible (spatie/laravel-translatable) : Product::toArray()
+        // renvoie le tableau brut {"fr": "...", "en": "..."} au lieu de la chaine
+        // resolue par la locale courante (contrairement a l'acces direct $product->name).
+        // Sans ce map, Inertia serialise l'objet brut et React plante en l'affichant.
+        $products->through(fn (Product $product) => [
+            'id' => $product->id,
+            'name' => $product->name,
+            'status' => $product->status->value,
+            'is_featured' => $product->is_featured,
+            'brand' => $product->brand,
+            'variants_count' => $product->variants_count,
+        ]);
+
         return Inertia::render('admin/products/index', [
             'products' => $products,
-            'thumbnailUrls' => $products
-                ->getCollection()
-                ->filter(fn ($product) => $product->primaryImage !== null)
-                ->mapWithKeys(fn ($product) => [
-                    $product->id => $cloudinary->url($product->primaryImage->path, 150, 150),
-                ]),
+            'thumbnailUrls' => $thumbnailUrls,
         ]);
     }
 
@@ -72,7 +87,25 @@ class ProductController extends Controller
         ]);
 
         return Inertia::render('admin/products/edit', [
-            'product' => $product,
+            // `name`/`short_description`/`description`/`ingredients_inci`/`how_to_use` sont
+            // traduisibles (spatie/laravel-translatable) : passer $product brut renverrait
+            // {"fr": "...", "en": "..."} au lieu de la chaine resolue par la locale courante.
+            'product' => [
+                'id' => $product->id,
+                'name' => $product->name,
+                'short_description' => $product->short_description,
+                'description' => $product->description,
+                'ingredients_inci' => $product->ingredients_inci,
+                'how_to_use' => $product->how_to_use,
+                'skin_types' => $product->skin_types,
+                'status' => $product->status->value,
+                'is_featured' => $product->is_featured,
+                'brand' => $product->brand,
+                'categories' => $product->categories,
+                'options' => $product->options,
+                'variants' => $product->variants,
+                'images' => $product->images,
+            ],
             'imageUrls' => $product->images->mapWithKeys(fn ($image) => [$image->id => $image->url(400, 400)]),
             'brandOptions' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categoryOptions' => Category::query()->orderBy('name')->get(['id', 'name']),
