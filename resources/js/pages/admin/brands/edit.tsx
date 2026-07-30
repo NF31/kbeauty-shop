@@ -1,10 +1,11 @@
-import { Form, Head, Link, router } from '@inertiajs/react';
+import { Form, Head, Link } from '@inertiajs/react';
 import BrandController from '@/actions/App/Http/Controllers/Admin/BrandController';
 import InputError from '@/components/input-error';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useConfirmDelete } from '@/hooks/use-confirm-delete';
 import admin from '@/routes/admin';
 
 type BrandsEditProps = {
@@ -19,16 +20,13 @@ type BrandsEditProps = {
 };
 
 export default function BrandsEdit({ brand }: BrandsEditProps) {
-    const handleDelete = () => {
-        if (
-            !confirm(
-                `Supprimer la marque « ${brand.name} » ? Les produits liés perdront leur marque.`,
-            )
-        ) {
-            return;
-        }
+    const confirmDelete = useConfirmDelete();
 
-        router.delete(BrandController.destroy.url(brand.id));
+    const handleDelete = () => {
+        confirmDelete(
+            `Supprimer la marque « ${brand.name} » ? Les produits liés perdront leur marque.`,
+            BrandController.destroy.url(brand.id),
+        );
     };
 
     return (

@@ -1,10 +1,11 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
 import type { DataTableColumn } from '@/components/admin/data-table';
 import { DataTable } from '@/components/admin/data-table';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
+import { useConfirmDelete } from '@/hooks/use-confirm-delete';
 import admin from '@/routes/admin';
 
 type CategoryRow = {
@@ -21,18 +22,13 @@ type CategoriesIndexProps = {
 };
 
 export default function CategoriesIndex({ categories }: CategoriesIndexProps) {
-    const handleDelete = (category: CategoryRow) => {
-        if (
-            !confirm(
-                `Supprimer la catégorie « ${category.name} » ? Les sous-catégories deviendront des catégories racines.`,
-            )
-        ) {
-            return;
-        }
+    const confirmDelete = useConfirmDelete();
 
-        router.delete(CategoryController.destroy.url(category.id), {
-            preserveScroll: true,
-        });
+    const handleDelete = (category: CategoryRow) => {
+        confirmDelete(
+            `Supprimer la catégorie « ${category.name} » ? Les sous-catégories deviendront des catégories racines.`,
+            CategoryController.destroy.url(category.id),
+        );
     };
 
     const columns: DataTableColumn<CategoryRow>[] = [

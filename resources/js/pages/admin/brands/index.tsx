@@ -1,10 +1,11 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import BrandController from '@/actions/App/Http/Controllers/Admin/BrandController';
 import type { DataTableColumn } from '@/components/admin/data-table';
 import { DataTable } from '@/components/admin/data-table';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
+import { useConfirmDelete } from '@/hooks/use-confirm-delete';
 import admin from '@/routes/admin';
 
 type BrandRow = {
@@ -20,18 +21,13 @@ type BrandsIndexProps = {
 };
 
 export default function BrandsIndex({ brands }: BrandsIndexProps) {
-    const handleDelete = (brand: BrandRow) => {
-        if (
-            !confirm(
-                `Supprimer la marque « ${brand.name} » ? Les produits liés perdront leur marque.`,
-            )
-        ) {
-            return;
-        }
+    const confirmDelete = useConfirmDelete();
 
-        router.delete(BrandController.destroy.url(brand.id), {
-            preserveScroll: true,
-        });
+    const handleDelete = (brand: BrandRow) => {
+        confirmDelete(
+            `Supprimer la marque « ${brand.name} » ? Les produits liés perdront leur marque.`,
+            BrandController.destroy.url(brand.id),
+        );
     };
 
     const columns: DataTableColumn<BrandRow>[] = [
