@@ -17,21 +17,26 @@ Route::middleware(['auth', 'role:admin|staff|support'])
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::middleware('permission:products.manage')->group(function () {
-            Route::resource('categories', CategoryController::class)->except('show');
-            Route::resource('brands', BrandController::class)->except('show');
-            Route::resource('products', ProductController::class)->except('show');
+            // Throttle dedie : protege le CRUD catalogue d'un compte compromis ou d'un
+            // bug frontend en boucle, meme si l'impact est moins critique qu'un
+            // remboursement (throttle plus large que celui des uploads/refund).
+            Route::middleware('throttle:60,1,admin-catalog-write')->group(function () {
+                Route::resource('categories', CategoryController::class)->except('show');
+                Route::resource('brands', BrandController::class)->except('show');
+                Route::resource('products', ProductController::class)->except('show');
 
-            Route::post('products/{product}/options', [ProductOptionController::class, 'store'])
-                ->name('products.options.store');
-            Route::delete('products/{product}/options/{option}', [ProductOptionController::class, 'destroy'])
-                ->name('products.options.destroy');
+                Route::post('products/{product}/options', [ProductOptionController::class, 'store'])
+                    ->name('products.options.store');
+                Route::delete('products/{product}/options/{option}', [ProductOptionController::class, 'destroy'])
+                    ->name('products.options.destroy');
 
-            Route::post('products/{product}/variants', [ProductVariantController::class, 'store'])
-                ->name('products.variants.store');
-            Route::put('products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
-                ->name('products.variants.update');
-            Route::delete('products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])
-                ->name('products.variants.destroy');
+                Route::post('products/{product}/variants', [ProductVariantController::class, 'store'])
+                    ->name('products.variants.store');
+                Route::put('products/{product}/variants/{variant}', [ProductVariantController::class, 'update'])
+                    ->name('products.variants.update');
+                Route::delete('products/{product}/variants/{variant}', [ProductVariantController::class, 'destroy'])
+                    ->name('products.variants.destroy');
+            });
 
             // Throttle dedie : chaque upload appelle l'API Cloudinary (cout direct).
             Route::post('products/{product}/images', [ProductImageController::class, 'store'])
@@ -46,7 +51,12 @@ Route::middleware(['auth', 'role:admin|staff|support'])
         Route::middleware('permission:orders.manage')->group(function () {
             Route::get('orders', [OrderController::class, 'index'])->name('orders.index');
             Route::get('orders/{order}', [OrderController::class, 'show'])->name('orders.show');
-            Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.update-status');
+            // Throttle dedie : un changement de statut declenche des effets de bord
+            // (emails, mouvements de stock) — protege d'un compte compromis ou d'un
+            // bug frontend en boucle, meme logique que le throttle refund ci-dessous.
+            Route::patch('orders/{order}/status', [OrderController::class, 'updateStatus'])
+                ->middleware('throttle:30,1,admin-order-status')
+                ->name('orders.update-status');
             Route::get('orders/{order}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
         });
 
