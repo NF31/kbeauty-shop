@@ -2,6 +2,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
 import type { DataTableColumn } from '@/components/admin/data-table';
 import { DataTable } from '@/components/admin/data-table';
+import type { Paginated } from '@/components/pagination';
+import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import admin from '@/routes/admin';
 
@@ -15,7 +17,7 @@ type CategoryRow = {
 };
 
 type CategoriesIndexProps = {
-    categories: CategoryRow[];
+    categories: Paginated<CategoryRow>;
 };
 
 export default function CategoriesIndex({ categories }: CategoriesIndexProps) {
@@ -84,10 +86,12 @@ export default function CategoriesIndex({ categories }: CategoriesIndexProps) {
 
                 <DataTable
                     columns={columns}
-                    rows={categories}
+                    rows={categories.data}
                     rowKey={(row) => row.id}
                     emptyMessage="Aucune catégorie pour l'instant."
                 />
+
+                <Pagination links={categories.links} />
             </div>
         </>
     );

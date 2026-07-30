@@ -2,6 +2,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
 import type { DataTableColumn } from '@/components/admin/data-table';
 import { DataTable } from '@/components/admin/data-table';
+import type { Paginated } from '@/components/pagination';
+import { Pagination } from '@/components/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import admin from '@/routes/admin';
@@ -16,7 +18,7 @@ type ProductRow = {
 };
 
 type ProductsIndexProps = {
-    products: ProductRow[];
+    products: Paginated<ProductRow>;
     thumbnailUrls: Record<number, string>;
 };
 
@@ -121,10 +123,12 @@ export default function ProductsIndex({
 
                 <DataTable
                     columns={columns}
-                    rows={products}
+                    rows={products.data}
                     rowKey={(row) => row.id}
                     emptyMessage="Aucun produit pour l'instant."
                 />
+
+                <Pagination links={products.links} />
             </div>
         </>
     );

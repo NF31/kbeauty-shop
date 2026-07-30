@@ -2,6 +2,8 @@ import { Head, Link, router } from '@inertiajs/react';
 import BrandController from '@/actions/App/Http/Controllers/Admin/BrandController';
 import type { DataTableColumn } from '@/components/admin/data-table';
 import { DataTable } from '@/components/admin/data-table';
+import type { Paginated } from '@/components/pagination';
+import { Pagination } from '@/components/pagination';
 import { Button } from '@/components/ui/button';
 import admin from '@/routes/admin';
 
@@ -14,7 +16,7 @@ type BrandRow = {
 };
 
 type BrandsIndexProps = {
-    brands: BrandRow[];
+    brands: Paginated<BrandRow>;
 };
 
 export default function BrandsIndex({ brands }: BrandsIndexProps) {
@@ -83,10 +85,12 @@ export default function BrandsIndex({ brands }: BrandsIndexProps) {
 
                 <DataTable
                     columns={columns}
-                    rows={brands}
+                    rows={brands.data}
                     rowKey={(row) => row.id}
                     emptyMessage="Aucune marque pour l'instant."
                 />
+
+                <Pagination links={brands.links} />
             </div>
         </>
     );

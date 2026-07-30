@@ -28,7 +28,7 @@ test('admin can list categories with parent and product count', function () {
         ->assertOk()
         ->assertInertia(fn ($page) => $page
             ->component('admin/categories/index')
-            ->has('categories', 2)
+            ->has('categories.data', 2)
         );
 });
 

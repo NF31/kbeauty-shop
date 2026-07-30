@@ -17,7 +17,8 @@ class BrandController extends Controller
         $brands = Brand::query()
             ->withCount('products')
             ->orderBy('name')
-            ->get();
+            ->paginate(20)
+            ->withQueryString();
 
         return Inertia::render('admin/brands/index', [
             'brands' => $brands,
