@@ -29,7 +29,7 @@ class MergeGuestCartIntoUserCart
         $this->unitOfWork->run(function () use ($guestCart, $user) {
             $userCart = $this->carts->findOrCreateForUser($user->id);
 
-            foreach ($guestCart->items()->with('variant')->get() as $guestItem) {
+            foreach ($this->carts->itemsWithVariant($guestCart) as $guestItem) {
                 try {
                     ($this->addCartItem)($userCart, $guestItem->variant, $guestItem->quantity);
                 } catch (InsufficientStockException) {

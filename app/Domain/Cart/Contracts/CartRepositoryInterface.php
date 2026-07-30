@@ -5,10 +5,16 @@ namespace App\Domain\Cart\Contracts;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\ProductVariant;
+use Illuminate\Support\Collection;
 
 interface CartRepositoryInterface
 {
     public function findOrCreateForUser(int $userId): Cart;
+
+    /**
+     * @return Collection<int, CartItem>
+     */
+    public function itemsWithVariant(Cart $cart): Collection;
 
     public function lockVariant(int $variantId): ProductVariant;
 
