@@ -23,6 +23,11 @@ class BrandController extends Controller
 
         return Inertia::render('storefront/brands-index', [
             'brands' => $brands,
+            'seo' => [
+                'title' => __('Nos marques'),
+                'description' => __('Toutes les marques de beauté coréenne disponibles sur Korea Beauty.'),
+                'image' => null,
+            ],
         ]);
     }
 

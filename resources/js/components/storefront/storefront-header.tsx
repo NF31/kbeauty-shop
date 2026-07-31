@@ -78,6 +78,7 @@ export function StorefrontHeader() {
                                 variant="ghost"
                                 size="icon"
                                 className="mr-2 h-[34px] w-[34px]"
+                                aria-label="Ouvrir le menu"
                             >
                                 <Menu className="h-5 w-5" />
                             </Button>
@@ -141,7 +142,12 @@ export function StorefrontHeader() {
 
                 <div className="ml-auto flex items-center space-x-2">
                     <LanguageSwitcher />
-                    <Button variant="ghost" size="icon" className="h-9 w-9">
+                    <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-9 w-9"
+                        aria-label="Rechercher"
+                    >
                         <Search className="!size-5 opacity-80" />
                     </Button>
                     <MiniCartSheet />

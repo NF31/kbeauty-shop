@@ -1,5 +1,6 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { PageHeading } from '@/components/storefront/page-heading';
+import { SeoHead } from '@/components/storefront/seo-head';
 
 type BrandRow = {
     id: number;
@@ -11,12 +12,17 @@ type BrandRow = {
 
 type BrandsIndexPageProps = {
     brands: BrandRow[];
+    seo: { title: string; description: string; image: string | null };
 };
 
-export default function BrandsIndexPage({ brands }: BrandsIndexPageProps) {
+export default function BrandsIndexPage({ brands, seo }: BrandsIndexPageProps) {
     return (
         <>
-            <Head title="Nos marques" />
+            <SeoHead
+                title={seo.title}
+                description={seo.description}
+                image={seo.image}
+            />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
                 <div className="mb-6">
                     <PageHeading title="Nos marques" />
