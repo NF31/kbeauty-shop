@@ -1,4 +1,4 @@
-import { Head, Link, usePage } from '@inertiajs/react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
@@ -34,6 +34,13 @@ export default function CartPage({
     useEffect(() => {
         sync({ items, subtotalCents, totalCents, currency });
     }, [items, subtotalCents, totalCents, currency, sync]);
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: t('Accueil'), href: '/' },
+            { title: t('Mon panier'), href: '#' },
+        ],
+    });
 
     return (
         <>

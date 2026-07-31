@@ -1,4 +1,4 @@
-import { Head } from '@inertiajs/react';
+import { Head, setLayoutProps } from '@inertiajs/react';
 import type { PropsWithChildren } from 'react';
 
 type LegalPageProps = PropsWithChildren<{
@@ -12,6 +12,13 @@ export function LegalPage({ title, updatedAt, children }: LegalPageProps) {
         day: 'numeric',
         month: 'long',
         year: 'numeric',
+    });
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title, href: '#' },
+        ],
     });
 
     return (

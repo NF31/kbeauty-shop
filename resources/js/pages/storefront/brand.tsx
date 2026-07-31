@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, setLayoutProps } from '@inertiajs/react';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { SeoHead } from '@/components/storefront/seo-head';
@@ -65,6 +65,14 @@ export default function BrandPage({
             { preserveState: true, preserveScroll: true, replace: true },
         );
     };
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title: 'Marques', href: '/marques' },
+            { title: brand.name, href: '#' },
+        ],
+    });
 
     return (
         <>

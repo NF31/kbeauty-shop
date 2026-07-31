@@ -1,4 +1,4 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, setLayoutProps, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
@@ -145,6 +145,21 @@ export default function CatalogPage({
     const seoDescription = t(
         'Tous nos produits de beauté coréenne : soins visage, sérums et cosmétiques sélectionnés pour chaque type de peau.',
     );
+
+    const activeFilterLabel = activeCategory?.name ?? activeBrand?.name ?? null;
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: t('Accueil'), href: '/' },
+            {
+                title: t('Tous nos produits'),
+                href: locale === 'en' ? '/en/produits' : '/produits',
+            },
+            ...(activeFilterLabel
+                ? [{ title: activeFilterLabel, href: '#' }]
+                : []),
+        ],
+    });
 
     return (
         <>

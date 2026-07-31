@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, setLayoutProps } from '@inertiajs/react';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { SeoHead } from '@/components/storefront/seo-head';
 
@@ -13,6 +13,13 @@ export default function SkinGuidePage({
     skinTypeOptions,
     seo,
 }: SkinGuidePageProps) {
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title: 'Guide de choix', href: '#' },
+        ],
+    });
+
     return (
         <>
             <SeoHead

@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, router } from '@inertiajs/react';
+import { Head, router, setLayoutProps } from '@inertiajs/react';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -74,6 +74,14 @@ export default function AccountAddressesPage({
 }) {
     const [editing, setEditing] = useState<Address | null>(null);
     const [creating, setCreating] = useState(false);
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title: 'Mon compte', href: '/mon-compte' },
+            { title: 'Mes adresses', href: '#' },
+        ],
+    });
 
     const destroy = (address: Address) => {
         if (!confirm(`Supprimer l'adresse "${address.fullName}" ?`)) {

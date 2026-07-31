@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { formatMoney } from '@/lib/money';
 
@@ -79,6 +79,15 @@ function AddressBlock({
 }
 
 export default function AccountOrderPage({ order }: { order: OrderDetail }) {
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title: 'Mon compte', href: '/mon-compte' },
+            { title: 'Mes commandes', href: '/mon-compte/commandes' },
+            { title: `Commande ${order.orderNumber}`, href: '#' },
+        ],
+    });
+
     return (
         <>
             <Head title={`Commande ${order.orderNumber}`} />

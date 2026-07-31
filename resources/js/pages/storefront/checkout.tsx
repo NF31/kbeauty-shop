@@ -1,5 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, router, usePage } from '@inertiajs/react';
+import { Head, router, setLayoutProps, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -147,6 +147,14 @@ export default function CheckoutPage({
     customerEmail,
 }: CheckoutPageProps) {
     const { t, tChoice } = useLaravelReactI18n();
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: t('Accueil'), href: '/' },
+            { title: t('Mon panier'), href: '/panier' },
+            { title: t('Commande'), href: '#' },
+        ],
+    });
 
     return (
         <>

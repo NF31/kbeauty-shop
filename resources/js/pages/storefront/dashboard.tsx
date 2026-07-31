@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import { MapPin, Package } from 'lucide-react';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { formatMoney } from '@/lib/money';
@@ -32,6 +32,13 @@ export default function Dashboard({
     addressesCount: number;
     recentOrders: OrderSummary[];
 }) {
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title: 'Mon compte', href: '#' },
+        ],
+    });
+
     return (
         <>
             <Head title="Tableau de bord" />
