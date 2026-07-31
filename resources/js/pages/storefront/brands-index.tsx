@@ -1,4 +1,4 @@
-import { Link } from '@inertiajs/react';
+import { Link, setLayoutProps } from '@inertiajs/react';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { SeoHead } from '@/components/storefront/seo-head';
 
@@ -16,6 +16,13 @@ type BrandsIndexPageProps = {
 };
 
 export default function BrandsIndexPage({ brands, seo }: BrandsIndexPageProps) {
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title: 'Marques', href: '#' },
+        ],
+    });
+
     return (
         <>
             <SeoHead

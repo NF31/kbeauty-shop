@@ -1,4 +1,4 @@
-import { Link, router, usePage } from '@inertiajs/react';
+import { Link, router, setLayoutProps, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import type { ProductGalleryImage } from '@/components/storefront/product-gallery';
@@ -98,6 +98,14 @@ export default function ProductPage({
             ],
         },
     ];
+
+    setLayoutProps({
+        breadcrumbs: [
+            { title: t('Accueil'), href: '/' },
+            { title: t('Catalogue'), href: productPath },
+            { title: product.name, href: '#' },
+        ],
+    });
 
     const addToCart = () => {
         if (!defaultVariantId) {

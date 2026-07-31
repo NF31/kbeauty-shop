@@ -1,4 +1,4 @@
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, setLayoutProps } from '@inertiajs/react';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { PageHeading } from '@/components/storefront/page-heading';
@@ -29,6 +29,14 @@ export default function AccountOrdersPage({
 }: {
     orders: Paginated<OrderSummary>;
 }) {
+    setLayoutProps({
+        breadcrumbs: [
+            { title: 'Accueil', href: '/' },
+            { title: 'Mon compte', href: '/mon-compte' },
+            { title: 'Mes commandes', href: '#' },
+        ],
+    });
+
     return (
         <>
             <Head title="Mes commandes" />
