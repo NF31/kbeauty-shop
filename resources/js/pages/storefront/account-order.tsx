@@ -82,7 +82,7 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
     setLayoutProps({
         breadcrumbs: [
             { title: 'Accueil', href: '/' },
-            { title: 'Mon compte', href: '/mon-compte' },
+            { title: 'Mon compte', href: '/dashboard' },
             { title: 'Mes commandes', href: '/mon-compte/commandes' },
             { title: `Commande ${order.orderNumber}`, href: '#' },
         ],

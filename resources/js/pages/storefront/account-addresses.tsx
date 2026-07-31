@@ -78,7 +78,7 @@ export default function AccountAddressesPage({
     setLayoutProps({
         breadcrumbs: [
             { title: 'Accueil', href: '/' },
-            { title: 'Mon compte', href: '/mon-compte' },
+            { title: 'Mon compte', href: '/dashboard' },
             { title: 'Mes adresses', href: '#' },
         ],
     });
