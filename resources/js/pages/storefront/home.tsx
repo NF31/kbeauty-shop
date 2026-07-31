@@ -136,7 +136,7 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                     </div>
 
                     <div className="grid grid-cols-2 gap-6 md:grid-cols-4">
-                        {products.map((product) => (
+                        {products.map((product, index) => (
                             <Link
                                 key={product.id}
                                 href={`/produits/${product.slug}`}
@@ -147,6 +147,15 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                                         <img
                                             src={product.thumbnailUrl}
                                             alt={product.name}
+                                            // Premiere image de la grille =
+                                            // candidate LCP sur la page
+                                            // d'accueil.
+                                            fetchPriority={
+                                                index === 0 ? 'high' : undefined
+                                            }
+                                            loading={
+                                                index === 0 ? undefined : 'lazy'
+                                            }
                                             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                                         />
                                     )}
