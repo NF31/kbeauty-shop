@@ -1,4 +1,5 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ShoppingBag, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -9,11 +10,13 @@ import {
     SheetTrigger,
 } from '@/components/ui/sheet';
 import { useCartActions } from '@/hooks/use-cart-actions';
+import { localizedPath } from '@/lib/locale-path';
 import { formatMoney } from '@/lib/money';
-import cartRoutes from '@/routes/storefront/cart';
 import { useCartStore } from '@/stores/cart-store';
 
 export function MiniCartSheet() {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
     const items = useCartStore((state) => state.items);
     const totalCents = useCartStore((state) => state.totalCents);
     const currency = useCartStore((state) => state.currency);
@@ -39,13 +42,13 @@ export function MiniCartSheet() {
             </SheetTrigger>
             <SheetContent className="w-full sm:max-w-sm">
                 <SheetHeader>
-                    <SheetTitle>Mon panier</SheetTitle>
+                    <SheetTitle>{t('Mon panier')}</SheetTitle>
                 </SheetHeader>
 
                 <div className="max-h-[60vh] overflow-y-auto px-4">
                     {items.length === 0 ? (
                         <p className="text-sm text-muted-foreground">
-                            Votre panier est vide.
+                            {t('Votre panier est vide.')}
                         </p>
                     ) : (
                         <ul className="divide-y">
@@ -87,7 +90,7 @@ export function MiniCartSheet() {
 
                                     <button
                                         type="button"
-                                        aria-label="Retirer du panier"
+                                        aria-label={t('Retirer du panier')}
                                         className="text-muted-foreground hover:text-destructive"
                                         onClick={() => removeItem(item.id)}
                                     >
@@ -102,12 +105,12 @@ export function MiniCartSheet() {
                 {items.length > 0 && (
                     <div className="border-t p-4">
                         <div className="mb-2 flex justify-between text-sm font-semibold">
-                            <span>Total</span>
+                            <span>{t('Total')}</span>
                             <span>{formatMoney(totalCents, currency)}</span>
                         </div>
                         <Button asChild className="w-full">
-                            <Link href={cartRoutes.index()}>
-                                Voir le panier
+                            <Link href={localizedPath('/panier', locale)}>
+                                {t('Voir le panier')}
                             </Link>
                         </Button>
                     </div>

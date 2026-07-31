@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { localizedPath } from '@/lib/locale-path';
 import { formatMoney } from '@/lib/money';
 
 // Pas de `.min(1)` ici : les champs restent optionnels au niveau du schéma
@@ -147,11 +148,15 @@ export default function CheckoutPage({
     customerEmail,
 }: CheckoutPageProps) {
     const { t, tChoice } = useLaravelReactI18n();
+    const { locale } = usePage().props;
 
     setLayoutProps({
         breadcrumbs: [
-            { title: t('Accueil'), href: '/' },
-            { title: t('Mon panier'), href: '/panier' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            {
+                title: t('Mon panier'),
+                href: localizedPath('/panier', locale),
+            },
             { title: t('Commande'), href: '#' },
         ],
     });

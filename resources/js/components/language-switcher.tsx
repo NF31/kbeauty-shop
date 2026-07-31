@@ -11,18 +11,22 @@ import {
 } from '@/components/ui/select';
 
 /**
- * Chemins storefront disposant d'un miroir `/en/...` (routes/storefront.php)
- * — catalogue, fiche produit, panier, tunnel de commande (25.1 puis
- * extension au parcours d'achat). Le selecteur reste visible partout ou le
- * header storefront est rendu (y compris login/register/compte/legal) ; sur
- * les pages sans version anglaise, il bascule vers /produits, seule page
- * dont l'anglais existe reellement.
+ * Chemins storefront disposant d'un miroir `/en/...` (routes/storefront.php,
+ * routes/web.php) — memes segments francais, seul le prefixe /en change.
+ * Le selecteur reste visible partout ou le header storefront est rendu (y
+ * compris login/register/legal/compte) ; sur les pages sans version
+ * anglaise (auth, admin, settings...), il bascule vers /produits.
  */
-const LOCALIZED_PATH_PATTERN = /^\/(en\/)?(produits|panier|commande)(\/.*)?$/;
+const LOCALIZED_PATH_PATTERN =
+    /^\/(en\/)?(produits|panier|commande|marques|guide-de-choix|mentions-legales|cgv|confidentialite|livraison|retours|mon-compte|dashboard)(\/.*)?$/;
 const FALLBACK_LOCALIZED_PATH = '/produits';
 
 function alternateLocaleHref(currentUrl: string): string {
     const isEnglish = currentUrl.startsWith('/en/') || currentUrl === '/en';
+
+    if (currentUrl === '/' || currentUrl === '/en') {
+        return isEnglish ? '/' : '/en';
+    }
 
     if (!LOCALIZED_PATH_PATTERN.test(currentUrl)) {
         return isEnglish

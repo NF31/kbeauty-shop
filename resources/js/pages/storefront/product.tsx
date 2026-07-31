@@ -8,6 +8,7 @@ import { SeoHead } from '@/components/storefront/seo-head';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { localizedPath } from '@/lib/locale-path';
 
 type ProductPageProps = {
     product: {
@@ -101,7 +102,10 @@ export default function ProductPage({
 
     setLayoutProps({
         breadcrumbs: [
-            { title: t('Accueil'), href: '/' },
+            {
+                title: t('Accueil'),
+                href: localizedPath('/', locale),
+            },
             { title: t('Catalogue'), href: productPath },
             { title: product.name, href: '#' },
         ],

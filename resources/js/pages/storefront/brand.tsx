@@ -1,7 +1,9 @@
-import { Link, router, setLayoutProps } from '@inertiajs/react';
+import { Link, router, setLayoutProps, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { SeoHead } from '@/components/storefront/seo-head';
+import { localizedPath } from '@/lib/locale-path';
 import { cn } from '@/lib/utils';
 
 type BrandProduct = {
@@ -48,6 +50,10 @@ export default function BrandPage({
     sort,
     seo,
 }: BrandPageProps) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+    const brandPath = localizedPath(`/marques/${brand.slug}`, locale);
+
     const applyFilters = (patch: Record<string, string | null>) => {
         const params = new URLSearchParams(window.location.search);
 
@@ -60,7 +66,7 @@ export default function BrandPage({
         });
 
         router.get(
-            `/marques/${brand.slug}${params.toString() ? `?${params.toString()}` : ''}`,
+            `${brandPath}${params.toString() ? `?${params.toString()}` : ''}`,
             {},
             { preserveState: true, preserveScroll: true, replace: true },
         );
@@ -68,8 +74,11 @@ export default function BrandPage({
 
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Accueil', href: '/' },
-            { title: 'Marques', href: '/marques' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            {
+                title: t('Marques'),
+                href: localizedPath('/marques', locale),
+            },
             { title: brand.name, href: '#' },
         ],
     });
@@ -115,7 +124,7 @@ export default function BrandPage({
                                     : 'hover:bg-muted',
                             )}
                         >
-                            Toutes les gammes
+                            {t('Toutes les gammes')}
                         </button>
                         {categoryOptions.map((option) => (
                             <button
@@ -140,7 +149,7 @@ export default function BrandPage({
                 <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
                     <div className="flex flex-wrap items-end gap-4">
                         <label className="flex flex-col gap-1 text-sm">
-                            Prix min (€)
+                            {t('Prix min (€)')}
                             <input
                                 type="number"
                                 min="0"
@@ -154,7 +163,7 @@ export default function BrandPage({
                             />
                         </label>
                         <label className="flex flex-col gap-1 text-sm">
-                            Prix max (€)
+                            {t('Prix max (€)')}
                             <input
                                 type="number"
                                 min="0"
@@ -170,7 +179,7 @@ export default function BrandPage({
                     </div>
 
                     <label className="flex flex-col gap-1 text-sm">
-                        Trier par
+                        {t('Trier par')}
                         <select
                             className="rounded-md border bg-background p-2"
                             value={sort ?? ''}
@@ -178,24 +187,31 @@ export default function BrandPage({
                                 applyFilters({ sort: e.target.value || null })
                             }
                         >
-                            <option value="">Plus récents</option>
-                            <option value="price_asc">Prix croissant</option>
-                            <option value="price_desc">Prix décroissant</option>
-                            <option value="name_asc">Nom (A-Z)</option>
+                            <option value="">{t('Plus récents')}</option>
+                            <option value="price_asc">
+                                {t('Prix croissant')}
+                            </option>
+                            <option value="price_desc">
+                                {t('Prix décroissant')}
+                            </option>
+                            <option value="name_asc">{t('Nom (A-Z)')}</option>
                         </select>
                     </label>
                 </div>
 
                 {products.data.length === 0 ? (
                     <p className="text-muted-foreground">
-                        Aucun produit disponible pour le moment.
+                        {t('Aucun produit disponible pour le moment.')}
                     </p>
                 ) : (
                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
                         {products.data.map((product, index) => (
                             <Link
                                 key={product.id}
-                                href={`/produits/${product.slug}`}
+                                href={localizedPath(
+                                    `/produits/${product.slug}`,
+                                    locale,
+                                )}
                                 className="group flex flex-col gap-2"
                             >
                                 <div className="aspect-square overflow-hidden rounded-md bg-muted">

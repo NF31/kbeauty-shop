@@ -1,4 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Menu, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AppLogo from '@/components/app-logo';
@@ -27,27 +28,28 @@ import {
 import { UserMenuContent } from '@/components/user-menu-content';
 import { useCurrentUrl } from '@/hooks/use-current-url';
 import { useInitials } from '@/hooks/use-initials';
+import { localizedPath } from '@/lib/locale-path';
 import { cn } from '@/lib/utils';
-import { home, login, register } from '@/routes';
+import { login, register } from '@/routes';
 import { useCartStore } from '@/stores/cart-store';
-import type { NavItem } from '@/types';
-
-/**
- * Catégories du mega-menu (24.3) : cette liste alimentera un futur composant
- * MegaMenu sans changer la structure du header. Vide tant que le catalogue
- * (Phase 2) n'existe pas.
- */
-const categoryNavItems: NavItem[] = [
-    { title: 'Produits', href: '/produits' },
-    { title: 'Marques', href: '/marques' },
-];
 
 export function StorefrontHeader() {
-    const { auth, cart } = usePage().props;
+    const { t } = useLaravelReactI18n();
+    const { auth, cart, locale } = usePage().props;
     const getInitials = useInitials();
     const { whenCurrentUrl } = useCurrentUrl();
     const sync = useCartStore((state) => state.sync);
     const [isScrolled, setIsScrolled] = useState(false);
+
+    /**
+     * Catégories du mega-menu (24.3) : cette liste alimentera un futur
+     * composant MegaMenu sans changer la structure du header. Vide tant que
+     * le catalogue (Phase 2) n'existe pas.
+     */
+    const categoryNavItems = [
+        { title: t('Produits'), href: localizedPath('/produits', locale) },
+        { title: t('Marques'), href: localizedPath('/marques', locale) },
+    ];
 
     useEffect(() => {
         sync(cart);
@@ -88,7 +90,7 @@ export function StorefrontHeader() {
                             className="flex h-full w-64 flex-col items-stretch bg-sidebar"
                         >
                             <SheetHeader className="flex justify-start text-left">
-                                <SheetTitle>Menu</SheetTitle>
+                                <SheetTitle>{t('Menu')}</SheetTitle>
                             </SheetHeader>
                             <nav className="flex flex-col space-y-4 p-4 text-sm">
                                 {categoryNavItems.map((item) => (
@@ -106,7 +108,7 @@ export function StorefrontHeader() {
                 </div>
 
                 <Link
-                    href={home()}
+                    href={localizedPath('/', locale)}
                     prefetch
                     className="flex items-center space-x-2 transition-opacity hover:opacity-80"
                 >
@@ -177,10 +179,12 @@ export function StorefrontHeader() {
                     ) : (
                         <div className="hidden items-center space-x-2 sm:flex">
                             <Button variant="ghost" asChild>
-                                <Link href={login()}>Connexion</Link>
+                                <Link href={login()}>{t('Connexion')}</Link>
                             </Button>
                             <Button asChild>
-                                <Link href={register()}>Créer un compte</Link>
+                                <Link href={register()}>
+                                    {t('Créer un compte')}
+                                </Link>
                             </Button>
                         </div>
                     )}

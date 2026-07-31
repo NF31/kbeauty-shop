@@ -1,8 +1,11 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
 
 export default function MentionsLegalesPage() {
+    const { t } = useLaravelReactI18n();
+
     return (
-        <LegalPage title="Mentions légales" updatedAt="2026-07-22">
+        <LegalPage title={t('Mentions légales')} updatedAt="2026-07-22">
             <section>
                 <h2>Éditeur du site</h2>
                 <p>

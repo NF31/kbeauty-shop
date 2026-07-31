@@ -1,8 +1,14 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
 
 export default function ConfidentialitePage() {
+    const { t } = useLaravelReactI18n();
+
     return (
-        <LegalPage title="Politique de confidentialité" updatedAt="2026-07-22">
+        <LegalPage
+            title={t('Politique de confidentialité')}
+            updatedAt="2026-07-22"
+        >
             <section>
                 <h2>Responsable de traitement</h2>
                 <p>

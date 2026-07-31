@@ -1,10 +1,15 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
+import { localizedPath } from '@/lib/locale-path';
 
 export default function RetoursPage() {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     return (
         <LegalPage
-            title="Politique de retours et remboursements"
+            title={t('Politique de retours et remboursements')}
             updatedAt="2026-07-22"
         >
             <section>
@@ -60,7 +65,7 @@ export default function RetoursPage() {
                     meilleurs délais : le retour et le remboursement (ou
                     l'échange) sont alors intégralement pris en charge,
                     conformément à la garantie légale de conformité (voir nos{' '}
-                    <Link href="/cgv">CGV</Link>).
+                    <Link href={localizedPath('/cgv', locale)}>CGV</Link>).
                 </p>
             </section>
         </LegalPage>

@@ -1,5 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head, router, setLayoutProps } from '@inertiajs/react';
+import { Head, router, setLayoutProps, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -22,6 +23,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { localizedPath } from '@/lib/locale-path';
 import addressesRoutes from '@/routes/storefront/account/addresses';
 
 type Address = {
@@ -72,19 +74,30 @@ export default function AccountAddressesPage({
 }: {
     addresses: Address[];
 }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
     const [editing, setEditing] = useState<Address | null>(null);
     const [creating, setCreating] = useState(false);
 
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Accueil', href: '/' },
-            { title: 'Mon compte', href: '/dashboard' },
-            { title: 'Mes adresses', href: '#' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            {
+                title: t('Mon compte'),
+                href: localizedPath('/dashboard', locale),
+            },
+            { title: t('Mes adresses'), href: '#' },
         ],
     });
 
     const destroy = (address: Address) => {
-        if (!confirm(`Supprimer l'adresse "${address.fullName}" ?`)) {
+        if (
+            !confirm(
+                t('Supprimer l\'adresse ":fullName" ?', {
+                    fullName: address.fullName,
+                }),
+            )
+        ) {
             return;
         }
 
@@ -99,20 +112,20 @@ export default function AccountAddressesPage({
 
     return (
         <>
-            <Head title="Mes adresses" />
+            <Head title={t('Mes adresses')} />
             <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
                 <PageHeading
-                    title="Mes adresses"
+                    title={t('Mes adresses')}
                     actions={
                         <Button onClick={() => setCreating(true)}>
-                            Ajouter une adresse
+                            {t('Ajouter une adresse')}
                         </Button>
                     }
                 />
 
                 {addresses.length === 0 ? (
                     <div className="rounded-lg border p-8 text-center text-muted-foreground">
-                        Vous n'avez pas encore enregistré d'adresse.
+                        {t("Vous n'avez pas encore enregistré d'adresse.")}
                     </div>
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -127,7 +140,7 @@ export default function AccountAddressesPage({
                                     </span>
                                     {address.isDefault && (
                                         <span className="rounded-full bg-accent px-2 py-0.5 text-xs text-accent-foreground">
-                                            Par défaut
+                                            {t('Par défaut')}
                                         </span>
                                     )}
                                 </div>
@@ -151,14 +164,14 @@ export default function AccountAddressesPage({
                                         className="underline"
                                         onClick={() => setEditing(address)}
                                     >
-                                        Modifier
+                                        {t('Modifier')}
                                     </button>
                                     <button
                                         type="button"
                                         className="text-destructive underline"
                                         onClick={() => destroy(address)}
                                     >
-                                        Supprimer
+                                        {t('Supprimer')}
                                     </button>
                                 </div>
                             </div>
@@ -170,7 +183,7 @@ export default function AccountAddressesPage({
             <AddressFormDialog
                 open={creating}
                 onOpenChange={setCreating}
-                title="Ajouter une adresse"
+                title={t('Ajouter une adresse')}
                 defaultValues={emptyAddress}
                 onSubmit={(values) => {
                     router.post(
@@ -186,7 +199,7 @@ export default function AccountAddressesPage({
             <AddressFormDialog
                 open={editing !== null}
                 onOpenChange={(open) => !open && setEditing(null)}
-                title="Modifier l'adresse"
+                title={t("Modifier l'adresse")}
                 defaultValues={editing ? toFormValues(editing) : emptyAddress}
                 onSubmit={(values) => {
                     if (!editing) {
@@ -245,6 +258,7 @@ function AddressFormDialog({
     defaultValues: AddressFormValues;
     onSubmit: (values: AddressFormValues) => void;
 }) {
+    const { t } = useLaravelReactI18n();
     const {
         control,
         register,
@@ -275,7 +289,7 @@ function AddressFormDialog({
 
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div>
-                        <Label htmlFor="type">Type d'adresse</Label>
+                        <Label htmlFor="type">{t("Type d'adresse")}</Label>
                         <Controller
                             name="type"
                             control={control}
@@ -289,10 +303,10 @@ function AddressFormDialog({
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="shipping">
-                                            Livraison
+                                            {t('Livraison')}
                                         </SelectItem>
                                         <SelectItem value="billing">
-                                            Facturation
+                                            {t('Facturation')}
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -301,7 +315,7 @@ function AddressFormDialog({
                     </div>
 
                     <div>
-                        <Label htmlFor="fullName">Nom complet</Label>
+                        <Label htmlFor="fullName">{t('Nom complet')}</Label>
                         <Input id="fullName" {...register('fullName')} />
                         {errors.fullName && (
                             <p className="mt-1 text-sm text-destructive">
@@ -311,7 +325,7 @@ function AddressFormDialog({
                     </div>
 
                     <div>
-                        <Label htmlFor="line1">Adresse</Label>
+                        <Label htmlFor="line1">{t('Adresse')}</Label>
                         <Controller
                             name="line1"
                             control={control}
@@ -340,13 +354,17 @@ function AddressFormDialog({
                     </div>
 
                     <div>
-                        <Label htmlFor="line2">Complément (optionnel)</Label>
+                        <Label htmlFor="line2">
+                            {t('Complément (optionnel)')}
+                        </Label>
                         <Input id="line2" {...register('line2')} />
                     </div>
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <Label htmlFor="postalCode">Code postal</Label>
+                            <Label htmlFor="postalCode">
+                                {t('Code postal')}
+                            </Label>
                             <Input
                                 id="postalCode"
                                 {...register('postalCode')}
@@ -359,7 +377,7 @@ function AddressFormDialog({
                         </div>
 
                         <div>
-                            <Label htmlFor="city">Ville</Label>
+                            <Label htmlFor="city">{t('Ville')}</Label>
                             <Input id="city" {...register('city')} />
                             {errors.city && (
                                 <p className="mt-1 text-sm text-destructive">
@@ -371,7 +389,9 @@ function AddressFormDialog({
 
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
-                            <Label htmlFor="countryCode">Pays (code)</Label>
+                            <Label htmlFor="countryCode">
+                                {t('Pays (code)')}
+                            </Label>
                             <Input
                                 id="countryCode"
                                 maxLength={2}
@@ -385,7 +405,9 @@ function AddressFormDialog({
                         </div>
 
                         <div>
-                            <Label htmlFor="phone">Téléphone (optionnel)</Label>
+                            <Label htmlFor="phone">
+                                {t('Téléphone (optionnel)')}
+                            </Label>
                             <Input id="phone" {...register('phone')} />
                         </div>
                     </div>
@@ -405,12 +427,12 @@ function AddressFormDialog({
                             )}
                         />
                         <Label htmlFor="isDefault">
-                            Définir comme adresse par défaut pour ce type
+                            {t('Définir comme adresse par défaut pour ce type')}
                         </Label>
                     </div>
 
                     <Button type="submit" disabled={isSubmitting}>
-                        Enregistrer
+                        {t('Enregistrer')}
                     </Button>
                 </form>
             </DialogContent>

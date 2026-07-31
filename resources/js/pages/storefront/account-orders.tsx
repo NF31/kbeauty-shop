@@ -1,7 +1,9 @@
-import { Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { PageHeading } from '@/components/storefront/page-heading';
+import { localizedPath } from '@/lib/locale-path';
 import { formatMoney } from '@/lib/money';
 
 type OrderItem = {
@@ -29,27 +31,36 @@ export default function AccountOrdersPage({
 }: {
     orders: Paginated<OrderSummary>;
 }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Accueil', href: '/' },
-            { title: 'Mon compte', href: '/dashboard' },
-            { title: 'Mes commandes', href: '#' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            {
+                title: t('Mon compte'),
+                href: localizedPath('/dashboard', locale),
+            },
+            { title: t('Mes commandes'), href: '#' },
         ],
     });
 
     return (
         <>
-            <Head title="Mes commandes" />
+            <Head title={t('Mes commandes')} />
             <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
-                <PageHeading title="Mes commandes" />
+                <PageHeading title={t('Mes commandes')} />
 
                 {orders.data.length === 0 ? (
                     <div className="rounded-lg border p-8 text-center text-muted-foreground">
                         <p className="mb-4">
-                            Vous n'avez pas encore passé de commande.
+                            {t("Vous n'avez pas encore passé de commande.")}
                         </p>
-                        <Link href="/produits" className="underline">
-                            Découvrir les produits
+                        <Link
+                            href={localizedPath('/produits', locale)}
+                            className="underline"
+                        >
+                            {t('Découvrir les produits')}
                         </Link>
                     </div>
                 ) : (
@@ -57,23 +68,33 @@ export default function AccountOrdersPage({
                         {orders.data.map((order) => (
                             <Link
                                 key={order.id}
-                                href={`/mon-compte/commandes/${order.id}`}
+                                href={localizedPath(
+                                    `/mon-compte/commandes/${order.id}`,
+                                    locale,
+                                )}
                                 className="block rounded-lg border p-4 transition-colors hover:bg-accent md:p-6"
                             >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div>
                                         <p className="font-medium">
-                                            Commande {order.orderNumber}
+                                            {t('Commande :orderNumber', {
+                                                orderNumber: order.orderNumber,
+                                            })}
                                         </p>
                                         {order.placedAt && (
                                             <p className="text-sm text-muted-foreground">
                                                 {new Date(
                                                     order.placedAt,
-                                                ).toLocaleDateString('fr-FR', {
-                                                    day: 'numeric',
-                                                    month: 'long',
-                                                    year: 'numeric',
-                                                })}
+                                                ).toLocaleDateString(
+                                                    locale === 'en'
+                                                        ? 'en-GB'
+                                                        : 'fr-FR',
+                                                    {
+                                                        day: 'numeric',
+                                                        month: 'long',
+                                                        year: 'numeric',
+                                                    },
+                                                )}
                                             </p>
                                         )}
                                     </div>

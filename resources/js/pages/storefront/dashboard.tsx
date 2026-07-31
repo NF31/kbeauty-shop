@@ -1,8 +1,9 @@
-import { Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { MapPin, Package } from 'lucide-react';
 import { PageHeading } from '@/components/storefront/page-heading';
+import { localizedPath } from '@/lib/locale-path';
 import { formatMoney } from '@/lib/money';
-import accountRoutes from '@/routes/storefront/account';
 
 type OrderItem = {
     productName: string;
@@ -32,45 +33,50 @@ export default function Dashboard({
     addressesCount: number;
     recentOrders: OrderSummary[];
 }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Accueil', href: '/' },
-            { title: 'Mon compte', href: '#' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            { title: t('Mon compte'), href: '#' },
         ],
     });
 
     return (
         <>
-            <Head title="Tableau de bord" />
+            <Head title={t('Tableau de bord')} />
             <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
-                <PageHeading title="Mon compte" />
+                <PageHeading title={t('Mon compte')} />
 
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Link
-                        href={accountRoutes.orders()}
+                        href={localizedPath('/mon-compte/commandes', locale)}
                         className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent"
                     >
                         <Package className="size-5 text-muted-foreground" />
                         <div>
-                            <p className="font-medium">Mes commandes</p>
+                            <p className="font-medium">{t('Mes commandes')}</p>
                             <p className="text-sm text-muted-foreground">
                                 {ordersCount}{' '}
-                                {ordersCount > 1 ? 'commandes' : 'commande'}
+                                {ordersCount > 1
+                                    ? t('commandes')
+                                    : t('commande')}
                             </p>
                         </div>
                     </Link>
                     <Link
-                        href={accountRoutes.addresses.index()}
+                        href={localizedPath('/mon-compte/adresses', locale)}
                         className="flex items-center gap-3 rounded-lg border p-4 transition-colors hover:bg-accent"
                     >
                         <MapPin className="size-5 text-muted-foreground" />
                         <div>
-                            <p className="font-medium">Mes adresses</p>
+                            <p className="font-medium">{t('Mes adresses')}</p>
                             <p className="text-sm text-muted-foreground">
                                 {addressesCount}{' '}
                                 {addressesCount > 1
-                                    ? 'adresses enregistrées'
-                                    : 'adresse enregistrée'}
+                                    ? t('adresses enregistrées')
+                                    : t('adresse enregistrée')}
                             </p>
                         </div>
                     </Link>
@@ -79,14 +85,17 @@ export default function Dashboard({
                 <div className="space-y-4">
                     <div className="flex items-center justify-between">
                         <h2 className="text-xl font-semibold">
-                            Dernières commandes
+                            {t('Dernières commandes')}
                         </h2>
                         {recentOrders.length > 0 && (
                             <Link
-                                href={accountRoutes.orders()}
+                                href={localizedPath(
+                                    '/mon-compte/commandes',
+                                    locale,
+                                )}
                                 className="text-sm underline"
                             >
-                                Voir toutes mes commandes
+                                {t('Voir toutes mes commandes')}
                             </Link>
                         )}
                     </div>
@@ -94,10 +103,13 @@ export default function Dashboard({
                     {recentOrders.length === 0 ? (
                         <div className="rounded-lg border p-8 text-center text-muted-foreground">
                             <p className="mb-4">
-                                Vous n'avez pas encore passé de commande.
+                                {t("Vous n'avez pas encore passé de commande.")}
                             </p>
-                            <Link href="/produits" className="underline">
-                                Découvrir les produits
+                            <Link
+                                href={localizedPath('/produits', locale)}
+                                className="underline"
+                            >
+                                {t('Découvrir les produits')}
                             </Link>
                         </div>
                     ) : (
@@ -105,20 +117,28 @@ export default function Dashboard({
                             {recentOrders.map((order) => (
                                 <Link
                                     key={order.id}
-                                    href={accountRoutes.orders.show(order.id)}
+                                    href={localizedPath(
+                                        `/mon-compte/commandes/${order.id}`,
+                                        locale,
+                                    )}
                                     className="block rounded-lg border p-4 transition-colors hover:bg-accent md:p-6"
                                 >
                                     <div className="flex flex-wrap items-center justify-between gap-2">
                                         <div>
                                             <p className="font-medium">
-                                                Commande {order.orderNumber}
+                                                {t('Commande :orderNumber', {
+                                                    orderNumber:
+                                                        order.orderNumber,
+                                                })}
                                             </p>
                                             {order.placedAt && (
                                                 <p className="text-sm text-muted-foreground">
                                                     {new Date(
                                                         order.placedAt,
                                                     ).toLocaleDateString(
-                                                        'fr-FR',
+                                                        locale === 'en'
+                                                            ? 'en-GB'
+                                                            : 'fr-FR',
                                                         {
                                                             day: 'numeric',
                                                             month: 'long',
