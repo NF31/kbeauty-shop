@@ -140,6 +140,10 @@ export default function Security(props: Props) {
 Security.layout = {
     breadcrumbs: [
         {
+            title: 'Mon compte',
+            href: '/mon-compte',
+        },
+        {
             title: 'Security settings',
             href: edit(),
         },

@@ -25,6 +25,10 @@ export default function Appearance() {
 Appearance.layout = {
     breadcrumbs: [
         {
+            title: 'Mon compte',
+            href: '/mon-compte',
+        },
+        {
             title: 'Appearance settings',
             href: editAppearance(),
         },
