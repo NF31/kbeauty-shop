@@ -4,6 +4,7 @@ import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AddressAutocompleteInput } from '@/components/storefront/address-autocomplete-input';
+import { PageHeading } from '@/components/storefront/page-heading';
 import { StripePaymentForm } from '@/components/storefront/stripe-payment-form';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -151,7 +152,9 @@ export default function CheckoutPage({
         <>
             <Head title={t('Commande')} />
             <div className="mx-auto max-w-2xl p-4 md:p-8">
-                <h1 className="mb-6 text-3xl font-semibold">{t('Commande')}</h1>
+                <div className="mb-6">
+                    <PageHeading title={t('Commande')} />
+                </div>
 
                 <p className="mb-6 text-sm text-muted-foreground">
                     {tChoice(':count article|:count articles', cart.itemCount)}{' '}

@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { PageHeading } from '@/components/storefront/page-heading';
 import { formatMoney } from '@/lib/money';
 
 type Address = {
@@ -89,38 +90,36 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                     ← Mes commandes
                 </Link>
 
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                        <h1 className="text-3xl font-semibold">
-                            Commande {order.orderNumber}
-                        </h1>
-                        {order.placedAt && (
-                            <p className="text-sm text-muted-foreground">
-                                {new Date(order.placedAt).toLocaleDateString(
-                                    'fr-FR',
-                                    {
-                                        day: 'numeric',
-                                        month: 'long',
-                                        year: 'numeric',
-                                    },
-                                )}
+                <PageHeading
+                    title={`Commande ${order.orderNumber}`}
+                    description={
+                        order.placedAt
+                            ? new Date(order.placedAt).toLocaleDateString(
+                                  'fr-FR',
+                                  {
+                                      day: 'numeric',
+                                      month: 'long',
+                                      year: 'numeric',
+                                  },
+                              )
+                            : undefined
+                    }
+                    actions={
+                        <div className="flex items-center gap-3">
+                            <p className="text-sm font-medium">
+                                {order.statusLabel}
                             </p>
-                        )}
-                    </div>
-                    <div className="flex items-center gap-3">
-                        <p className="text-sm font-medium">
-                            {order.statusLabel}
-                        </p>
-                        {order.hasInvoice && (
-                            <a
-                                href={`/mon-compte/commandes/${order.id}/facture`}
-                                className="text-sm text-primary underline"
-                            >
-                                Télécharger ma facture
-                            </a>
-                        )}
-                    </div>
-                </div>
+                            {order.hasInvoice && (
+                                <a
+                                    href={`/mon-compte/commandes/${order.id}/facture`}
+                                    className="text-sm text-primary underline"
+                                >
+                                    Télécharger ma facture
+                                </a>
+                            )}
+                        </div>
+                    }
+                />
 
                 <div className="rounded-lg border">
                     <ul className="divide-y">

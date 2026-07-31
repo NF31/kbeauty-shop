@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { PageHeading } from '@/components/storefront/page-heading';
 
 type BrandRow = {
     id: number;
@@ -17,7 +18,9 @@ export default function BrandsIndexPage({ brands }: BrandsIndexPageProps) {
         <>
             <Head title="Nos marques" />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
-                <h1 className="mb-6 text-3xl font-semibold">Nos marques</h1>
+                <div className="mb-6">
+                    <PageHeading title="Nos marques" />
+                </div>
 
                 {brands.length === 0 ? (
                     <p className="text-muted-foreground">

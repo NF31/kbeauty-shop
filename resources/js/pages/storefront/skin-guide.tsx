@@ -1,4 +1,5 @@
 import { Head, Link } from '@inertiajs/react';
+import { PageHeading } from '@/components/storefront/page-heading';
 
 type SkinTypeOption = { value: string; label: string };
 
@@ -11,13 +12,12 @@ export default function SkinGuidePage({ skinTypeOptions }: SkinGuidePageProps) {
         <>
             <Head title="Guide de choix" />
             <div className="mx-auto max-w-xl p-4 md:p-8">
-                <h1 className="mb-2 text-3xl font-semibold">
-                    Quel est ton type de peau ?
-                </h1>
-                <p className="mb-6 text-muted-foreground">
-                    Choisis la réponse qui te correspond le mieux pour voir une
-                    sélection de produits adaptés.
-                </p>
+                <div className="mb-6">
+                    <PageHeading
+                        title="Quel est ton type de peau ?"
+                        description="Choisis la réponse qui te correspond le mieux pour voir une sélection de produits adaptés."
+                    />
+                </div>
 
                 <div className="flex flex-col gap-3">
                     {skinTypeOptions.map((option) => (
