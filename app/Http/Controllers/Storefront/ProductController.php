@@ -6,6 +6,7 @@ use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\CloudinaryService;
+use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +19,13 @@ class ProductController extends Controller
         $product->load(['brand:id,name', 'variants', 'images']);
 
         $defaultVariant = $product->variants->firstWhere('is_default', true) ?? $product->variants->first();
+
+        $images = $product->images->map(fn ($image) => [
+            'id' => $image->id,
+            'url' => $cloudinary->url($image->path, 800, 800),
+            'alt_text' => $image->alt_text,
+            'product_variant_id' => $image->product_variant_id,
+        ]);
 
         return Inertia::render('storefront/product', [
             'product' => [
@@ -33,12 +41,14 @@ class ProductController extends Controller
             'priceCents' => $defaultVariant?->price_cents,
             'compareAtPriceCents' => $defaultVariant?->compare_at_price_cents,
             'stockQuantity' => $defaultVariant?->stock_quantity,
-            'images' => $product->images->map(fn ($image) => [
-                'id' => $image->id,
-                'url' => $cloudinary->url($image->path, 800, 800),
-                'alt_text' => $image->alt_text,
-                'product_variant_id' => $image->product_variant_id,
-            ]),
+            'images' => $images,
+            'seo' => [
+                'title' => $product->meta_title ?? $product->name,
+                'description' => $product->meta_description
+                    ?? $product->short_description
+                    ?? Str::limit(strip_tags($product->description), 160),
+                'image' => $images->first()['url'] ?? null,
+            ],
         ]);
     }
 }

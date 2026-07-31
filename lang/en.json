@@ -84,5 +84,11 @@
     "Le paiement a échoué. Veuillez réessayer.": "Payment failed. Please try again.",
     "Chargement du formulaire de paiement…": "Loading payment form…",
     "Le formulaire de paiement n'a pas pu se charger.": "The payment form could not load.",
-    "Payer :amount": "Pay :amount"
+    "Payer :amount": "Pay :amount",
+
+    "Le meilleur de la K-Beauty, sélectionné pour vous": "The best of K-Beauty, curated for you",
+    "Soins coréens sélectionnés, livrés chez vous. Découvrez notre sélection de marques et de soins pensés pour chaque type de peau.": "Curated Korean skincare, delivered to your door. Discover our selection of brands and treatments designed for every skin type.",
+    "Tous nos produits de beauté coréenne : soins visage, sérums et cosmétiques sélectionnés pour chaque type de peau.": "All our Korean beauty products: face care, serums and cosmetics curated for every skin type.",
+    "Découvrez les produits :brand disponibles sur Korea Beauty.": "Discover the :brand products available on Korea Beauty.",
+    "Toutes les marques de beauté coréenne disponibles sur Korea Beauty.": "All the Korean beauty brands available on Korea Beauty."
 }

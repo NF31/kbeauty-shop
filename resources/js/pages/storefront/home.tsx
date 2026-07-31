@@ -1,6 +1,7 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { CreditCard, PackageCheck, Sparkles } from 'lucide-react';
+import { SeoHead } from '@/components/storefront/seo-head';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
@@ -22,14 +23,24 @@ type HomeBrand = {
 type HomePageProps = {
     products: HomeProduct[];
     brands: HomeBrand[];
+    seo: { title: string; description: string; image: string | null };
 };
 
 function euros(cents: number): string {
     return (cents / 100).toFixed(2) + ' €';
 }
 
-export default function HomePage({ products, brands }: HomePageProps) {
+export default function HomePage({ products, brands, seo }: HomePageProps) {
     const { t } = useLaravelReactI18n();
+    const { props } = usePage();
+
+    const jsonLd = {
+        '@context': 'https://schema.org',
+        '@type': 'Organization',
+        name: props.name,
+        url: props.appUrl,
+        logo: `${props.appUrl}/logo.png`,
+    };
 
     const valueProps = [
         {
@@ -58,7 +69,12 @@ export default function HomePage({ products, brands }: HomePageProps) {
 
     return (
         <>
-            <Head title={t('Accueil')} />
+            <SeoHead
+                title={seo.title}
+                description={seo.description}
+                image={seo.image}
+                jsonLd={jsonLd}
+            />
 
             <div className="relative overflow-hidden bg-gradient-to-b from-secondary/60 via-secondary/15 to-background">
                 <div className="mx-auto flex max-w-6xl flex-col items-center gap-6 px-4 py-16 text-center md:py-24">

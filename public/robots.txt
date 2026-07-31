@@ -1,2 +1,8 @@
 User-agent: *
-Disallow:
+Disallow: /panier
+Disallow: /mon-compte
+Disallow: /commande
+Disallow: /en/panier
+Disallow: /en/commande
+
+Sitemap: https://boutique.nfdev.fr/sitemap.xml

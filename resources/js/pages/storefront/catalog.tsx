@@ -1,10 +1,11 @@
-import { Head, Link, router, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { PageHeading } from '@/components/storefront/page-heading';
+import { SeoHead } from '@/components/storefront/seo-head';
 
 type CatalogProduct = {
     id: number;
@@ -136,9 +137,18 @@ export default function CatalogPage({
 
     const activeFiltersQueryString = activeFiltersQuery.toString();
 
+    const seoTitle = activeCategory
+        ? activeCategory.name
+        : activeBrand
+          ? activeBrand.name
+          : t('Tous nos produits');
+    const seoDescription = t(
+        'Tous nos produits de beauté coréenne : soins visage, sérums et cosmétiques sélectionnés pour chaque type de peau.',
+    );
+
     return (
         <>
-            <Head title={t('Catalogue')} />
+            <SeoHead title={seoTitle} description={seoDescription} />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
                 <div className="mb-6">
                     <PageHeading

@@ -61,6 +61,12 @@ class BrandController extends Controller
                     'countryOfOrigin' => $brand->country_of_origin,
                 ],
                 'categoryOptions' => $categoryOptions,
+                'seo' => [
+                    'title' => $brand->name,
+                    'description' => $brand->description
+                        ?? __('Découvrez les produits :brand disponibles sur Korea Beauty.', ['brand' => $brand->name]),
+                    'image' => $brand->logo_path,
+                ],
             ],
         ));
     }
