@@ -4,6 +4,7 @@ import { Search } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
+import { PageHeading } from '@/components/storefront/page-heading';
 
 type CatalogProduct = {
     id: number;
@@ -139,16 +140,18 @@ export default function CatalogPage({
         <>
             <Head title={t('Catalogue')} />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-                    <h1 className="text-3xl font-semibold">
-                        {t('Tous nos produits')}
-                    </h1>
-                    <Link
-                        href="/guide-de-choix"
-                        className="text-sm text-muted-foreground underline"
-                    >
-                        {t("Besoin d'aide pour choisir ?")}
-                    </Link>
+                <div className="mb-6">
+                    <PageHeading
+                        title={t('Tous nos produits')}
+                        actions={
+                            <Link
+                                href="/guide-de-choix"
+                                className="text-sm text-muted-foreground underline"
+                            >
+                                {t("Besoin d'aide pour choisir ?")}
+                            </Link>
+                        }
+                    />
                 </div>
 
                 <label className="mb-6 flex flex-col gap-1 text-sm">

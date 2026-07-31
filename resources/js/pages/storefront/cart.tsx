@@ -2,6 +2,7 @@ import { Head, Link, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { Trash2 } from 'lucide-react';
 import { useEffect } from 'react';
+import { PageHeading } from '@/components/storefront/page-heading';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
 import { useCartActions } from '@/hooks/use-cart-actions';
 import { formatMoney } from '@/lib/money';
@@ -38,9 +39,9 @@ export default function CartPage({
         <>
             <Head title={t('Panier')} />
             <div className="mx-auto max-w-4xl p-4 md:p-8">
-                <h1 className="mb-6 text-3xl font-semibold">
-                    {t('Mon panier')}
-                </h1>
+                <div className="mb-6">
+                    <PageHeading title={t('Mon panier')} />
+                </div>
 
                 {storeItems.length === 0 ? (
                     <p className="text-muted-foreground">

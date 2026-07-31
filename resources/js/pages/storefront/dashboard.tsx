@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { MapPin, Package } from 'lucide-react';
+import { PageHeading } from '@/components/storefront/page-heading';
 import { formatMoney } from '@/lib/money';
 import accountRoutes from '@/routes/storefront/account';
 
@@ -35,7 +36,7 @@ export default function Dashboard({
         <>
             <Head title="Tableau de bord" />
             <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
-                <h1 className="text-3xl font-semibold">Mon compte</h1>
+                <PageHeading title="Mon compte" />
 
                 <div className="grid gap-4 sm:grid-cols-2">
                     <Link

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { AddressAutocompleteInput } from '@/components/storefront/address-autocomplete-input';
+import { PageHeading } from '@/components/storefront/page-heading';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -92,12 +93,14 @@ export default function AccountAddressesPage({
         <>
             <Head title="Mes adresses" />
             <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                    <h1 className="text-3xl font-semibold">Mes adresses</h1>
-                    <Button onClick={() => setCreating(true)}>
-                        Ajouter une adresse
-                    </Button>
-                </div>
+                <PageHeading
+                    title="Mes adresses"
+                    actions={
+                        <Button onClick={() => setCreating(true)}>
+                            Ajouter une adresse
+                        </Button>
+                    }
+                />
 
                 {addresses.length === 0 ? (
                     <div className="rounded-lg border p-8 text-center text-muted-foreground">

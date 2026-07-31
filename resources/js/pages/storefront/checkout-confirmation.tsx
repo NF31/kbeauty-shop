@@ -1,5 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
+import { PageHeading } from '@/components/storefront/page-heading';
 
 export default function CheckoutConfirmationPage({
     orderNumber,
@@ -15,7 +16,9 @@ export default function CheckoutConfirmationPage({
         <>
             <Head title={t('Commande confirmée')} />
             <div className="mx-auto max-w-2xl p-4 text-center md:p-8">
-                <h1 className="mb-4 text-3xl font-semibold">{t('Merci !')}</h1>
+                <div className="mb-4">
+                    <PageHeading title={t('Merci !')} />
+                </div>
                 {orderNumber ? (
                     <p className="mb-6 text-muted-foreground">
                         {paymentConfirmed

@@ -1,6 +1,7 @@
 import { Head, Link } from '@inertiajs/react';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
+import { PageHeading } from '@/components/storefront/page-heading';
 import { formatMoney } from '@/lib/money';
 
 type OrderItem = {
@@ -32,7 +33,7 @@ export default function AccountOrdersPage({
         <>
             <Head title="Mes commandes" />
             <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
-                <h1 className="text-3xl font-semibold">Mes commandes</h1>
+                <PageHeading title="Mes commandes" />
 
                 {orders.data.length === 0 ? (
                     <div className="rounded-lg border p-8 text-center text-muted-foreground">
