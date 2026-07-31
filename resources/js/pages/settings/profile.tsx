@@ -132,7 +132,7 @@ Profile.layout = {
     breadcrumbs: [
         {
             title: 'Mon compte',
-            href: '/mon-compte',
+            href: '/dashboard',
         },
         {
             title: 'Profile settings',
