@@ -137,6 +137,7 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                                         <img
                                             src={brand.logo_path}
                                             alt={brand.name}
+                                            loading="lazy"
                                             className="size-full object-contain p-4"
                                         />
                                     ) : (

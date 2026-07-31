@@ -133,6 +133,7 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                                         <img
                                             src={item.imageUrl}
                                             alt=""
+                                            loading="lazy"
                                             className="size-16 rounded-md object-cover"
                                         />
                                     ) : (

@@ -120,6 +120,7 @@ export default function ProductsIndex({
                                         <img
                                             src={thumbnailUrls[product.id]}
                                             alt={product.name}
+                                            loading="lazy"
                                             className="size-10 shrink-0 rounded object-cover"
                                         />
                                     ) : (
