@@ -16,7 +16,7 @@ export function StorefrontFooter() {
                 </div>
 
                 <div>
-                    <h3 className="mb-3 font-semibold">Aide</h3>
+                    <h2 className="mb-3 font-semibold">Aide</h2>
                     <ul className="space-y-2 text-muted-foreground">
                         <li>
                             <Link href="/livraison" className="hover:underline">
@@ -33,7 +33,7 @@ export function StorefrontFooter() {
                 </div>
 
                 <div>
-                    <h3 className="mb-3 font-semibold">Légal</h3>
+                    <h2 className="mb-3 font-semibold">Légal</h2>
                     <ul className="space-y-2 text-muted-foreground">
                         <li>
                             <Link href="/cgv" className="hover:underline">
@@ -60,7 +60,7 @@ export function StorefrontFooter() {
                 </div>
 
                 <div>
-                    <h3 className="mb-3 font-semibold">Newsletter</h3>
+                    <h2 className="mb-3 font-semibold">Newsletter</h2>
                     <p className="text-muted-foreground">Bientôt disponible.</p>
                 </div>
             </div>
