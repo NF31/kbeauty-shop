@@ -1,5 +1,7 @@
-import { Head, Link, setLayoutProps } from '@inertiajs/react';
+import { Head, Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { PageHeading } from '@/components/storefront/page-heading';
+import { localizedPath } from '@/lib/locale-path';
 import { formatMoney } from '@/lib/money';
 
 type Address = {
@@ -79,32 +81,44 @@ function AddressBlock({
 }
 
 export default function AccountOrderPage({ order }: { order: OrderDetail }) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+    const orderTitle = t('Commande :orderNumber', {
+        orderNumber: order.orderNumber,
+    });
+
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Accueil', href: '/' },
-            { title: 'Mon compte', href: '/dashboard' },
-            { title: 'Mes commandes', href: '/mon-compte/commandes' },
-            { title: `Commande ${order.orderNumber}`, href: '#' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            {
+                title: t('Mon compte'),
+                href: localizedPath('/dashboard', locale),
+            },
+            {
+                title: t('Mes commandes'),
+                href: localizedPath('/mon-compte/commandes', locale),
+            },
+            { title: orderTitle, href: '#' },
         ],
     });
 
     return (
         <>
-            <Head title={`Commande ${order.orderNumber}`} />
+            <Head title={orderTitle} />
             <div className="mx-auto max-w-3xl space-y-6 p-4 md:p-8">
                 <Link
-                    href="/mon-compte/commandes"
+                    href={localizedPath('/mon-compte/commandes', locale)}
                     className="text-sm text-muted-foreground underline"
                 >
-                    ← Mes commandes
+                    ← {t('Mes commandes')}
                 </Link>
 
                 <PageHeading
-                    title={`Commande ${order.orderNumber}`}
+                    title={orderTitle}
                     description={
                         order.placedAt
                             ? new Date(order.placedAt).toLocaleDateString(
-                                  'fr-FR',
+                                  locale === 'en' ? 'en-GB' : 'fr-FR',
                                   {
                                       day: 'numeric',
                                       month: 'long',
@@ -120,10 +134,13 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                             </p>
                             {order.hasInvoice && (
                                 <a
-                                    href={`/mon-compte/commandes/${order.id}/facture`}
+                                    href={localizedPath(
+                                        `/mon-compte/commandes/${order.id}/facture`,
+                                        locale,
+                                    )}
                                     className="text-sm text-primary underline"
                                 >
-                                    Télécharger ma facture
+                                    {t('Télécharger ma facture')}
                                 </a>
                             )}
                         </div>
@@ -179,7 +196,7 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                     <div className="space-y-1 border-t p-4 text-sm">
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">
-                                Sous-total
+                                {t('Sous-total')}
                             </span>
                             <span>
                                 {formatMoney(
@@ -191,7 +208,7 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                         {order.discountCents > 0 && (
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
-                                    Remise
+                                    {t('Remise')}
                                 </span>
                                 <span>
                                     -
@@ -204,7 +221,7 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                         )}
                         <div className="flex justify-between">
                             <span className="text-muted-foreground">
-                                Livraison
+                                {t('Livraison')}
                             </span>
                             <span>
                                 {formatMoney(
@@ -216,7 +233,7 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                         {order.taxCents > 0 && (
                             <div className="flex justify-between">
                                 <span className="text-muted-foreground">
-                                    Taxes
+                                    {t('Taxes')}
                                 </span>
                                 <span>
                                     {formatMoney(
@@ -227,7 +244,7 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                             </div>
                         )}
                         <div className="flex justify-between pt-1 font-medium">
-                            <span>Total</span>
+                            <span>{t('Total')}</span>
                             <span>
                                 {formatMoney(order.totalCents, order.currency)}
                             </span>
@@ -237,11 +254,11 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
 
                 <div className="grid gap-6 sm:grid-cols-2">
                     <AddressBlock
-                        title="Adresse de livraison"
+                        title={t('Adresse de livraison')}
                         address={order.shippingAddress}
                     />
                     <AddressBlock
-                        title="Adresse de facturation"
+                        title={t('Adresse de facturation')}
                         address={order.billingAddress}
                     />
                 </div>

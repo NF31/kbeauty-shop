@@ -1,6 +1,8 @@
-import { Link, setLayoutProps } from '@inertiajs/react';
+import { Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { SeoHead } from '@/components/storefront/seo-head';
+import { localizedPath } from '@/lib/locale-path';
 
 type SkinTypeOption = { value: string; label: string };
 
@@ -13,10 +15,13 @@ export default function SkinGuidePage({
     skinTypeOptions,
     seo,
 }: SkinGuidePageProps) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Accueil', href: '/' },
-            { title: 'Guide de choix', href: '#' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            { title: t('Guide de choix'), href: '#' },
         ],
     });
 
@@ -30,8 +35,10 @@ export default function SkinGuidePage({
             <div className="mx-auto max-w-xl p-4 md:p-8">
                 <div className="mb-6">
                     <PageHeading
-                        title="Quel est ton type de peau ?"
-                        description="Choisis la réponse qui te correspond le mieux pour voir une sélection de produits adaptés."
+                        title={t('Quel est ton type de peau ?')}
+                        description={t(
+                            'Choisis la réponse qui te correspond le mieux pour voir une sélection de produits adaptés.',
+                        )}
                     />
                 </div>
 
@@ -39,17 +46,20 @@ export default function SkinGuidePage({
                     {skinTypeOptions.map((option) => (
                         <Link
                             key={option.value}
-                            href={`/produits?skin_type=${option.value}`}
+                            href={localizedPath(
+                                `/produits?skin_type=${option.value}`,
+                                locale,
+                            )}
                             className="rounded-md border p-4 text-center font-medium transition-colors hover:bg-muted"
                         >
                             {option.label}
                         </Link>
                     ))}
                     <Link
-                        href="/produits"
+                        href={localizedPath('/produits', locale)}
                         className="rounded-md border p-4 text-center font-medium text-muted-foreground transition-colors hover:bg-muted"
                     >
-                        Tous les types de peaux
+                        {t('Tous les types de peaux')}
                     </Link>
                 </div>
             </div>

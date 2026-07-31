@@ -4,6 +4,7 @@ import { CreditCard, PackageCheck, Sparkles } from 'lucide-react';
 import { SeoHead } from '@/components/storefront/seo-head';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { localizedPath } from '@/lib/locale-path';
 
 type HomeProduct = {
     id: number;
@@ -33,6 +34,7 @@ function euros(cents: number): string {
 export default function HomePage({ products, brands, seo }: HomePageProps) {
     const { t } = useLaravelReactI18n();
     const { props } = usePage();
+    const { locale } = props;
 
     const jsonLd = {
         '@context': 'https://schema.org',
@@ -103,7 +105,7 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                             className="transition-transform hover:-translate-y-0.5 hover:shadow-lg"
                             asChild
                         >
-                            <Link href="/produits">
+                            <Link href={localizedPath('/produits', locale)}>
                                 {t('Découvrir les produits')}
                             </Link>
                         </Button>
@@ -113,7 +115,9 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                             className="border border-transparent transition-transform hover:-translate-y-0.5 hover:shadow-lg"
                             asChild
                         >
-                            <Link href="/guide-de-choix">
+                            <Link
+                                href={localizedPath('/guide-de-choix', locale)}
+                            >
                                 {t("Besoin d'aide pour choisir ?")}
                             </Link>
                         </Button>
@@ -128,7 +132,7 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                             {t('Nouveautés')}
                         </h2>
                         <Link
-                            href="/produits"
+                            href={localizedPath('/produits', locale)}
                             className="text-sm text-muted-foreground underline"
                         >
                             {t('Voir tout')}
@@ -139,7 +143,10 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                         {products.map((product, index) => (
                             <Link
                                 key={product.id}
-                                href={`/produits/${product.slug}`}
+                                href={localizedPath(
+                                    `/produits/${product.slug}`,
+                                    locale,
+                                )}
                                 className="group flex flex-col gap-2"
                             >
                                 <div className="relative aspect-square overflow-hidden rounded-md bg-muted shadow-sm transition-shadow duration-300 group-hover:shadow-lg">
@@ -207,7 +214,7 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                                 {t('Nos marques')}
                             </h2>
                             <Link
-                                href="/marques"
+                                href={localizedPath('/marques', locale)}
                                 className="text-sm text-muted-foreground underline"
                             >
                                 {t('Voir tout')}
@@ -218,7 +225,10 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                             {brands.map((brand) => (
                                 <Link
                                     key={brand.slug}
-                                    href={`/marques/${brand.slug}`}
+                                    href={localizedPath(
+                                        `/marques/${brand.slug}`,
+                                        locale,
+                                    )}
                                     className="rounded-full bg-secondary px-4 py-2 text-sm text-secondary-foreground transition-all duration-200 hover:-translate-y-0.5 hover:bg-secondary/70 hover:shadow-md"
                                 >
                                     {brand.name}

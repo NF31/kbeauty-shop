@@ -97,33 +97,90 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
         Route::get('commande/confirmation', [CheckoutController::class, 'confirmation'])
             ->name('storefront.checkout.confirmation');
     });
+
+    Route::get('marques', [BrandController::class, 'index'])
+        ->name('storefront.brands.index');
+
+    Route::get('marques/{brand:slug}', [BrandController::class, 'show'])
+        ->name('storefront.brands.show');
+
+    Route::get('guide-de-choix', [SkinGuideController::class, 'index'])
+        ->name('storefront.skin-guide');
+
+    Route::get('mentions-legales', [LegalController::class, 'mentions'])
+        ->name('storefront.legal.mentions');
+
+    Route::get('cgv', [LegalController::class, 'cgv'])
+        ->name('storefront.legal.cgv');
+
+    Route::get('confidentialite', [LegalController::class, 'confidentialite'])
+        ->name('storefront.legal.confidentialite');
+
+    Route::get('livraison', [LegalController::class, 'livraison'])
+        ->name('storefront.legal.livraison');
+
+    Route::get('retours', [LegalController::class, 'retours'])
+        ->name('storefront.legal.retours');
+
+    Route::middleware('auth')->group(function () {
+        Route::get('mon-compte/commandes', [AccountController::class, 'orders'])
+            ->name('storefront.account.orders');
+
+        Route::get('mon-compte/commandes/{order}', [AccountController::class, 'show'])
+            ->name('storefront.account.orders.show');
+
+        Route::get('mon-compte/commandes/{order}/facture', [AccountController::class, 'downloadInvoice'])
+            ->name('storefront.account.orders.invoice');
+
+        Route::get('mon-compte/adresses', [AccountAddressController::class, 'index'])
+            ->name('storefront.account.addresses.index');
+
+        Route::middleware('throttle:30,1,storefront-account-address')->group(function () {
+            Route::post('mon-compte/adresses', [AccountAddressController::class, 'store'])
+                ->name('storefront.account.addresses.store');
+
+            Route::put('mon-compte/adresses/{address}', [AccountAddressController::class, 'update'])
+                ->name('storefront.account.addresses.update');
+
+            Route::delete('mon-compte/adresses/{address}', [AccountAddressController::class, 'destroy'])
+                ->name('storefront.account.addresses.destroy');
+        });
+    });
 });
 
 Route::get('marques', [BrandController::class, 'index'])
+    ->middleware('locale:fr')
     ->name('storefront.brands.index');
 
 Route::get('marques/{brand:slug}', [BrandController::class, 'show'])
+    ->middleware('locale:fr')
     ->name('storefront.brands.show');
 
 Route::get('guide-de-choix', [SkinGuideController::class, 'index'])
+    ->middleware('locale:fr')
     ->name('storefront.skin-guide');
 
 Route::get('mentions-legales', [LegalController::class, 'mentions'])
+    ->middleware('locale:fr')
     ->name('storefront.legal.mentions');
 
 Route::get('cgv', [LegalController::class, 'cgv'])
+    ->middleware('locale:fr')
     ->name('storefront.legal.cgv');
 
 Route::get('confidentialite', [LegalController::class, 'confidentialite'])
+    ->middleware('locale:fr')
     ->name('storefront.legal.confidentialite');
 
 Route::get('livraison', [LegalController::class, 'livraison'])
+    ->middleware('locale:fr')
     ->name('storefront.legal.livraison');
 
 Route::get('retours', [LegalController::class, 'retours'])
+    ->middleware('locale:fr')
     ->name('storefront.legal.retours');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'locale:fr'])->group(function () {
     Route::get('mon-compte/commandes', [AccountController::class, 'orders'])
         ->name('storefront.account.orders');
 

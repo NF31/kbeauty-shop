@@ -6,6 +6,7 @@ import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { SeoHead } from '@/components/storefront/seo-head';
+import { localizedPath } from '@/lib/locale-path';
 
 type CatalogProduct = {
     id: number;
@@ -150,10 +151,10 @@ export default function CatalogPage({
 
     setLayoutProps({
         breadcrumbs: [
-            { title: t('Accueil'), href: '/' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
             {
                 title: t('Tous nos produits'),
-                href: locale === 'en' ? '/en/produits' : '/produits',
+                href: localizedPath('/produits', locale),
             },
             ...(activeFilterLabel
                 ? [{ title: activeFilterLabel, href: '#' }]
@@ -170,7 +171,7 @@ export default function CatalogPage({
                         title={t('Tous nos produits')}
                         actions={
                             <Link
-                                href="/guide-de-choix"
+                                href={localizedPath('/guide-de-choix', locale)}
                                 className="text-sm text-muted-foreground underline"
                             >
                                 {t("Besoin d'aide pour choisir ?")}

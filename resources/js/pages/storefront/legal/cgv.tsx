@@ -1,9 +1,17 @@
-import { Link } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
+import { localizedPath } from '@/lib/locale-path';
 
 export default function CgvPage() {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     return (
-        <LegalPage title="Conditions générales de vente" updatedAt="2026-07-22">
+        <LegalPage
+            title={t('Conditions générales de vente')}
+            updatedAt="2026-07-22"
+        >
             <section>
                 <h2>Article 1 — Objet</h2>
                 <p>
@@ -48,7 +56,11 @@ export default function CgvPage() {
                 <h2>Article 5 — Livraison</h2>
                 <p>
                     Les modalités et délais de livraison sont détaillés dans
-                    notre <Link href="/livraison">politique de livraison</Link>.
+                    notre{' '}
+                    <Link href={localizedPath('/livraison', locale)}>
+                        politique de livraison
+                    </Link>
+                    .
                 </p>
             </section>
 
@@ -61,7 +73,7 @@ export default function CgvPage() {
                     consommation, le client dispose d'un délai de 14 jours pour
                     exercer son droit de rétractation. Les modalités sont
                     détaillées dans notre{' '}
-                    <Link href="/retours">
+                    <Link href={localizedPath('/retours', locale)}>
                         politique de retours et remboursements
                     </Link>
                     .
@@ -83,7 +95,7 @@ export default function CgvPage() {
                 <p>
                     Le traitement des données personnelles du client est décrit
                     dans notre{' '}
-                    <Link href="/confidentialite">
+                    <Link href={localizedPath('/confidentialite', locale)}>
                         politique de confidentialité
                     </Link>
                     .
@@ -96,8 +108,10 @@ export default function CgvPage() {
                     Les présentes CGV sont soumises au droit français. En cas de
                     litige, le client peut recourir à la médiation de la
                     consommation (voir nos{' '}
-                    <Link href="/mentions-legales">mentions légales</Link>)
-                    avant toute action judiciaire.
+                    <Link href={localizedPath('/mentions-legales', locale)}>
+                        mentions légales
+                    </Link>
+                    ) avant toute action judiciaire.
                 </p>
             </section>
         </LegalPage>

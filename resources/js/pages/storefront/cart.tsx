@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
 import { useCartActions } from '@/hooks/use-cart-actions';
+import { localizedPath } from '@/lib/locale-path';
 import { formatMoney } from '@/lib/money';
 import type { CartStoreItem } from '@/stores/cart-store';
 import { useCartStore } from '@/stores/cart-store';
@@ -37,7 +38,7 @@ export default function CartPage({
 
     setLayoutProps({
         breadcrumbs: [
-            { title: t('Accueil'), href: '/' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
             { title: t('Mon panier'), href: '#' },
         ],
     });

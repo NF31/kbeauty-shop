@@ -1,8 +1,11 @@
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
 
 export default function LivraisonPage() {
+    const { t } = useLaravelReactI18n();
+
     return (
-        <LegalPage title="Politique de livraison" updatedAt="2026-07-22">
+        <LegalPage title={t('Politique de livraison')} updatedAt="2026-07-22">
             <section>
                 <h2>Zones de livraison</h2>
                 <p>

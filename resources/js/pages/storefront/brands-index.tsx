@@ -1,6 +1,8 @@
-import { Link, setLayoutProps } from '@inertiajs/react';
+import { Link, setLayoutProps, usePage } from '@inertiajs/react';
+import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { SeoHead } from '@/components/storefront/seo-head';
+import { localizedPath } from '@/lib/locale-path';
 
 type BrandRow = {
     id: number;
@@ -16,10 +18,13 @@ type BrandsIndexPageProps = {
 };
 
 export default function BrandsIndexPage({ brands, seo }: BrandsIndexPageProps) {
+    const { t } = useLaravelReactI18n();
+    const { locale } = usePage().props;
+
     setLayoutProps({
         breadcrumbs: [
-            { title: 'Accueil', href: '/' },
-            { title: 'Marques', href: '#' },
+            { title: t('Accueil'), href: localizedPath('/', locale) },
+            { title: t('Marques'), href: '#' },
         ],
     });
 
@@ -32,19 +37,22 @@ export default function BrandsIndexPage({ brands, seo }: BrandsIndexPageProps) {
             />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
                 <div className="mb-6">
-                    <PageHeading title="Nos marques" />
+                    <PageHeading title={t('Nos marques')} />
                 </div>
 
                 {brands.length === 0 ? (
                     <p className="text-muted-foreground">
-                        Aucune marque disponible pour le moment.
+                        {t('Aucune marque disponible pour le moment.')}
                     </p>
                 ) : (
                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
                         {brands.map((brand, index) => (
                             <Link
                                 key={brand.id}
-                                href={`/marques/${brand.slug}`}
+                                href={localizedPath(
+                                    `/marques/${brand.slug}`,
+                                    locale,
+                                )}
                                 className="group flex flex-col items-center gap-3 rounded-lg border p-6 text-center transition-colors hover:bg-muted"
                             >
                                 <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full bg-muted">
