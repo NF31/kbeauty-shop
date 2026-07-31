@@ -20,12 +20,12 @@ enum SkinType: string
             self::Dry => __('Peau sèche'),
             self::Oily => __('Peau grasse'),
             self::Combination => __('Peau mixte'),
-            self::Sensitive => __('Peau sensible'),
+            self::Sensitive => __('Sensible'),
             self::Normal => __('Peau normale'),
             self::Dull => __('Peau terne'),
             self::Mature => __('Peau mature'),
             self::Dehydrated => __('Peau déshydratée'),
-            self::Acneic => __('Peau à tendance acnéique'),
+            self::Acneic => __('Acné'),
         };
     }
 }
