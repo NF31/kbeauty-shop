@@ -341,7 +341,7 @@ ci-dessous (pas de doublon de travail entre cette liste et les tâches numérot�
 
 | # | Tâche | Dev | Priorité | Statut | Détails |
 | --- | --- | --- | --- | --- | --- |
-| 27.1 | Pixels marketing (Meta, TikTok, Google Ads) | Front | P1 | ⚪ | Scripts tiers chargés conditionnellement, uniquement après consentement du bandeau cookies (20.6) — jamais avant, conformité RGPD. |
+| 27.1 | Pixels marketing (Meta, TikTok, Google Ads) | Front | P1 | 🟡 | Scripts tiers chargés conditionnellement, uniquement après consentement du bandeau cookies (20.6) — jamais avant, conformité RGPD. **Google Tag Manager installé** (`GoogleTagManager`, monté dans `StorefrontLayoutTemplate` et `AuthSimpleLayout`, `GTM_ID` en config, gate sur `hasMarketingConsent()`) + **GA4 branché** (balise "Balise Google" dans GTM, `G-XMS6F6Y39T`). L'événement `purchase` (dataLayer, montant + devise + n° commande, poussé une seule fois via garde `sessionStorage` sur `checkout-confirmation.tsx`) est déjà prêt côté site. **🔴 Suivi de conversion Google Ads bloqué** : la création de compte force la création d'une vraie campagne payante (aucun mode expert accessible, aucun lien pour créer une campagne "sans objectif" trouvé) avant de donner accès aux Outils/Conversions — reporté à quand une campagne Ads sera réellement lancée (l'ID de conversion sortira alors comme sous-produit naturel de cette étape). Meta/TikTok non commencés. |
 | 27.2 | Permissions admin fines par rôle | Backend | P2 | ⚪ | `spatie/laravel-permission` (déjà requis en 2.2) — granularité type "gestionnaire stock" vs "support client" via les permissions `products.manage`/`orders.manage`/etc. déjà listées dans `DATA_MODEL.md`. |
 
 ---

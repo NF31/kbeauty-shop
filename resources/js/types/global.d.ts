@@ -8,6 +8,12 @@ declare module 'react' {
     }
 }
 
+declare global {
+    interface Window {
+        dataLayer?: Record<string, unknown>[];
+    }
+}
+
 declare module '@inertiajs/core' {
     export interface InertiaConfig {
         sharedPageProps: {
