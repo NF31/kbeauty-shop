@@ -13,6 +13,7 @@ declare module '@inertiajs/core' {
         sharedPageProps: {
             name: string;
             appUrl: string;
+            gtmId: string | null;
             auth: Auth;
             locale: string;
             sidebarOpen: boolean;

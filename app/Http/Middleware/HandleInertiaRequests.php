@@ -44,6 +44,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => config('app.name'),
             'appUrl' => config('app.url'),
+            'gtmId' => config('services.gtm.id'),
             'auth' => [
                 'user' => $user,
                 'roles' => $user?->getRoleNames() ?? [],

@@ -57,4 +57,8 @@ return [
         'invitation_bcc' => env('TRUSTPILOT_INVITATION_BCC'),
     ],
 
+    'gtm' => [
+        'id' => env('GTM_ID'),
+    ],
+
 ];

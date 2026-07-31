@@ -1,4 +1,6 @@
+import { usePage } from '@inertiajs/react';
 import { CookieConsentBanner } from '@/components/storefront/cookie-consent-banner';
+import { GoogleTagManager } from '@/components/storefront/google-tag-manager';
 import { StorefrontFooter } from '@/components/storefront/storefront-footer';
 import { StorefrontHeader } from '@/components/storefront/storefront-header';
 import type { AuthLayoutProps } from '@/types';
@@ -8,8 +10,11 @@ export default function AuthSimpleLayout({
     title,
     description,
 }: AuthLayoutProps) {
+    const { gtmId } = usePage().props;
+
     return (
         <div className="flex min-h-screen flex-col">
+            <GoogleTagManager gtmId={gtmId} />
             <StorefrontHeader />
 
             <main className="flex flex-1 items-center justify-center bg-background p-6 md:p-10">
