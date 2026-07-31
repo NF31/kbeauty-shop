@@ -143,8 +143,8 @@ export default function OrderShow({
             <Head title={`Commande ${order.orderNumber}`} />
             <div className="mx-auto flex max-w-3xl flex-1 flex-col gap-6 p-4 md:p-8">
                 <div className="flex flex-wrap items-center justify-between gap-2">
-                    <div>
-                        <h1 className="text-2xl font-semibold">
+                    <div className="min-w-0">
+                        <h1 className="text-2xl font-semibold break-words">
                             Commande {order.orderNumber}
                         </h1>
                         <p className="text-sm text-muted-foreground">
@@ -183,24 +183,24 @@ export default function OrderShow({
                         {order.items.map((item, index) => (
                             <li
                                 key={index}
-                                className="flex items-center justify-between gap-4 p-4"
+                                className="flex flex-wrap items-center justify-between gap-4 p-4"
                             >
-                                <div className="flex items-center gap-4">
+                                <div className="flex min-w-0 items-center gap-4">
                                     {item.imageUrl ? (
                                         <img
                                             src={item.imageUrl}
                                             alt=""
-                                            className="size-16 rounded-md object-cover"
+                                            className="size-16 shrink-0 rounded-md object-cover"
                                         />
                                     ) : (
-                                        <span className="size-16 rounded-md bg-muted" />
+                                        <span className="size-16 shrink-0 rounded-md bg-muted" />
                                     )}
-                                    <div>
-                                        <p className="font-medium">
+                                    <div className="min-w-0">
+                                        <p className="truncate font-medium">
                                             {item.productName}
                                         </p>
                                         {item.variantLabel && (
-                                            <p className="text-sm text-muted-foreground">
+                                            <p className="truncate text-sm text-muted-foreground">
                                                 {item.variantLabel}
                                             </p>
                                         )}
@@ -213,7 +213,7 @@ export default function OrderShow({
                                         </p>
                                     </div>
                                 </div>
-                                <p className="font-medium">
+                                <p className="shrink-0 font-medium">
                                     {formatMoney(
                                         item.totalCents,
                                         order.currency,

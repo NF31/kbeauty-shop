@@ -17,6 +17,7 @@ use App\Models\Payment;
 use App\Models\Refund;
 use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -25,11 +26,23 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search'));
+        $status = $request->query('status');
+
         $orders = Order::query()
             ->with('user:id,name,email')
             ->withSum(['refunds as refunded_cents' => fn ($query) => $query->succeeded()], 'amount_cents')
+            ->when($search !== '', fn ($query) => $query->where(fn ($q) => $q
+                ->where('order_number', 'like', "%{$search}%")
+                ->orWhereHas('user', fn ($userQuery) => $userQuery
+                    ->where('name', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%"))))
+            ->when(
+                is_string($status) && OrderStatus::tryFrom($status) !== null,
+                fn ($query) => $query->where('status', $status),
+            )
             ->orderByDesc('placed_at')
             ->paginate(20)
             ->withQueryString();
@@ -49,6 +62,11 @@ class OrderController extends Controller
 
         return Inertia::render('admin/orders/index', [
             'orders' => $orders,
+            'filters' => ['search' => $search, 'status' => $status],
+            'statusOptions' => array_map(
+                fn (OrderStatus $status) => ['value' => $status->value, 'label' => $status->label()],
+                OrderStatus::cases(),
+            ),
         ]);
     }
 

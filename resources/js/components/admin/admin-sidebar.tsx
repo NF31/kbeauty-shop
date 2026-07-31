@@ -12,11 +12,9 @@ import OrderController from '@/actions/App/Http/Controllers/Admin/OrderControlle
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
-import { NavUser } from '@/components/nav-user';
 import {
     Sidebar,
     SidebarContent,
-    SidebarFooter,
     SidebarHeader,
     SidebarMenu,
     SidebarMenuButton,
@@ -80,10 +78,6 @@ export function AdminSidebar() {
             <SidebarContent>
                 <NavMain items={mainNavItems} />
             </SidebarContent>
-
-            <SidebarFooter>
-                <NavUser />
-            </SidebarFooter>
         </Sidebar>
     );
 }

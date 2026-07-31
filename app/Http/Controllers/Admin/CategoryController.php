@@ -7,16 +7,20 @@ use App\Http\Requests\Admin\StoreCategoryRequest;
 use App\Http\Requests\Admin\UpdateCategoryRequest;
 use App\Models\Category;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CategoryController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search'));
+
         $categories = Category::query()
             ->withCount('products')
             ->with('parent:id,name')
+            ->when($search !== '', fn ($query) => $query->where('name', 'like', "%{$search}%"))
             ->orderBy('position')
             ->orderBy('name')
             ->paginate(20)
@@ -24,6 +28,7 @@ class CategoryController extends Controller
 
         return Inertia::render('admin/categories/index', [
             'categories' => $categories,
+            'filters' => ['search' => $search],
         ]);
     }
 

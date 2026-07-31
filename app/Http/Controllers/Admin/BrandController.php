@@ -7,21 +7,28 @@ use App\Http\Requests\Admin\StoreBrandRequest;
 use App\Http\Requests\Admin\UpdateBrandRequest;
 use App\Models\Brand;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class BrandController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search'));
+
         $brands = Brand::query()
             ->withCount('products')
+            ->when($search !== '', fn ($query) => $query->where(fn ($q) => $q
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('country_of_origin', 'like', "%{$search}%")))
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 
         return Inertia::render('admin/brands/index', [
             'brands' => $brands,
+            'filters' => ['search' => $search],
         ]);
     }
 
