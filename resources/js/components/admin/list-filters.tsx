@@ -80,7 +80,7 @@ export function ListFilters({
                         })
                     }
                 >
-                    <SelectTrigger className="sm:w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                         <SelectValue placeholder={statusPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>
@@ -99,7 +99,7 @@ export function ListFilters({
                     value={sort ?? sortOptions[0]?.value}
                     onValueChange={(value) => pushFilters({ sort: value })}
                 >
-                    <SelectTrigger className="sm:w-48">
+                    <SelectTrigger className="w-full sm:w-48">
                         <SelectValue placeholder={sortPlaceholder} />
                     </SelectTrigger>
                     <SelectContent>

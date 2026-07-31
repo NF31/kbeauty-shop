@@ -2,8 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { LayoutGrid, List } from 'lucide-react';
 import { useState } from 'react';
 import BrandController from '@/actions/App/Http/Controllers/Admin/BrandController';
-import type { DataTableColumn } from '@/components/admin/data-table';
-import { DataTable } from '@/components/admin/data-table';
+import { DataList } from '@/components/admin/data-list';
 import { EntityGrid } from '@/components/admin/entity-grid';
 import { ListFilters } from '@/components/admin/list-filters';
 import { PageHeader } from '@/components/admin/page-header';
@@ -39,42 +38,6 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
             BrandController.destroy.url(brand.id),
         );
     };
-
-    const columns: DataTableColumn<BrandRow>[] = [
-        { key: 'name', header: 'Nom', render: (row) => row.name },
-        { key: 'slug', header: 'Slug', render: (row) => row.slug },
-        {
-            key: 'country_of_origin',
-            header: 'Origine',
-            render: (row) => row.country_of_origin ?? '—',
-        },
-        {
-            key: 'products_count',
-            header: 'Produits',
-            render: (row) => row.products_count,
-        },
-        {
-            key: 'actions',
-            header: '',
-            className: 'text-right',
-            render: (row) => (
-                <div className="flex justify-end gap-2">
-                    <Button variant="outline" size="sm" asChild>
-                        <Link href={BrandController.edit.url(row.id)}>
-                            Modifier
-                        </Link>
-                    </Button>
-                    <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={() => handleDelete(row)}
-                    >
-                        Supprimer
-                    </Button>
-                </div>
-            ),
-        },
-    ];
 
     return (
         <>
@@ -121,11 +84,46 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                 />
 
                 {view === 'list' ? (
-                    <DataTable
-                        columns={columns}
+                    <DataList
                         rows={brands.data}
                         rowKey={(row) => row.id}
                         emptyMessage="Aucune marque pour l'instant."
+                        renderRow={(brand) => (
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div className="min-w-0 flex-1">
+                                    <p className="truncate font-medium">
+                                        {brand.name}
+                                    </p>
+                                    <p className="truncate text-sm text-muted-foreground">
+                                        {brand.slug}
+                                        {brand.country_of_origin
+                                            ? ` · ${brand.country_of_origin}`
+                                            : ''}
+                                        {' · '}
+                                        {brand.products_count} produit
+                                        {brand.products_count > 1 ? 's' : ''}
+                                    </p>
+                                </div>
+                                <div className="flex shrink-0 gap-2">
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link
+                                            href={BrandController.edit.url(
+                                                brand.id,
+                                            )}
+                                        >
+                                            Modifier
+                                        </Link>
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        size="sm"
+                                        onClick={() => handleDelete(brand)}
+                                    >
+                                        Supprimer
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
                     />
                 ) : (
                     <EntityGrid
@@ -133,7 +131,7 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                         rowKey={(row) => row.id}
                         emptyMessage="Aucune marque pour l'instant."
                         renderCard={(brand) => (
-                            <Card className="gap-0 overflow-hidden py-0">
+                            <Card className="min-w-0 gap-0 overflow-hidden py-0">
                                 <div className="flex aspect-square items-center justify-center bg-muted">
                                     {brand.logo_path ? (
                                         <img
@@ -159,11 +157,11 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                                         {brand.products_count > 1 ? 's' : ''}
                                     </p>
                                 </CardContent>
-                                <CardFooter className="flex gap-2 px-3 py-3">
+                                <CardFooter className="flex flex-col gap-2 px-3 py-3">
                                     <Button
                                         variant="outline"
                                         size="sm"
-                                        className="flex-1"
+                                        className="w-full"
                                         asChild
                                     >
                                         <Link
@@ -177,6 +175,7 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                                     <Button
                                         variant="destructive"
                                         size="sm"
+                                        className="w-full"
                                         onClick={() => handleDelete(brand)}
                                     >
                                         Supprimer

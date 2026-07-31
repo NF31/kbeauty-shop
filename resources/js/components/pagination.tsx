@@ -27,17 +27,17 @@ export function Pagination({ links }: { links: PaginationLink[] }) {
     const pages = links.slice(1, -1);
 
     return (
-        <nav className="flex items-center justify-center gap-1">
+        <nav className="flex min-w-0 items-center justify-center gap-1">
             <NavButton link={first} icon={<ChevronLeft className="size-4" />} />
 
-            <div className="mx-1 flex items-center gap-1">
+            <div className="mx-1 flex min-w-0 items-center gap-1 overflow-x-auto">
                 {pages.map((link, index) => (
                     <Link
                         key={index}
                         href={link.url ?? '#'}
                         preserveScroll
                         className={cn(
-                            'flex size-9 items-center justify-center rounded-md border text-sm transition-colors',
+                            'flex size-9 shrink-0 items-center justify-center rounded-md border text-sm transition-colors',
                             link.active
                                 ? 'border-primary bg-primary text-primary-foreground'
                                 : 'border-transparent hover:bg-accent',

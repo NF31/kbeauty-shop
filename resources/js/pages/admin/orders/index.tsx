@@ -2,8 +2,7 @@ import { Head, Link } from '@inertiajs/react';
 import { LayoutGrid, List } from 'lucide-react';
 import { useState } from 'react';
 import OrderController from '@/actions/App/Http/Controllers/Admin/OrderController';
-import type { DataTableColumn } from '@/components/admin/data-table';
-import { DataTable } from '@/components/admin/data-table';
+import { DataList } from '@/components/admin/data-list';
 import { EntityGrid } from '@/components/admin/entity-grid';
 import { ListFilters } from '@/components/admin/list-filters';
 import { PageHeader } from '@/components/admin/page-header';
@@ -51,63 +50,6 @@ export default function OrdersIndex({
 }: OrdersIndexProps) {
     const [view, setView] = useState<'list' | 'grid'>('list');
 
-    const columns: DataTableColumn<OrderRow>[] = [
-        {
-            key: 'orderNumber',
-            header: 'Commande',
-            render: (row) => (
-                <Link
-                    href={OrderController.show.url(row.id)}
-                    className="font-medium underline-offset-2 hover:underline"
-                >
-                    {row.orderNumber}
-                </Link>
-            ),
-        },
-        {
-            key: 'customer',
-            header: 'Client',
-            render: (row) => (
-                <div>
-                    <p>{row.customerName ?? '—'}</p>
-                    <p className="text-sm text-muted-foreground">
-                        {row.customerEmail}
-                    </p>
-                </div>
-            ),
-        },
-        {
-            key: 'status',
-            header: 'Statut',
-            render: (row) => (
-                <Badge variant={statusVariant[row.status] ?? 'secondary'}>
-                    {row.statusLabel}
-                </Badge>
-            ),
-        },
-        {
-            key: 'total',
-            header: 'Total',
-            render: (row) => formatMoney(row.totalCents, row.currency),
-        },
-        {
-            key: 'refunded',
-            header: 'Remboursé',
-            render: (row) =>
-                row.refundedCents > 0
-                    ? formatMoney(row.refundedCents, row.currency)
-                    : '—',
-        },
-        {
-            key: 'placedAt',
-            header: 'Date',
-            render: (row) =>
-                row.placedAt
-                    ? new Date(row.placedAt).toLocaleDateString('fr-FR')
-                    : '—',
-        },
-    ];
-
     return (
         <>
             <Head title="Commandes" />
@@ -149,11 +91,55 @@ export default function OrdersIndex({
                 />
 
                 {view === 'list' ? (
-                    <DataTable
-                        columns={columns}
+                    <DataList
                         rows={orders.data}
                         rowKey={(row) => row.id}
                         emptyMessage="Aucune commande pour l'instant."
+                        renderRow={(order) => (
+                            <div className="flex flex-wrap items-center justify-between gap-4">
+                                <div className="min-w-0 flex-1">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <Link
+                                            href={OrderController.show.url(
+                                                order.id,
+                                            )}
+                                            className="truncate font-medium underline-offset-2 hover:underline"
+                                        >
+                                            {order.orderNumber}
+                                        </Link>
+                                        <Badge
+                                            variant={
+                                                statusVariant[order.status] ??
+                                                'secondary'
+                                            }
+                                        >
+                                            {order.statusLabel}
+                                        </Badge>
+                                    </div>
+                                    <p className="truncate text-sm text-muted-foreground">
+                                        {order.customerName ?? '—'}
+                                        {order.customerEmail
+                                            ? ` (${order.customerEmail})`
+                                            : ''}
+                                    </p>
+                                </div>
+                                <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+                                    <span className="font-medium">
+                                        {formatMoney(
+                                            order.totalCents,
+                                            order.currency,
+                                        )}
+                                    </span>
+                                    <span className="text-muted-foreground">
+                                        {order.placedAt
+                                            ? new Date(
+                                                  order.placedAt,
+                                              ).toLocaleDateString('fr-FR')
+                                            : '—'}
+                                    </span>
+                                </div>
+                            </div>
+                        )}
                     />
                 ) : (
                     <EntityGrid

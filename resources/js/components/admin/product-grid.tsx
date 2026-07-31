@@ -40,7 +40,10 @@ export function ProductGrid({
     return (
         <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {rows.map((row) => (
-                <Card key={row.id} className="gap-0 overflow-hidden py-0">
+                <Card
+                    key={row.id}
+                    className="min-w-0 gap-0 overflow-hidden py-0"
+                >
                     <div className="relative aspect-square bg-muted">
                         {thumbnailUrls[row.id] ? (
                             <img
@@ -87,11 +90,11 @@ export function ProductGrid({
                             </p>
                         )}
                     </CardContent>
-                    <CardFooter className="flex gap-2 px-3 py-3">
+                    <CardFooter className="flex flex-col gap-2 px-3 py-3">
                         <Button
                             variant="outline"
                             size="sm"
-                            className="flex-1"
+                            className="w-full"
                             asChild
                         >
                             <Link href={ProductController.edit.url(row.id)}>
@@ -101,6 +104,7 @@ export function ProductGrid({
                         <Button
                             variant="destructive"
                             size="sm"
+                            className="w-full"
                             onClick={() => onDelete(row)}
                         >
                             Supprimer
