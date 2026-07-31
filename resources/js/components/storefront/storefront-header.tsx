@@ -1,6 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import { Menu, Search } from 'lucide-react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import AppLogo from '@/components/app-logo';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { MiniCartSheet } from '@/components/storefront/mini-cart-sheet';
@@ -37,20 +37,39 @@ import type { NavItem } from '@/types';
  * MegaMenu sans changer la structure du header. Vide tant que le catalogue
  * (Phase 2) n'existe pas.
  */
-const categoryNavItems: NavItem[] = [{ title: 'Marques', href: '/marques' }];
+const categoryNavItems: NavItem[] = [
+    { title: 'Produits', href: '/produits' },
+    { title: 'Marques', href: '/marques' },
+];
 
 export function StorefrontHeader() {
     const { auth, cart } = usePage().props;
     const getInitials = useInitials();
     const { whenCurrentUrl } = useCurrentUrl();
     const sync = useCartStore((state) => state.sync);
+    const [isScrolled, setIsScrolled] = useState(false);
 
     useEffect(() => {
         sync(cart);
     }, [cart, sync]);
 
+    useEffect(() => {
+        const onScroll = () => setIsScrolled(window.scrollY > 8);
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+
+        return () => window.removeEventListener('scroll', onScroll);
+    }, []);
+
     return (
-        <header className="border-b border-sidebar-border/80">
+        <header
+            className={cn(
+                'sticky top-0 z-40 border-b bg-background/80 backdrop-blur-md transition-shadow duration-300',
+                isScrolled
+                    ? 'border-sidebar-border/80 shadow-sm'
+                    : 'border-transparent',
+            )}
+        >
             <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <div className="lg:hidden">
                     <Sheet>
@@ -88,7 +107,7 @@ export function StorefrontHeader() {
                 <Link
                     href={home()}
                     prefetch
-                    className="flex items-center space-x-2"
+                    className="flex items-center space-x-2 transition-opacity hover:opacity-80"
                 >
                     <AppLogo />
                 </Link>
@@ -109,7 +128,7 @@ export function StorefrontHeader() {
                                                 item.href,
                                                 'text-neutral-900 dark:text-neutral-100',
                                             ),
-                                            'h-9 cursor-pointer px-3',
+                                            'group relative h-9 cursor-pointer px-3 after:absolute after:inset-x-3 after:-bottom-0.5 after:h-0.5 after:origin-left after:scale-x-0 after:rounded-full after:bg-primary after:transition-transform after:duration-300 hover:after:scale-x-100',
                                         )}
                                     >
                                         {item.title}

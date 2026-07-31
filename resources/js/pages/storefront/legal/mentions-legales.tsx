@@ -6,7 +6,7 @@ export default function MentionsLegalesPage() {
             <section>
                 <h2>Éditeur du site</h2>
                 <p>
-                    Le site K-Beauty est édité par [À COMPLÉTER : raison
+                    Le site Korea Beauty est édité par [À COMPLÉTER : raison
                     sociale], [À COMPLÉTER : forme juridique], au capital de [À
                     COMPLÉTER : montant] euros, immatriculée au Registre du
                     Commerce et des Sociétés de [À COMPLÉTER : ville] sous le

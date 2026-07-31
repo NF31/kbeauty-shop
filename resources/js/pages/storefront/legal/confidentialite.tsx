@@ -6,11 +6,11 @@ export default function ConfidentialitePage() {
             <section>
                 <h2>Responsable de traitement</h2>
                 <p>
-                    [À COMPLÉTER : raison sociale], éditeur du site K-Beauty,
-                    est responsable du traitement des données personnelles
-                    collectées via ce site. Pour toute question relative à vos
-                    données, vous pouvez nous contacter à [À COMPLÉTER : email
-                    dédié RGPD].
+                    [À COMPLÉTER : raison sociale], éditeur du site Korea
+                    Beauty, est responsable du traitement des données
+                    personnelles collectées via ce site. Pour toute question
+                    relative à vos données, vous pouvez nous contacter à [À
+                    COMPLÉTER : email dédié RGPD].
                 </p>
             </section>
 

@@ -13,19 +13,24 @@ import {
 /**
  * Chemins storefront disposant d'un miroir `/en/...` (routes/storefront.php)
  * — catalogue, fiche produit, panier, tunnel de commande (25.1 puis
- * extension au parcours d'achat). Rendu par le header (une seule instance
- * partagee, voir StorefrontHeader) plutot que sur chaque page : ne pas
- * afficher le selecteur sur les pages qui n'ont pas encore de version
- * anglaise (compte client, pages legales, guide de choix...).
+ * extension au parcours d'achat). Le selecteur reste visible partout ou le
+ * header storefront est rendu (y compris login/register/compte/legal) ; sur
+ * les pages sans version anglaise, il bascule vers /produits, seule page
+ * dont l'anglais existe reellement.
  */
 const LOCALIZED_PATH_PATTERN = /^\/(en\/)?(produits|panier|commande)(\/.*)?$/;
+const FALLBACK_LOCALIZED_PATH = '/produits';
 
-function alternateLocaleHref(currentUrl: string): string | null {
+function alternateLocaleHref(currentUrl: string): string {
+    const isEnglish = currentUrl.startsWith('/en/') || currentUrl === '/en';
+
     if (!LOCALIZED_PATH_PATTERN.test(currentUrl)) {
-        return null;
+        return isEnglish
+            ? FALLBACK_LOCALIZED_PATH
+            : `/en${FALLBACK_LOCALIZED_PATH}`;
     }
 
-    return currentUrl.startsWith('/en/') || currentUrl === '/en'
+    return isEnglish
         ? currentUrl.replace(/^\/en/, '') || '/'
         : `/en${currentUrl}`;
 }
@@ -40,16 +45,8 @@ export function LanguageSwitcher() {
     // selecteur soit instantanee (servie depuis le cache Inertia) plutot
     // que de declencher un aller-retour serveur visible au clic.
     useEffect(() => {
-        if (!alternateHref) {
-            return;
-        }
-
         router.prefetch(alternateHref, { method: 'get' }, { cacheFor: '30s' });
     }, [alternateHref]);
-
-    if (!alternateHref) {
-        return null;
-    }
 
     return (
         <Select

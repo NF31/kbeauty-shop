@@ -4,6 +4,7 @@ import { useState } from 'react';
 import type { ProductGalleryImage } from '@/components/storefront/product-gallery';
 import { ProductGallery } from '@/components/storefront/product-gallery';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
@@ -71,10 +72,10 @@ export default function ProductPage({
     return (
         <>
             <Head title={product.name} />
-            <div className="mx-auto grid max-w-5xl gap-8 p-4 md:grid-cols-2 md:p-8">
+            <div className="mx-auto grid max-w-6xl gap-10 px-4 py-8 md:grid-cols-2 md:gap-16 md:px-16 md:py-16">
                 <ProductGallery images={images} productName={product.name} />
 
-                <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-6">
                     {activeFiltersQueryString && (
                         <Link
                             href={`${locale === 'en' ? '/en' : ''}/produits?${activeFiltersQueryString}`}
@@ -83,28 +84,32 @@ export default function ProductPage({
                             ← {t('Retour au catalogue filtré')}
                         </Link>
                     )}
-                    {product.brand && (
-                        <p className="text-sm text-muted-foreground">
-                            {product.brand.name}
-                        </p>
-                    )}
-                    <h1 className="text-3xl font-semibold">{product.name}</h1>
-                    {priceCents !== null && (
-                        <p className="flex items-baseline gap-3">
-                            <span className="text-xl font-medium">
-                                {euros(priceCents)}
-                            </span>
-                            {compareAtPriceCents !== null &&
-                                compareAtPriceCents > priceCents && (
-                                    <span className="text-base text-muted-foreground line-through">
-                                        {euros(compareAtPriceCents)}
-                                    </span>
-                                )}
-                        </p>
-                    )}
+                    <div className="space-y-3">
+                        {product.brand && (
+                            <p className="text-sm text-muted-foreground">
+                                {product.brand.name}
+                            </p>
+                        )}
+                        <h1 className="font-heading text-4xl leading-tight font-medium tracking-tight md:text-5xl">
+                            {product.name}
+                        </h1>
+                        {priceCents !== null && (
+                            <p className="flex items-baseline gap-3">
+                                <span className="text-2xl font-medium">
+                                    {euros(priceCents)}
+                                </span>
+                                {compareAtPriceCents !== null &&
+                                    compareAtPriceCents > priceCents && (
+                                        <span className="text-base text-muted-foreground line-through">
+                                            {euros(compareAtPriceCents)}
+                                        </span>
+                                    )}
+                            </p>
+                        )}
+                    </div>
 
                     {inStock ? (
-                        <>
+                        <div className="flex flex-col gap-4">
                             <QuantitySelector
                                 value={quantity}
                                 onChange={setQuantity}
@@ -112,6 +117,7 @@ export default function ProductPage({
                             />
 
                             <Button
+                                size="lg"
                                 onClick={addToCart}
                                 disabled={isAdding || !defaultVariantId}
                             >
@@ -123,16 +129,19 @@ export default function ProductPage({
                                     {addError}
                                 </p>
                             )}
-                        </>
+                        </div>
                     ) : (
-                        <p className="text-sm text-muted-foreground">
-                            {t('Rupture de stock.')}
-                        </p>
+                        <Badge
+                            variant="outline"
+                            className="w-fit text-muted-foreground"
+                        >
+                            {t('Rupture de stock')}
+                        </Badge>
                     )}
                 </div>
             </div>
 
-            <div className="mx-auto max-w-5xl p-4 md:p-8">
+            <div className="mx-auto max-w-6xl border-t px-4 py-8 md:px-16 md:py-16">
                 <Tabs defaultValue="benefits">
                     <TabsList>
                         <TabsTrigger value="benefits">
@@ -152,7 +161,7 @@ export default function ProductPage({
 
                     <TabsContent value="benefits">
                         {product.short_description ? (
-                            <p className="whitespace-pre-line">
+                            <p className="leading-relaxed whitespace-pre-line">
                                 {product.short_description}
                             </p>
                         ) : (
@@ -163,14 +172,14 @@ export default function ProductPage({
                     </TabsContent>
 
                     <TabsContent value="description">
-                        <p className="whitespace-pre-line">
+                        <p className="leading-relaxed whitespace-pre-line">
                             {product.description}
                         </p>
                     </TabsContent>
 
                     <TabsContent value="ingredients">
                         {product.ingredients_inci ? (
-                            <p className="whitespace-pre-line">
+                            <p className="leading-relaxed whitespace-pre-line">
                                 {product.ingredients_inci}
                             </p>
                         ) : (
@@ -184,7 +193,7 @@ export default function ProductPage({
 
                     <TabsContent value="how-to-use">
                         {product.how_to_use ? (
-                            <p className="whitespace-pre-line">
+                            <p className="leading-relaxed whitespace-pre-line">
                                 {product.how_to_use}
                             </p>
                         ) : (

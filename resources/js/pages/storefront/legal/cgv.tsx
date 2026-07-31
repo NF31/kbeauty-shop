@@ -9,8 +9,8 @@ export default function CgvPage() {
                 <p>
                     Les présentes conditions générales de vente (CGV) régissent
                     les ventes de produits cosmétiques réalisées sur le site
-                    K-Beauty entre [À COMPLÉTER : raison sociale] et tout client
-                    consommateur ou professionnel.
+                    Korea Beauty entre [À COMPLÉTER : raison sociale] et tout
+                    client consommateur ou professionnel.
                 </p>
             </section>
 
@@ -18,8 +18,8 @@ export default function CgvPage() {
                 <h2>Article 2 — Prix</h2>
                 <p>
                     Les prix sont indiqués en euros, toutes taxes comprises
-                    (TTC). K-Beauty se réserve le droit de modifier ses prix à
-                    tout moment, étant entendu que le prix figurant sur la
+                    (TTC). Korea Beauty se réserve le droit de modifier ses prix
+                    à tout moment, étant entendu que le prix figurant sur la
                     commande au moment de sa validation est le seul applicable
                     au client.
                 </p>
