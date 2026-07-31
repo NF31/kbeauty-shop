@@ -1,16 +1,25 @@
-import { Head, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { PageHeading } from '@/components/storefront/page-heading';
+import { SeoHead } from '@/components/storefront/seo-head';
 
 type SkinTypeOption = { value: string; label: string };
 
 type SkinGuidePageProps = {
     skinTypeOptions: SkinTypeOption[];
+    seo: { title: string; description: string; image: string | null };
 };
 
-export default function SkinGuidePage({ skinTypeOptions }: SkinGuidePageProps) {
+export default function SkinGuidePage({
+    skinTypeOptions,
+    seo,
+}: SkinGuidePageProps) {
     return (
         <>
-            <Head title="Guide de choix" />
+            <SeoHead
+                title={seo.title}
+                description={seo.description}
+                image={seo.image}
+            />
             <div className="mx-auto max-w-xl p-4 md:p-8">
                 <div className="mb-6">
                     <PageHeading

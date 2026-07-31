@@ -16,6 +16,11 @@ class SkinGuideController extends Controller
                 fn (SkinType $type) => ['value' => $type->value, 'label' => $type->label()],
                 SkinType::cases(),
             ),
+            'seo' => [
+                'title' => __('Quel est ton type de peau ?'),
+                'description' => __('Réponds à quelques questions pour découvrir les soins coréens adaptés à ton type de peau.'),
+                'image' => null,
+            ],
         ]);
     }
 }
