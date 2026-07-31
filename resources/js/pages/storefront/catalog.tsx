@@ -307,7 +307,7 @@ export default function CatalogPage({
                     </p>
                 ) : (
                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-                        {products.data.map((product) => (
+                        {products.data.map((product, index) => (
                             <Link
                                 key={product.id}
                                 href={
@@ -322,6 +322,14 @@ export default function CatalogPage({
                                         <img
                                             src={product.thumbnailUrl}
                                             alt={product.name}
+                                            // Premiere image de la grille =
+                                            // candidate LCP sur le catalogue.
+                                            fetchPriority={
+                                                index === 0 ? 'high' : undefined
+                                            }
+                                            loading={
+                                                index === 0 ? undefined : 'lazy'
+                                            }
                                             className="h-full w-full object-cover transition-transform group-hover:scale-105"
                                         />
                                     )}

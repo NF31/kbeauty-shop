@@ -97,7 +97,7 @@ export function ProductGallery({
         <div className="flex flex-col gap-3">
             <Carousel setApi={setApi} className="w-full">
                 <CarouselContent>
-                    {displayedImages.map((image) => (
+                    {displayedImages.map((image, index) => (
                         <CarouselItem key={image.id}>
                             <button
                                 type="button"
@@ -107,6 +107,16 @@ export function ProductGallery({
                                 <img
                                     src={image.url}
                                     alt={image.alt_text ?? productName}
+                                    // Premiere image = candidate LCP (visible
+                                    // des l'arrivee sur la fiche produit) :
+                                    // priorite haute pour ne pas la faire
+                                    // attendre derriere d'autres ressources.
+                                    // Les autres slides du carousel ne sont
+                                    // pas visibles au chargement : lazy.
+                                    fetchPriority={
+                                        index === 0 ? 'high' : undefined
+                                    }
+                                    loading={index === 0 ? undefined : 'lazy'}
                                     className="aspect-square w-full object-cover transition-transform duration-300 ease-out group-hover:scale-105"
                                 />
                             </button>
@@ -139,6 +149,7 @@ export function ProductGallery({
                             <img
                                 src={image.url}
                                 alt=""
+                                loading="lazy"
                                 className="size-full object-cover"
                             />
                         </button>
@@ -186,6 +197,7 @@ export function ProductGallery({
                                     <img
                                         src={image.url}
                                         alt={image.alt_text ?? productName}
+                                        loading="lazy"
                                         className="max-h-full max-w-full animate-in rounded-lg object-contain duration-500 ease-out zoom-in-95 fade-in"
                                     />
                                 </CarouselItem>
