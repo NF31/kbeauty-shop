@@ -34,7 +34,7 @@ export default function BrandsIndexPage({ brands, seo }: BrandsIndexPageProps) {
                     </p>
                 ) : (
                     <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-                        {brands.map((brand) => (
+                        {brands.map((brand, index) => (
                             <Link
                                 key={brand.id}
                                 href={`/marques/${brand.slug}`}
@@ -45,6 +45,12 @@ export default function BrandsIndexPage({ brands, seo }: BrandsIndexPageProps) {
                                         <img
                                             src={brand.logo_path}
                                             alt={brand.name}
+                                            // Premiere image de la grille =
+                                            // candidate LCP sur la liste des
+                                            // marques.
+                                            fetchPriority={
+                                                index === 0 ? 'high' : undefined
+                                            }
                                             className="h-full w-full object-cover"
                                         />
                                     ) : (
