@@ -44,6 +44,11 @@ class HomeController extends Controller
         return Inertia::render('storefront/home', [
             'products' => $products,
             'brands' => $brands,
+            'seo' => [
+                'title' => __('Le meilleur de la K-Beauty, sélectionné pour vous'),
+                'description' => __('Soins coréens sélectionnés, livrés chez vous. Découvrez notre sélection de marques et de soins pensés pour chaque type de peau.'),
+                'image' => url('/logo.png'),
+            ],
         ]);
     }
 }

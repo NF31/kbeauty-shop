@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\Storefront\AccountController;
 use App\Http\Controllers\Storefront\HomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [AccountController::class, 'dashboard'])->name('dashboard');

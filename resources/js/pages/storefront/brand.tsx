@@ -1,6 +1,7 @@
-import { Head, Link, router } from '@inertiajs/react';
+import { Link, router } from '@inertiajs/react';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
+import { SeoHead } from '@/components/storefront/seo-head';
 import { cn } from '@/lib/utils';
 
 type BrandProduct = {
@@ -30,6 +31,7 @@ type BrandPageProps = {
     priceMin: string | null;
     priceMax: string | null;
     sort: SortValue;
+    seo: { title: string; description: string; image: string | null };
 };
 
 function euros(cents: number): string {
@@ -44,6 +46,7 @@ export default function BrandPage({
     priceMin,
     priceMax,
     sort,
+    seo,
 }: BrandPageProps) {
     const applyFilters = (patch: Record<string, string | null>) => {
         const params = new URLSearchParams(window.location.search);
@@ -65,7 +68,11 @@ export default function BrandPage({
 
     return (
         <>
-            <Head title={brand.name} />
+            <SeoHead
+                title={seo.title}
+                description={seo.description}
+                image={seo.image}
+            />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
                 <div className="mb-8 flex flex-col items-center gap-4 border-b pb-8 text-center">
                     {brand.logoUrl && (
