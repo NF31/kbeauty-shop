@@ -200,6 +200,14 @@ class CheckoutController extends Controller
             // sinon le client voit "en cours de confirmation" alors que
             // Stripe a déjà répondu "succeeded".
             'paymentConfirmed' => $paymentConfirmed,
+            // Alimente le dataLayer GTM (evenement "purchase") pour le suivi
+            // de conversion Google Ads / GA4 — uniquement une fois le
+            // paiement reellement confirme par Stripe.
+            'purchase' => $paymentConfirmed && $order ? [
+                'transactionId' => $order->order_number,
+                'value' => $order->total_cents / 100,
+                'currency' => $order->currency,
+            ] : null,
         ]);
     }
 
