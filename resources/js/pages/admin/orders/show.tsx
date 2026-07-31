@@ -190,6 +190,7 @@ export default function OrderShow({
                                         <img
                                             src={item.imageUrl}
                                             alt=""
+                                            loading="lazy"
                                             className="size-16 shrink-0 rounded-md object-cover"
                                         />
                                     ) : (

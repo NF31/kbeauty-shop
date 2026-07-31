@@ -49,6 +49,7 @@ export function ProductGrid({
                             <img
                                 src={thumbnailUrls[row.id]}
                                 alt={row.name}
+                                loading="lazy"
                                 className="size-full object-cover"
                             />
                         ) : (

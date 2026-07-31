@@ -8,6 +8,7 @@ export function StorefrontFooter() {
                     <img
                         src="/logo-mark.png"
                         alt="Korea Beauty"
+                        loading="lazy"
                         className="mb-3 size-14 rounded-full"
                     />
                     <p className="text-muted-foreground">

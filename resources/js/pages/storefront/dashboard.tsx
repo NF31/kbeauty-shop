@@ -144,6 +144,7 @@ export default function Dashboard({
                                                     <img
                                                         src={item.imageUrl}
                                                         alt=""
+                                                        loading="lazy"
                                                         className="size-10 rounded-md object-cover"
                                                     />
                                                 ) : (
