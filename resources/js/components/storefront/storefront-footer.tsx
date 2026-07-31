@@ -5,7 +5,11 @@ export function StorefrontFooter() {
         <footer className="border-t border-sidebar-border/80">
             <div className="mx-auto grid gap-8 px-4 py-12 text-sm sm:grid-cols-2 md:max-w-7xl lg:grid-cols-4">
                 <div>
-                    <h3 className="mb-3 font-semibold">K-Beauty</h3>
+                    <img
+                        src="/logo-mark.png"
+                        alt="Korea Beauty"
+                        className="mb-3 size-14 rounded-full"
+                    />
                     <p className="text-muted-foreground">
                         Soins coréens sélectionnés, livrés chez vous.
                     </p>
@@ -62,7 +66,7 @@ export function StorefrontFooter() {
             </div>
 
             <div className="border-t border-sidebar-border/80 px-4 py-4 text-center text-xs text-muted-foreground">
-                &copy; {new Date().getFullYear()} K-Beauty. Tous droits
+                &copy; {new Date().getFullYear()} Korea Beauty. Tous droits
                 réservés.
             </div>
         </footer>

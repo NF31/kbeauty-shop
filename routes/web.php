@@ -1,9 +1,10 @@
 <?php
 
 use App\Http\Controllers\Storefront\AccountController;
+use App\Http\Controllers\Storefront\HomeController;
 use Illuminate\Support\Facades\Route;
 
-Route::inertia('/', 'welcome')->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [AccountController::class, 'dashboard'])->name('dashboard');

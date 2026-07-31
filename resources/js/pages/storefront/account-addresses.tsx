@@ -336,7 +336,7 @@ function AddressFormDialog({
                         <Input id="line2" {...register('line2')} />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <Label htmlFor="postalCode">Code postal</Label>
                             <Input
@@ -361,7 +361,7 @@ function AddressFormDialog({
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <div>
                             <Label htmlFor="countryCode">Pays (code)</Label>
                             <Input
