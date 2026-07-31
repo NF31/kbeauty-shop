@@ -27,6 +27,7 @@ export function MiniCartSheet() {
                     variant="ghost"
                     size="icon"
                     className="relative h-9 w-9"
+                    aria-label="Voir le panier"
                 >
                     <ShoppingBag className="!size-5 opacity-80" />
                     {itemCount > 0 && (

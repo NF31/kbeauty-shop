@@ -27,8 +27,15 @@ export function Pagination({ links }: { links: PaginationLink[] }) {
     const pages = links.slice(1, -1);
 
     return (
-        <nav className="flex min-w-0 items-center justify-center gap-1">
-            <NavButton link={first} icon={<ChevronLeft className="size-4" />} />
+        <nav
+            className="flex min-w-0 items-center justify-center gap-1"
+            aria-label="Pagination"
+        >
+            <NavButton
+                link={first}
+                icon={<ChevronLeft className="size-4" />}
+                label="Page précédente"
+            />
 
             <div className="mx-1 flex min-w-0 items-center gap-1 overflow-x-auto">
                 {pages.map((link, index) => (
@@ -36,6 +43,7 @@ export function Pagination({ links }: { links: PaginationLink[] }) {
                         key={index}
                         href={link.url ?? '#'}
                         preserveScroll
+                        aria-current={link.active ? 'page' : undefined}
                         className={cn(
                             'flex size-9 shrink-0 items-center justify-center rounded-md border text-sm transition-colors',
                             link.active
@@ -47,15 +55,30 @@ export function Pagination({ links }: { links: PaginationLink[] }) {
                 ))}
             </div>
 
-            <NavButton link={last} icon={<ChevronRight className="size-4" />} />
+            <NavButton
+                link={last}
+                icon={<ChevronRight className="size-4" />}
+                label="Page suivante"
+            />
         </nav>
     );
 }
 
-function NavButton({ link, icon }: { link: PaginationLink; icon: ReactNode }) {
+function NavButton({
+    link,
+    icon,
+    label,
+}: {
+    link: PaginationLink;
+    icon: ReactNode;
+    label: string;
+}) {
     if (link.url === null) {
         return (
-            <span className="flex size-9 items-center justify-center rounded-md text-muted-foreground/40">
+            <span
+                className="flex size-9 items-center justify-center rounded-md text-muted-foreground/40"
+                aria-hidden="true"
+            >
                 {icon}
             </span>
         );
@@ -65,6 +88,7 @@ function NavButton({ link, icon }: { link: PaginationLink; icon: ReactNode }) {
         <Link
             href={link.url}
             preserveScroll
+            aria-label={label}
             className="flex size-9 items-center justify-center rounded-md border hover:bg-accent"
         >
             {icon}

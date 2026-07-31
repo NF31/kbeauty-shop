@@ -80,6 +80,7 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
                                     variant="ghost"
                                     size="icon"
                                     className="mr-2 h-[34px] w-[34px]"
+                                    aria-label="Ouvrir le menu"
                                 >
                                     <Menu className="h-5 w-5" />
                                 </Button>
