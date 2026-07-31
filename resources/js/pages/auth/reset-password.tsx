@@ -1,5 +1,6 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import InputError from '@/components/input-error';
+import { NoIndexHead } from '@/components/no-index-head';
 import PasswordInput from '@/components/password-input';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -16,7 +17,7 @@ type Props = {
 export default function ResetPassword({ token, email, passwordRules }: Props) {
     return (
         <>
-            <Head title="Réinitialiser le mot de passe" />
+            <NoIndexHead title="Réinitialiser le mot de passe" />
 
             <Form
                 {...update.form()}

@@ -1,5 +1,6 @@
-import { Form, Head } from '@inertiajs/react';
+import { Form } from '@inertiajs/react';
 import InputError from '@/components/input-error';
+import { NoIndexHead } from '@/components/no-index-head';
 import PasswordInput from '@/components/password-input';
 import TextLink from '@/components/text-link';
 import { Button } from '@/components/ui/button';
@@ -16,7 +17,7 @@ type Props = {
 export default function Register({ passwordRules }: Props) {
     return (
         <>
-            <Head title="Inscription" />
+            <NoIndexHead title="Inscription" />
             <Form
                 {...store.form()}
                 resetOnSuccess={['password', 'password_confirmation']}
