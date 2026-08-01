@@ -7,6 +7,7 @@ use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\LegalController;
+use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SkinGuideController;
 use Illuminate\Support\Facades\Route;
@@ -37,6 +38,13 @@ Route::middleware(['locale:fr', 'throttle:30,1,storefront-cart'])->group(functio
 
     Route::delete('panier/{cartItem}', [CartController::class, 'destroy'])
         ->name('storefront.cart.destroy');
+});
+
+// Formulaire newsletter du footer (13.2), accessible depuis n'importe quelle page - throttle
+// dedie (pas de captcha visible, le honeypot anti-spam est prevu separement en 13.4).
+Route::middleware(['locale:fr', 'throttle:10,1,storefront-newsletter'])->group(function () {
+    Route::post('newsletter', [NewsletterController::class, 'store'])
+        ->name('storefront.newsletter.store');
 });
 
 // Le tunnel de commande exige un compte (pas de checkout invité) — un
@@ -82,6 +90,11 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
 
         Route::delete('panier/{cartItem}', [CartController::class, 'destroy'])
             ->name('storefront.cart.destroy');
+    });
+
+    Route::middleware('throttle:10,1,storefront-newsletter')->group(function () {
+        Route::post('newsletter', [NewsletterController::class, 'store'])
+            ->name('storefront.newsletter.store');
     });
 
     Route::middleware(['checkout.auth', 'throttle:20,1,storefront-checkout'])->group(function () {
