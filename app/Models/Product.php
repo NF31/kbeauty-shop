@@ -17,6 +17,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Laravel\Scout\Searchable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Sluggable\Attributes\Sluggable;
 use Spatie\Translatable\HasTranslations;
 
@@ -63,7 +65,16 @@ use Spatie\Translatable\HasTranslations;
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, HasTranslations, Searchable, SoftDeletes;
+    use HasFactory, HasTranslations, LogsActivity, Searchable, SoftDeletes;
+
+    /**
+     * Le statut initial fixe a la creation du produit n'est pas une
+     * transition de publication interessante a auditer (16.5) - seuls les
+     * changements de statut sur un produit existant le sont.
+     *
+     * @var array<int, string>
+     */
+    protected static array $doNotRecordEvents = ['created'];
 
     /**
      * @var array<int, string>
@@ -142,6 +153,20 @@ class Product extends Model
     public function primaryImage(): HasOne
     {
         return $this->hasOne(ProductImage::class)->ofMany('position', 'min');
+    }
+
+    /**
+     * Audit trail (16.5) : seul le statut de publication nous interesse
+     * (qui a publie/depublie le produit et quand) - pas les champs de
+     * contenu (nom, description...) qui changent trop souvent.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->useLogName('product');
     }
 
     /**

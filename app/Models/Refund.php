@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * @property int $id
@@ -24,7 +26,7 @@ use Illuminate\Support\Carbon;
 class Refund extends Model
 {
     /** @use HasFactory<RefundFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     const UPDATED_AT = null;
 
@@ -34,6 +36,18 @@ class Refund extends Model
             'status' => RefundStatus::class,
             'created_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Audit trail (16.5) : un remboursement est cree une seule fois (pas de
+     * UPDATED_AT) - on journalise sa creation avec le montant et le motif.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['amount_cents', 'reason', 'status'])
+            ->dontLogEmptyChanges()
+            ->useLogName('refund');
     }
 
     /**

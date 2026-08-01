@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -80,3 +81,11 @@ Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
     ->get('health', [HealthController::class, 'index'])
     ->name('admin.health');
+
+// Audit trail (spatie/laravel-activitylog, 16.5) - qui a change quoi (stock,
+// statut commande, remboursement, publication produit) et quand. Reserve au
+// role admin strict, meme perimetre que la page Sante ci-dessus.
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->get('activity-log', [ActivityLogController::class, 'index'])
+    ->name('admin.activity-log');
