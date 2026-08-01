@@ -49,8 +49,9 @@ recherche Meilisearch si le catalogue le justifie (7.2 passe de la recherche SQL
 Meilisearch), fidélisation/parrainage/gift cards/recommandations (23.1-23.3, 24.4), support client,
 portail retours et wishlist partageable (26.1-26.3), permissions admin fines (27.2).
 
-Multi-langue (25.1) anticipée par rapport à ce jalon (P2) : infra i18n FR/EN + catalogue + tunnel
-d'achat déjà traduits (🟡 en cours) — reste compte client, auth/settings, pages légales, emails.
+Multi-langue (25.1) anticipée par rapport à ce jalon (P2) : infra i18n FR/EN + tout le storefront
+public désormais traduit (🟢) — reste volontairement en français les emails transactionnels, le
+corps juridique des pages légales (encore `[À COMPLÉTER]`) et le back-office admin (outil interne).
 
 ## Jalon 5 — Ambitions long terme (V3, P3)
 
