@@ -46,6 +46,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // Enregistrement conditionnel plutot que dans bootstrap/providers.php :
+        // laravel/telescope est require-dev (absent d'un `composer install
+        // --no-dev` en prod), donc referencer la classe ici ne charge rien
+        // tant que la branche n'est pas executee - la protection "jamais en
+        // prod" repose d'abord sur --no-dev au deploiement, ce garde local
+        // n'est qu'une securite supplementaire (staging avec les deps dev
+        // installees, etc.).
+        if ($this->app->isLocal()) {
+            $this->app->register(TelescopeServiceProvider::class);
+        }
+
         $this->app->singleton(Cloudinary::class, fn () => new Cloudinary(config('services.cloudinary.url')));
 
         $this->app->singleton(StripeClient::class, fn () => new StripeClient(config('services.stripe.secret')));
