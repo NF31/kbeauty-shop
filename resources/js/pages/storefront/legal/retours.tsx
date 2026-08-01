@@ -11,6 +11,9 @@ export default function RetoursPage() {
     return (
         <LegalPage
             title={t('Politique de retours et remboursements')}
+            description={t(
+                'Modalités de retour et de remboursement de vos commandes Korea Beauty.',
+            )}
             updatedAt={legalUpdatedAt.retours}
         >
             <section>
