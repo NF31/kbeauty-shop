@@ -177,8 +177,13 @@ SENDCLOUD_SECRET_KEY=
 
 ```env
 SENTRY_LARAVEL_DSN=
+SENTRY_TRACES_SAMPLE_RATE=1.0
+VITE_SENTRY_DSN=
 ```
 
+> Même DSN backend/frontend (un projet Sentry, environnements distingués par le tag `environment`,
+> auto-dérivé d'`APP_ENV`/`import.meta.env.MODE`) — voir `FEATURES.md` 22.1.
+>
 > Ne jamais committer les vraies valeurs — garder `.env.example` à jour avec les clés vides à
 > chaque nouveau package ajouté, comme c'est déjà fait pour le reste du projet.
 
