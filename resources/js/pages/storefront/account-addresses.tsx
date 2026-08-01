@@ -3,6 +3,7 @@ import { Head, router, setLayoutProps, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { AddressAutocompleteInput } from '@/components/storefront/address-autocomplete-input';
 import { PageHeading } from '@/components/storefront/page-heading';
@@ -23,6 +24,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { useConfirm } from '@/hooks/use-confirm';
 import { localizedPath } from '@/lib/locale-path';
 import addressesRoutes from '@/routes/storefront/account/addresses';
 
@@ -76,6 +78,7 @@ export default function AccountAddressesPage({
 }) {
     const { t } = useLaravelReactI18n();
     const { locale } = usePage().props;
+    const confirm = useConfirm();
     const [editing, setEditing] = useState<Address | null>(null);
     const [creating, setCreating] = useState(false);
 
@@ -90,21 +93,26 @@ export default function AccountAddressesPage({
         ],
     });
 
-    const destroy = (address: Address) => {
-        if (
-            !confirm(
-                t('Supprimer l\'adresse ":fullName" ?', {
-                    fullName: address.fullName,
-                }),
-            )
-        ) {
+    const destroy = async (address: Address) => {
+        const confirmed = await confirm(
+            t('Supprimer l\'adresse ":fullName" ?', {
+                fullName: address.fullName,
+            }),
+            {
+                title: t('Supprimer'),
+                confirmLabel: t('Supprimer'),
+                variant: 'destructive',
+            },
+        );
+
+        if (!confirmed) {
             return;
         }
 
         router.delete(addressesRoutes.destroy(address.id).url, {
             onError: (errors) => {
                 if (errors.address) {
-                    alert(errors.address);
+                    toast.error(errors.address);
                 }
             },
         });
