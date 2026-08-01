@@ -47,6 +47,12 @@ Route::middleware(['locale:fr', 'throttle:10,1,storefront-newsletter'])->group(f
         ->name('storefront.newsletter.store');
 });
 
+// Double opt-in (13.3) : lien signe recu par email, pas de version /en - les notifications ne
+// sont pas encore localisees dans le projet (voir OrderConfirmation, RefundConfirmation...).
+Route::get('newsletter/confirmer/{subscriber}', [NewsletterController::class, 'confirm'])
+    ->middleware(['locale:fr', 'signed'])
+    ->name('storefront.newsletter.confirm');
+
 // Le tunnel de commande exige un compte (pas de checkout invité) — un
 // visiteur non connecté est redirigé vers /login, puis renvoyé ici une fois
 // connecté/inscrit via le mécanisme "intended URL" de Laravel (voir
