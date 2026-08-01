@@ -11,6 +11,7 @@ use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SkinGuideController;
 use Illuminate\Support\Facades\Route;
+use Spatie\Honeypot\ProtectAgainstSpam;
 
 Route::get('produits', [CatalogController::class, 'index'])
     ->middleware('locale:fr')
@@ -41,8 +42,9 @@ Route::middleware(['locale:fr', 'throttle:30,1,storefront-cart'])->group(functio
 });
 
 // Formulaire newsletter du footer (13.2), accessible depuis n'importe quelle page - throttle
-// dedie (pas de captcha visible, le honeypot anti-spam est prevu separement en 13.4).
-Route::middleware(['locale:fr', 'throttle:10,1,storefront-newsletter'])->group(function () {
+// dedie + honeypot (13.4) : les champs sont fournis via le prop Inertia partage 'honeypot'
+// (voir HandleInertiaRequests) et rendus caches dans storefront-footer.tsx.
+Route::middleware(['locale:fr', 'throttle:10,1,storefront-newsletter', ProtectAgainstSpam::class])->group(function () {
     Route::post('newsletter', [NewsletterController::class, 'store'])
         ->name('storefront.newsletter.store');
 });
@@ -98,7 +100,7 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
             ->name('storefront.cart.destroy');
     });
 
-    Route::middleware('throttle:10,1,storefront-newsletter')->group(function () {
+    Route::middleware(['throttle:10,1,storefront-newsletter', ProtectAgainstSpam::class])->group(function () {
         Route::post('newsletter', [NewsletterController::class, 'store'])
             ->name('storefront.newsletter.store');
     });

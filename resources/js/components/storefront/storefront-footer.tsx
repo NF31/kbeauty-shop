@@ -9,7 +9,7 @@ import { localizedPath } from '@/lib/locale-path';
 
 export function StorefrontFooter() {
     const { t } = useLaravelReactI18n();
-    const { locale } = usePage().props;
+    const { locale, honeypot } = usePage().props;
     const [email, setEmail] = useState('');
     const [consent, setConsent] = useState(false);
     const [error, setError] = useState<string | null>(null);
@@ -22,7 +22,12 @@ export function StorefrontFooter() {
 
         router.post(
             localizedPath('/newsletter', locale),
-            { email, consent },
+            {
+                email,
+                consent,
+                [honeypot.nameFieldName]: '',
+                [honeypot.validFromFieldName]: honeypot.encryptedValidFrom,
+            },
             {
                 preserveScroll: true,
                 onError: (errors) =>

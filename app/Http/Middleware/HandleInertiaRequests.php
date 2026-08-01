@@ -7,6 +7,7 @@ use App\Services\CloudinaryService;
 use App\Support\CartPresenter;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
+use Spatie\Honeypot\Honeypot;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -55,6 +56,7 @@ class HandleInertiaRequests extends Middleware
                 app(CartService::class)->findExisting($request),
                 app(CloudinaryService::class),
             ),
+            'honeypot' => fn () => app(Honeypot::class)->toArray(),
         ];
     }
 }

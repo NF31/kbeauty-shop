@@ -30,6 +30,12 @@ declare module '@inertiajs/core' {
                 currency: string;
                 itemCount: number;
             };
+            honeypot: {
+                enabled: boolean;
+                nameFieldName: string;
+                validFromFieldName: string;
+                encryptedValidFrom: string;
+            };
             [key: string]: unknown;
         };
     }
