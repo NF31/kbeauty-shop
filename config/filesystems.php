@@ -79,13 +79,17 @@ return [
         // Disque dedie aux sauvegardes (spatie/laravel-backup) : "local" en
         // dev, "s3" (Cloudflare R2, bucket distinct de celui des factures -
         // une sauvegarde ne doit pas partager le bucket qu'elle est censee
-        // pouvoir restaurer) en prod via BACKUP_DISK=s3. Cles AWS_*
-        // reutilisees (R2 parle le protocole S3), seul le bucket differe.
+        // pouvoir restaurer) en prod via BACKUP_DISK=s3. Token R2 dedie,
+        // scope uniquement sur ce bucket (BACKUP_ACCESS_KEY_ID /
+        // BACKUP_SECRET_ACCESS_KEY) - ne PAS reutiliser les cles AWS_* des
+        // factures, un token scope sur kbeauty-invoices n'a pas acces a
+        // kbeauty-backups. L'endpoint/region restent ceux du compte R2
+        // (memes pour tous les buckets), donc reutilises depuis AWS_*.
         'backups' => [
             'driver' => env('BACKUP_DISK', 'local'),
             'root' => env('BACKUP_DISK', 'local') === 'local' ? storage_path('app/private/backups') : null,
-            'key' => env('AWS_ACCESS_KEY_ID'),
-            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'key' => env('BACKUP_ACCESS_KEY_ID'),
+            'secret' => env('BACKUP_SECRET_ACCESS_KEY'),
             'region' => env('AWS_DEFAULT_REGION'),
             'bucket' => env('BACKUP_BUCKET'),
             'endpoint' => env('AWS_ENDPOINT'),
