@@ -76,6 +76,24 @@ return [
             'report' => false,
         ],
 
+        // Disque dedie aux sauvegardes (spatie/laravel-backup) : "local" en
+        // dev, "s3" (Cloudflare R2, bucket distinct de celui des factures -
+        // une sauvegarde ne doit pas partager le bucket qu'elle est censee
+        // pouvoir restaurer) en prod via BACKUP_DISK=s3. Cles AWS_*
+        // reutilisees (R2 parle le protocole S3), seul le bucket differe.
+        'backups' => [
+            'driver' => env('BACKUP_DISK', 'local'),
+            'root' => env('BACKUP_DISK', 'local') === 'local' ? storage_path('app/private/backups') : null,
+            'key' => env('AWS_ACCESS_KEY_ID'),
+            'secret' => env('AWS_SECRET_ACCESS_KEY'),
+            'region' => env('AWS_DEFAULT_REGION'),
+            'bucket' => env('BACKUP_BUCKET'),
+            'endpoint' => env('AWS_ENDPOINT'),
+            'use_path_style_endpoint' => env('AWS_USE_PATH_STYLE_ENDPOINT', false),
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*
