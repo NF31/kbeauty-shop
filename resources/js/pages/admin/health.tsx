@@ -69,9 +69,15 @@ function MetaDetails({ meta }: { meta: HealthCheck['meta'] }) {
     );
 }
 
+type EmailThrottle = {
+    throttled: boolean;
+    nextAllowedAt: number | null;
+};
+
 type HealthProps = {
     lastRanAt: number | null;
     checks: HealthCheck[];
+    emailThrottle: EmailThrottle;
 };
 
 const statusConfig: Record<
@@ -115,7 +121,11 @@ const statusConfig: Record<
     },
 };
 
-export default function AdminHealth({ lastRanAt, checks }: HealthProps) {
+export default function AdminHealth({
+    lastRanAt,
+    checks,
+    emailThrottle,
+}: HealthProps) {
     const [isRefreshing, setIsRefreshing] = useState(false);
     const hasFailure = checks.some(
         (check) => check.status === 'failed' || check.status === 'crashed',
@@ -218,12 +228,32 @@ export default function AdminHealth({ lastRanAt, checks }: HealthProps) {
                 )}
 
                 {hasFailure ? (
-                    <p className="text-sm text-muted-foreground">
-                        Un ou plusieurs checks sont en échec — une alerte email
-                        est envoyée à <code>HEALTH_TO_ADDRESS</code> (au plus
-                        une fois par heure, pour éviter le spam si un check
-                        reste en échec).
-                    </p>
+                    <Card className="border-amber-300 dark:border-amber-800">
+                        <CardContent className="space-y-1 py-4 text-sm text-muted-foreground">
+                            <p>
+                                Un ou plusieurs checks sont en échec — notifie{' '}
+                                <code>HEALTH_TO_ADDRESS</code> par email, au
+                                plus une fois par heure pour éviter le spam si
+                                un check reste en échec.
+                            </p>
+                            {emailThrottle.throttled &&
+                            emailThrottle.nextAllowedAt ? (
+                                <p className="font-medium text-foreground">
+                                    Une alerte a déjà été envoyée récemment —
+                                    prochaine alerte possible à partir de{' '}
+                                    {new Date(
+                                        emailThrottle.nextAllowedAt * 1000,
+                                    ).toLocaleTimeString('fr-FR')}
+                                    .
+                                </p>
+                            ) : (
+                                <p className="font-medium text-foreground">
+                                    Aucune alerte récente enregistrée — l'échec
+                                    actuel devrait déclencher un envoi.
+                                </p>
+                            )}
+                        </CardContent>
+                    </Card>
                 ) : null}
             </div>
         </>
