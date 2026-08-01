@@ -1,11 +1,15 @@
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
+import { legalUpdatedAt } from '@/lib/legal-updated-at';
 
 export default function MentionsLegalesPage() {
     const { t } = useLaravelReactI18n();
 
     return (
-        <LegalPage title={t('Mentions légales')} updatedAt="2026-07-22">
+        <LegalPage
+            title={t('Mentions légales')}
+            updatedAt={legalUpdatedAt.mentionsLegales}
+        >
             <section>
                 <h2>Éditeur du site</h2>
                 <p>
@@ -28,9 +32,9 @@ export default function MentionsLegalesPage() {
             <section>
                 <h2>Hébergement</h2>
                 <p>
-                    Le site est hébergé par [À COMPLÉTER : nom de l'hébergeur],
-                    [À COMPLÉTER : adresse de l'hébergeur], [À COMPLÉTER :
-                    contact/téléphone de l'hébergeur].
+                    Le site est hébergé par Laravel Holdings Inc. (Laravel
+                    Cloud), 60 Broad Street, 24th Floor #1559, New York, New
+                    York 10004, États-Unis. Contact : support@laravel.com.
                 </p>
             </section>
 
