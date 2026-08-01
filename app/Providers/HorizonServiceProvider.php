@@ -2,7 +2,10 @@
 
 namespace App\Providers;
 
+use App\Listeners\NotifyAdminsOfFailedHorizonJob;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
+use Laravel\Horizon\Events\JobFailed;
 use Laravel\Horizon\Horizon;
 use Laravel\Horizon\HorizonApplicationServiceProvider;
 
@@ -16,8 +19,12 @@ class HorizonServiceProvider extends HorizonApplicationServiceProvider
         parent::boot();
 
         // Horizon::routeSmsNotificationsTo('15556667777');
-        // Horizon::routeMailNotificationsTo('example@example.com');
+        if ($alertEmail = config('services.horizon.alert_email')) {
+            Horizon::routeMailNotificationsTo($alertEmail);
+        }
         // Horizon::routeSlackNotificationsTo('slack-webhook-url', '#channel');
+
+        Event::listen(JobFailed::class, NotifyAdminsOfFailedHorizonJob::class);
     }
 
     /**

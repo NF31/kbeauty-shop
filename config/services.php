@@ -61,4 +61,8 @@ return [
         'id' => env('GTM_ID'),
     ],
 
+    'horizon' => [
+        'alert_email' => env('HORIZON_ALERT_EMAIL'),
+    ],
+
 ];
