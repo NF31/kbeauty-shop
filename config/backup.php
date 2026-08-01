@@ -250,10 +250,15 @@ return [
         'notifiable' => Notifiable::class,
 
         'mail' => [
-            'to' => env('BACKUP_ALERT_EMAIL', 'your@example.com'),
+            // env() ne retombe sur sa valeur par defaut que si la cle est
+            // absente, pas si elle vaut "" (cas de BACKUP_ALERT_EMAIL=
+            // dans .env.example) - une chaine vide fait echouer la
+            // validation email de spatie/laravel-backup au boot de
+            // n'importe quelle commande artisan, pas seulement backup:*.
+            'to' => env('BACKUP_ALERT_EMAIL') ?: 'your@example.com',
 
             'from' => [
-                'address' => env('MAIL_FROM_ADDRESS', 'hello@example.com'),
+                'address' => env('MAIL_FROM_ADDRESS') ?: 'hello@example.com',
                 'name' => env('MAIL_FROM_NAME', 'Example'),
             ],
         ],
