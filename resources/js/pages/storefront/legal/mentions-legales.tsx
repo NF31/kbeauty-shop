@@ -8,6 +8,9 @@ export default function MentionsLegalesPage() {
     return (
         <LegalPage
             title={t('Mentions légales')}
+            description={t(
+                'Informations légales sur Korea Beauty : éditeur du site, hébergement et propriété intellectuelle.',
+            )}
             updatedAt={legalUpdatedAt.mentionsLegales}
         >
             <section>

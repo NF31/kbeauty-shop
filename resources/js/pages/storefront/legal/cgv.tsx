@@ -11,6 +11,9 @@ export default function CgvPage() {
     return (
         <LegalPage
             title={t('Conditions générales de vente')}
+            description={t(
+                'Conditions générales de vente applicables aux commandes passées sur Korea Beauty.',
+            )}
             updatedAt={legalUpdatedAt.cgv}
         >
             <section>

@@ -8,6 +8,9 @@ export default function LivraisonPage() {
     return (
         <LegalPage
             title={t('Politique de livraison')}
+            description={t(
+                'Délais et modalités de livraison de vos commandes Korea Beauty.',
+            )}
             updatedAt={legalUpdatedAt.livraison}
         >
             <section>

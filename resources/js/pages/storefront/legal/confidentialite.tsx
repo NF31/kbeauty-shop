@@ -8,6 +8,9 @@ export default function ConfidentialitePage() {
     return (
         <LegalPage
             title={t('Politique de confidentialité')}
+            description={t(
+                'Comment Korea Beauty collecte, utilise et protège vos données personnelles.',
+            )}
             updatedAt={legalUpdatedAt.confidentialite}
         >
             <section>
