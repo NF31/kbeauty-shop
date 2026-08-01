@@ -1,10 +1,44 @@
-import { Link, usePage } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { localizedPath } from '@/lib/locale-path';
 
 export function StorefrontFooter() {
     const { t } = useLaravelReactI18n();
     const { locale } = usePage().props;
+    const [email, setEmail] = useState('');
+    const [consent, setConsent] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+
+    function handleNewsletterSubmit(event: React.FormEvent) {
+        event.preventDefault();
+        setError(null);
+        setIsSubmitting(true);
+
+        router.post(
+            localizedPath('/newsletter', locale),
+            { email, consent },
+            {
+                preserveScroll: true,
+                onError: (errors) =>
+                    setError(
+                        errors.email ??
+                            errors.consent ??
+                            t('Inscription impossible.'),
+                    ),
+                onSuccess: () => {
+                    setEmail('');
+                    setConsent(false);
+                },
+                onFinish: () => setIsSubmitting(false),
+            },
+        );
+    }
 
     return (
         <footer className="border-t border-sidebar-border/80">
@@ -79,9 +113,54 @@ export function StorefrontFooter() {
 
                 <div>
                     <h2 className="mb-3 font-semibold">{t('Newsletter')}</h2>
-                    <p className="text-muted-foreground">
-                        {t('Bientôt disponible.')}
+                    <p className="mb-3 text-muted-foreground">
+                        {t('Recevez nos nouveautés et offres par email.')}
                     </p>
+                    <form
+                        onSubmit={handleNewsletterSubmit}
+                        className="space-y-2"
+                    >
+                        <div className="flex gap-2">
+                            <Label
+                                htmlFor="newsletter-email"
+                                className="sr-only"
+                            >
+                                {t('Adresse email')}
+                            </Label>
+                            <Input
+                                id="newsletter-email"
+                                type="email"
+                                required
+                                placeholder={t('Votre email')}
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="bg-background"
+                            />
+                            <Button type="submit" disabled={isSubmitting}>
+                                {t("S'inscrire")}
+                            </Button>
+                        </div>
+                        <div className="flex items-start gap-2">
+                            <Checkbox
+                                id="newsletter-consent"
+                                checked={consent}
+                                onCheckedChange={(checked) =>
+                                    setConsent(checked === true)
+                                }
+                            />
+                            <Label
+                                htmlFor="newsletter-consent"
+                                className="text-xs leading-snug font-normal text-muted-foreground"
+                            >
+                                {t(
+                                    "J'accepte de recevoir des emails de Korea Beauty et je peux me désinscrire à tout moment.",
+                                )}
+                            </Label>
+                        </div>
+                        {error ? (
+                            <p className="text-xs text-destructive">{error}</p>
+                        ) : null}
+                    </form>
                 </div>
             </div>
 
