@@ -3,9 +3,12 @@ import {
     AlertTriangle,
     CheckCircle2,
     CircleSlash,
+    Loader2,
     RefreshCw,
     XCircle,
 } from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { PageHeader } from '@/components/admin/page-header';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -74,9 +77,22 @@ const statusConfig: Record<
 };
 
 export default function AdminHealth({ lastRanAt, checks }: HealthProps) {
+    const [isRefreshing, setIsRefreshing] = useState(false);
     const hasFailure = checks.some(
         (check) => check.status === 'failed' || check.status === 'crashed',
     );
+
+    function handleRefresh() {
+        setIsRefreshing(true);
+
+        router.reload({
+            data: { fresh: true },
+            onFinish: () => {
+                setIsRefreshing(false);
+                toast.success('Checks relancés');
+            },
+        });
+    }
 
     return (
         <>
@@ -93,12 +109,17 @@ export default function AdminHealth({ lastRanAt, checks }: HealthProps) {
                         <Button
                             variant="outline"
                             size="sm"
-                            onClick={() =>
-                                router.reload({ data: { fresh: true } })
-                            }
+                            disabled={isRefreshing}
+                            onClick={handleRefresh}
                         >
-                            <RefreshCw className="size-4" />
-                            Relancer les checks
+                            {isRefreshing ? (
+                                <Loader2 className="size-4 animate-spin" />
+                            ) : (
+                                <RefreshCw className="size-4" />
+                            )}
+                            {isRefreshing
+                                ? 'Vérification en cours…'
+                                : 'Relancer les checks'}
                         </Button>
                     }
                 />
@@ -152,8 +173,9 @@ export default function AdminHealth({ lastRanAt, checks }: HealthProps) {
                 {hasFailure ? (
                     <p className="text-sm text-muted-foreground">
                         Un ou plusieurs checks sont en échec — une alerte email
-                        a été envoyée si configurée (
-                        <code>HEALTH_TO_ADDRESS</code>).
+                        est envoyée à <code>HEALTH_TO_ADDRESS</code> (au plus
+                        une fois par heure, pour éviter le spam si un check
+                        reste en échec).
                     </p>
                 ) : null}
             </div>
