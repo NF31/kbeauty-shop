@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductLine;
 use App\Services\CloudinaryService;
 use App\Support\CatalogPresenter;
 use App\Support\CatalogQuery;
@@ -30,6 +31,11 @@ class CatalogController extends Controller
             ? Brand::query()->where('slug', $brandSlug)->first()
             : null;
 
+        $productLineSlug = $request->query('product_line');
+        $productLine = $productLineSlug
+            ? ProductLine::query()->where('slug', $productLineSlug)->first()
+            : null;
+
         $search = trim((string) $request->query('q'));
 
         $searchIds = $search !== '' ? Product::search($search)->keys() : null;
@@ -38,6 +44,7 @@ class CatalogController extends Controller
             $skinType,
             $category,
             $brand,
+            $productLine,
             $request->query('price_min'),
             $request->query('price_max'),
             $searchIds,
@@ -49,6 +56,7 @@ class CatalogController extends Controller
             $skinType,
             $category,
             $brand,
+            $productLine,
             $search,
             $request,
             $cloudinary,

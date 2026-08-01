@@ -42,6 +42,7 @@ class BrandController extends Controller
             null,
             $category,
             $brand,
+            null,
             $request->query('price_min'),
             $request->query('price_max'),
             null,
@@ -56,7 +57,7 @@ class BrandController extends Controller
             ->get(['slug', 'name']);
 
         return Inertia::render('storefront/brand', array_merge(
-            CatalogPresenter::present($products, null, $category, $brand, null, $request, $cloudinary),
+            CatalogPresenter::present($products, null, $category, $brand, null, null, $request, $cloudinary),
             [
                 'brand' => [
                     'name' => $brand->name,

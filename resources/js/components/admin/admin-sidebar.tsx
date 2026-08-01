@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     BadgePercent,
     LayoutGrid,
+    Layers,
     Package,
     ShoppingCart,
     Tags,
@@ -10,6 +11,7 @@ import BrandController from '@/actions/App/Http/Controllers/Admin/BrandControlle
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
 import OrderController from '@/actions/App/Http/Controllers/Admin/OrderController';
 import ProductController from '@/actions/App/Http/Controllers/Admin/ProductController';
+import ProductLineController from '@/actions/App/Http/Controllers/Admin/ProductLineController';
 import AppLogo from '@/components/app-logo';
 import { NavMain } from '@/components/nav-main';
 import {
@@ -56,6 +58,11 @@ export function AdminSidebar() {
                       title: 'Marques',
                       href: BrandController.index.url(),
                       icon: BadgePercent,
+                  },
+                  {
+                      title: 'Gammes',
+                      href: ProductLineController.index.url(),
+                      icon: Layers,
                   },
               ]
             : []),

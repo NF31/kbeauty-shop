@@ -3,6 +3,7 @@
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductLine;
 use App\Models\ProductVariant;
 use App\Services\CloudinaryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -127,6 +128,28 @@ test('the catalog page filters products by brand', function () {
             ->has('products.data', 1)
             ->where('products.data.0.id', $matching->id)
             ->where('activeBrand.slug', $brand->slug)
+        );
+});
+
+test('the catalog page filters products by product line', function () {
+    $this->mock(CloudinaryService::class, function ($mock) {
+        $mock->shouldReceive('url')->andReturn('https://res.cloudinary.com/fake/image.jpg');
+    });
+
+    $productLine = ProductLine::factory()->create();
+    $matching = Product::factory()->published()->create(['product_line_id' => $productLine->id]);
+    ProductVariant::factory()->default()->create(['product_id' => $matching->id]);
+
+    $other = Product::factory()->published()->create();
+    ProductVariant::factory()->default()->create(['product_id' => $other->id]);
+
+    $this->get("/produits?product_line={$productLine->slug}")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/catalog')
+            ->has('products.data', 1)
+            ->where('products.data.0.id', $matching->id)
+            ->where('activeProductLine.slug', $productLine->slug)
         );
 });
 

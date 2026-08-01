@@ -28,12 +28,14 @@ type CatalogPageProps = {
     activeSkinType: SkinTypeOption | null;
     activeCategory: NamedOption | null;
     activeBrand: NamedOption | null;
+    activeProductLine: NamedOption | null;
     priceMin: string | null;
     priceMax: string | null;
     sort: SortValue;
     skinTypeOptions: SkinTypeOption[];
     categoryOptions: NamedOption[];
     brandOptions: NamedOption[];
+    productLineOptions: NamedOption[];
 };
 
 function euros(cents: number): string {
@@ -70,12 +72,14 @@ export default function CatalogPage({
     activeSkinType,
     activeCategory,
     activeBrand,
+    activeProductLine,
     priceMin,
     priceMax,
     sort,
     skinTypeOptions,
     categoryOptions,
     brandOptions,
+    productLineOptions,
 }: CatalogPageProps) {
     const { t } = useLaravelReactI18n();
     const { locale } = usePage().props;
@@ -103,6 +107,7 @@ export default function CatalogPage({
         activeSkinType ||
         activeCategory ||
         activeBrand ||
+        activeProductLine ||
         priceMin ||
         priceMax;
 
@@ -122,6 +127,10 @@ export default function CatalogPage({
 
     if (activeBrand) {
         activeFiltersQuery.set('brand', activeBrand.slug);
+    }
+
+    if (activeProductLine) {
+        activeFiltersQuery.set('product_line', activeProductLine.slug);
     }
 
     if (priceMin) {
@@ -226,6 +235,26 @@ export default function CatalogPage({
                         >
                             <option value="">{t('Toutes')}</option>
                             {brandOptions.map((option) => (
+                                <option key={option.slug} value={option.slug}>
+                                    {option.name}
+                                </option>
+                            ))}
+                        </select>
+                    </label>
+
+                    <label className="flex flex-col gap-1 text-sm">
+                        {t('Gamme')}
+                        <select
+                            className="rounded-md border bg-background p-2"
+                            value={activeProductLine?.slug ?? ''}
+                            onChange={(e) =>
+                                applyFilters({
+                                    product_line: e.target.value || null,
+                                })
+                            }
+                        >
+                            <option value="">{t('Toutes')}</option>
+                            {productLineOptions.map((option) => (
                                 <option key={option.slug} value={option.slug}>
                                     {option.name}
                                 </option>

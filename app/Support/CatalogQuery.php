@@ -6,6 +6,7 @@ use App\Enums\SkinType;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductLine;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -24,6 +25,7 @@ class CatalogQuery
         ?SkinType $skinType,
         ?Category $category,
         ?Brand $brand,
+        ?ProductLine $productLine,
         ?string $priceMinEuros,
         ?string $priceMaxEuros,
         ?Collection $searchIds,
@@ -41,6 +43,7 @@ class CatalogQuery
                 fn ($q) => $q->where('categories.id', $category->id),
             ))
             ->when($brand, fn ($query) => $query->where('brand_id', $brand->id))
+            ->when($productLine, fn ($query) => $query->where('product_line_id', $productLine->id))
             ->when($priceMin !== null || $priceMax !== null, fn ($query) => $query->whereHas(
                 'variants',
                 fn ($q) => $q

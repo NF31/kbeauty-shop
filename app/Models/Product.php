@@ -23,6 +23,7 @@ use Spatie\Translatable\HasTranslations;
 /**
  * @property int $id
  * @property int|null $brand_id
+ * @property int|null $product_line_id
  * @property string $name
  * @property string $slug
  * @property string|null $short_description
@@ -44,6 +45,7 @@ use Spatie\Translatable\HasTranslations;
 #[Sluggable(from: 'name', to: 'slug')]
 #[Fillable([
     'brand_id',
+    'product_line_id',
     'name',
     'slug',
     'short_description',
@@ -89,6 +91,14 @@ class Product extends Model
     public function brand(): BelongsTo
     {
         return $this->belongsTo(Brand::class);
+    }
+
+    /**
+     * @return BelongsTo<ProductLine, $this>
+     */
+    public function productLine(): BelongsTo
+    {
+        return $this->belongsTo(ProductLine::class);
     }
 
     /**
