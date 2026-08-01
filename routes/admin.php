@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\HealthController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
@@ -10,7 +11,6 @@ use App\Http\Controllers\Admin\ProductLineController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use Illuminate\Support\Facades\Route;
-use Spatie\Health\Http\Controllers\HealthCheckResultsController;
 
 Route::middleware(['auth', 'role:admin|staff|support'])
     ->prefix('admin')
@@ -78,5 +78,5 @@ Route::middleware(['auth', 'role:admin|staff|support'])
 // sauvegardes, hors perimetre operationnel du reste du back-office.
 Route::middleware(['auth', 'role:admin'])
     ->prefix('admin')
-    ->get('health', HealthCheckResultsController::class)
+    ->get('health', [HealthController::class, 'index'])
     ->name('admin.health');
