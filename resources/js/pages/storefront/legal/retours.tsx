@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
+import { legalUpdatedAt } from '@/lib/legal-updated-at';
 import { localizedPath } from '@/lib/locale-path';
 
 export default function RetoursPage() {
@@ -10,7 +11,7 @@ export default function RetoursPage() {
     return (
         <LegalPage
             title={t('Politique de retours et remboursements')}
-            updatedAt="2026-07-22"
+            updatedAt={legalUpdatedAt.retours}
         >
             <section>
                 <h2>Droit de rétractation</h2>

@@ -1,5 +1,6 @@
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
+import { legalUpdatedAt } from '@/lib/legal-updated-at';
 
 export default function ConfidentialitePage() {
     const { t } = useLaravelReactI18n();
@@ -7,7 +8,7 @@ export default function ConfidentialitePage() {
     return (
         <LegalPage
             title={t('Politique de confidentialité')}
-            updatedAt="2026-07-22"
+            updatedAt={legalUpdatedAt.confidentialite}
         >
             <section>
                 <h2>Responsable de traitement</h2>

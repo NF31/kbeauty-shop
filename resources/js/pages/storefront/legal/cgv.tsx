@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { LegalPage } from '@/components/storefront/legal-page';
+import { legalUpdatedAt } from '@/lib/legal-updated-at';
 import { localizedPath } from '@/lib/locale-path';
 
 export default function CgvPage() {
@@ -10,7 +11,7 @@ export default function CgvPage() {
     return (
         <LegalPage
             title={t('Conditions générales de vente')}
-            updatedAt="2026-07-22"
+            updatedAt={legalUpdatedAt.cgv}
         >
             <section>
                 <h2>Article 1 — Objet</h2>
