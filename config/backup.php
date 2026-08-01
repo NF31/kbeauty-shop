@@ -67,7 +67,13 @@ return [
                  * Set to `null` to include complete absolute path
                  * Example: base_path()
                  */
-                'relative_path' => null,
+                // Sans ca, le zip stocke le chemin Windows absolu complet
+                // (C:\Users\...) comme nom d'entree - les deux-points/la
+                // lettre de lecteur ne sont pas geres par l'extracteur natif
+                // Windows, qui rapporte l'archive comme invalide a
+                // l'ouverture. Constate en testant reellement le
+                // telechargement d'une sauvegarde.
+                'relative_path' => base_path(),
             ],
 
             /*
