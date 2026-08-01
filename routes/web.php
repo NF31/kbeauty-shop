@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', [HomeController::class, 'index'])->middleware('locale:fr')->name('home');
 
-Route::get('sitemap.xml', [SitemapController::class, 'index'])->name('sitemap');
+Route::get('sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [AccountController::class, 'dashboard'])
