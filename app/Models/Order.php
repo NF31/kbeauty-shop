@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * @property int $id
@@ -37,7 +39,16 @@ use Illuminate\Support\Carbon;
 class Order extends Model
 {
     /** @use HasFactory<OrderFactory> */
-    use HasFactory, SoftDeletes;
+    use HasFactory, LogsActivity, SoftDeletes;
+
+    /**
+     * La creation d'une commande (statut initial "pending") n'est pas une
+     * transition de statut interessante a auditer (16.5) - seules les
+     * transitions sur une commande existante le sont.
+     *
+     * @var array<int, string>
+     */
+    protected static array $doNotRecordEvents = ['created'];
 
     /**
      * @return array<string, string>
@@ -48,6 +59,19 @@ class Order extends Model
             'status' => OrderStatus::class,
             'placed_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Audit trail (16.5) : seul le statut nous interesse (qui a fait
+     * transitionner la commande et quand).
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->useLogName('order');
     }
 
     /**

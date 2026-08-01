@@ -2,6 +2,7 @@ import { Link, usePage } from '@inertiajs/react';
 import {
     Activity,
     BadgePercent,
+    History,
     LayoutGrid,
     Layers,
     Package,
@@ -74,6 +75,11 @@ export function AdminSidebar() {
                       title: 'Santé',
                       href: admin.health(),
                       icon: Activity,
+                  },
+                  {
+                      title: "Journal d'activité",
+                      href: admin.activityLog(),
+                      icon: History,
                   },
               ]
             : []),

@@ -9,6 +9,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * @property int $id
@@ -29,13 +31,36 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ProductVariant extends Model
 {
     /** @use HasFactory<ProductVariantFactory> */
-    use HasFactory;
+    use HasFactory, LogsActivity;
+
+    /**
+     * La creation d'une variante (avec son stock initial) est deja tracee par
+     * InventoryMovement (mouvement "adjustment") - seules les modifications
+     * de stock sur une variante existante nous interessent ici (16.5).
+     *
+     * @var array<int, string>
+     */
+    protected static array $doNotRecordEvents = ['created'];
 
     protected function casts(): array
     {
         return [
             'is_default' => 'boolean',
         ];
+    }
+
+    /**
+     * Audit trail (16.5) : seul `stock_quantity` nous interesse ici (qui a
+     * change le stock et quand) - les autres champs (prix, position...)
+     * changent trop souvent pour etre pertinents dans ce journal.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['stock_quantity'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->useLogName('stock');
     }
 
     /**
