@@ -1,4 +1,5 @@
 import { createInertiaApp, usePage } from '@inertiajs/react';
+import * as Sentry from '@sentry/react';
 import {
     LaravelReactI18nProvider,
     useLaravelReactI18n,
@@ -15,6 +16,17 @@ import SettingsLayout from '@/layouts/settings/layout';
 import StorefrontLayout from '@/layouts/storefront-layout';
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+
+// DSN vide (local/CI) => le SDK reste inerte, aucun envoi. Meme DSN que le
+// backend (config/sentry.php), evenements distingues par le tag "environment".
+if (import.meta.env.VITE_SENTRY_DSN) {
+    Sentry.init({
+        dsn: import.meta.env.VITE_SENTRY_DSN,
+        environment: import.meta.env.MODE,
+        integrations: [Sentry.browserTracingIntegration()],
+        tracesSampleRate: 1.0,
+    });
+}
 
 /**
  * Locale active partagee par le backend (HandleInertiaRequests::share) —
