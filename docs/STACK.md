@@ -14,7 +14,8 @@ le *pourquoi* de certains choix ; ce document liste précisément *quoi installe
 | Auth | Laravel Fortify |
 | Permissions | Spatie Laravel Permission |
 | Paiement | Stripe (`stripe-php`) |
-| Panier | `bumbummen99/shoppingcart` |
+| Panier | `CartService` natif (`bumbummen99/shoppingcart` évalué puis abandonné/incompatible Laravel 13, voir §4) |
+| Multi-langue | `laravel-react-i18n` (front) + `spatie/laravel-translatable` (colonnes traduisibles), voir `ARCHITECTURE.md` §3ter |
 | Recherche | Laravel Scout + Meilisearch |
 | Médias | Cloudinary (SDK officiel `cloudinary/cloudinary_php` — `cloudinary-labs/cloudinary-laravel` abandonné, incompatible Laravel 13) |
 | Emails | Resend (via `resend-laravel`) |
@@ -32,7 +33,6 @@ ci-dessous) :
 ```bash
 composer require spatie/laravel-permission
 composer require stripe/stripe-php
-composer require bumbummen99/shoppingcart
 composer require brick/money
 composer require cloudinary/cloudinary_php
 composer require laravel/scout
@@ -40,6 +40,7 @@ composer require meilisearch/meilisearch-php
 composer require resend/resend-laravel
 composer require spatie/laravel-sluggable
 composer require spatie/laravel-sitemap
+composer require spatie/laravel-translatable
 composer require artesaos/seotools
 composer require barryvdh/laravel-dompdf
 composer require laravel/horizon
@@ -61,7 +62,6 @@ composer require --dev barryvdh/laravel-debugbar
 ### Packages optionnels (Phase 11, à installer seulement si la feature est activée)
 
 ```bash
-composer require laravel-lang/lang         # multi-langue FR/EN — à évaluer, plusieurs options existent
 composer require laravel/cashier           # réachat/abonnement récurrent (P3, Stripe Billing)
 ```
 
@@ -72,6 +72,7 @@ Packages restant à installer :
 ```bash
 npm install zustand zod react-hook-form
 npm install @radix-ui/react-tabs
+npm install laravel-react-i18n
 ```
 
 > `@radix-ui/react-tabs` n'est pas déjà dans le starter (les autres `@radix-ui/react-*` oui) —
@@ -113,6 +114,7 @@ starter.
 | `laravel/horizon` + Redis | supervision des queues (emails, indexation Scout, jobs Sendcloud) |
 | `sentry/sentry-laravel` | remontée d'erreurs prod, indispensable dès la mise en ligne réelle |
 | `laravel/telescope` / `barryvdh/laravel-debugbar` | debug local uniquement — **ne jamais activer en production** |
+| `laravel-react-i18n` + `spatie/laravel-translatable` | multi-langue FR/EN : `t()`/`tChoice()` côté front (clés = phrase française) + colonnes JSON traduisibles côté back (`Product.name`/`description`/etc.) — voir `ARCHITECTURE.md` §3ter |
 
 ## 5. Configuration `.env` (extraits clés)
 
@@ -186,7 +188,7 @@ Aligné sur le phasage de `FEATURES.md` — pas besoin d'installer tout le stack
 
 1. **Fondations** : PostgreSQL, Fortify (déjà là), Spatie Permission.
 2. **Catalogue** : Cloudinary, Spatie Sluggable.
-3. **Panier/commande** : `bumbummen99/shoppingcart`, `brick/money`, Stripe.
+3. **Panier/commande** : `CartService` natif (voir §4), `brick/money`, Stripe.
 4. **Emails/queues** : Resend, Horizon + Redis.
 5. **Avis/admin** : dompdf (le back-office admin est un module Inertia/React custom — même stack
    que le storefront, aucun package admin supplémentaire requis).

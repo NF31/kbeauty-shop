@@ -241,6 +241,27 @@ Route::middleware(['auth', 'role:admin|staff|support'])->prefix('admin')->group(
 - Composants shadcn/ui existants réutilisés au maximum ; nouveaux composants storefront ajoutés à
   côté sans dupliquer ce qui existe déjà dans `components/ui`.
 
+### 3ter. Routing bilingue (FR/EN)
+
+Chaque route storefront public a un miroir `/en/...` avec les **mêmes segments français** — pas de
+traduction d'URL (`/produits` reste `/produits` en anglais, seul le préfixe change), pour ne pas
+avoir à maintenir deux arborescences de slugs. Middleware `locale:{fr,en}` posé sur le groupe
+`Route::prefix('en')->name('en.')->middleware('locale:en')`, en miroir de chaque route FR
+correspondante dans `routes/storefront.php`/`routes/web.php`. Locale partagée via Inertia,
+`laravel-react-i18n` côté front (`t()`/`tChoice()`, clés = phrase française, `lang/en.json`),
+`spatie/laravel-translatable` côté back pour les colonnes traduisibles (`Product.name`/
+`description`/etc., JSON `{"fr": ..., "en": ...}`).
+
+**Règle pour tout lien interne côté storefront** : toujours construit via le helper partagé
+`resources/js/lib/locale-path.ts` (`localizedPath(path, locale)`), jamais en chemin français en
+dur — un lien en dur casse silencieusement le miroir bilingue (bug de régression déjà rencontré :
+changer de langue puis naviguer ramenait au français). `components/language-switcher.tsx`
+centralise la reconnaissance des chemins bilingues pour le sélecteur de langue.
+
+**Périmètre volontairement exclu** : back-office admin (outil interne, jamais de version anglaise),
+emails transactionnels, corps juridique des pages légales (encore `[À COMPLÉTER]`, inutile de
+traduire du texte provisoire). Détail des routes déjà traduites : `docs/FEATURES.md` §25.1.
+
 ## 4. Flux de paiement (Stripe)
 
 1. Le client valide le récapitulatif → `POST /checkout` (contrôleur Inertia) crée l'`Order`
