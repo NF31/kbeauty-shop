@@ -16,3 +16,9 @@ Artisan::command('inspire', function () {
 Schedule::command('backup:run')->dailyAt('02:00')->onOneServer();
 Schedule::command('backup:clean')->dailyAt('02:30')->onOneServer();
 Schedule::command('backup:monitor')->dailyAt('03:00')->onOneServer();
+
+// health:queue-check-heartbeat pousse un job sur la queue pour que QueueCheck
+// puisse verifier qu'Horizon le traite bien ; health:check execute tous les
+// checks (dont ce meme QueueCheck) et notifie en cas d'echec.
+Schedule::command('health:queue-check-heartbeat')->everyMinute();
+Schedule::command('health:check')->everyMinute();

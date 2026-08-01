@@ -1,5 +1,6 @@
 import { Link, usePage } from '@inertiajs/react';
 import {
+    Activity,
     BadgePercent,
     LayoutGrid,
     Layers,
@@ -30,6 +31,7 @@ export function AdminSidebar() {
     const canManageProducts = auth.roles.some((role) =>
         ['admin', 'staff'].includes(role),
     );
+    const isAdmin = auth.roles.includes('admin');
 
     const mainNavItems: NavItem[] = [
         {
@@ -63,6 +65,15 @@ export function AdminSidebar() {
                       title: 'Gammes',
                       href: ProductLineController.index.url(),
                       icon: Layers,
+                  },
+              ]
+            : []),
+        ...(isAdmin
+            ? [
+                  {
+                      title: 'Santé',
+                      href: admin.health(),
+                      icon: Activity,
                   },
               ]
             : []),
