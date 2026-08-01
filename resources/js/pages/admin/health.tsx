@@ -27,8 +27,47 @@ type HealthCheck = {
     status: 'ok' | 'warning' | 'failed' | 'crashed' | 'skipped';
     notificationMessage: string;
     shortSummary: string;
-    meta: Record<string, unknown>;
+    meta: Record<string, unknown> | unknown[];
 };
+
+function humanizeMetaKey(key: string): string {
+    return key.replace(/_/g, ' ');
+}
+
+function MetaDetails({ meta }: { meta: HealthCheck['meta'] }) {
+    if (Array.isArray(meta)) {
+        if (meta.length === 0) {
+            return null;
+        }
+
+        return (
+            <ul className="list-inside list-disc space-y-1 text-sm text-muted-foreground">
+                {meta.map((value, index) => (
+                    <li key={index}>{String(value)}</li>
+                ))}
+            </ul>
+        );
+    }
+
+    const entries = Object.entries(meta);
+
+    if (entries.length === 0) {
+        return null;
+    }
+
+    return (
+        <dl className="space-y-1 text-sm text-muted-foreground">
+            {entries.map(([key, value]) => (
+                <div key={key} className="flex justify-between gap-2">
+                    <dt>{humanizeMetaKey(key)}</dt>
+                    <dd className="font-medium text-foreground">
+                        {String(value)}
+                    </dd>
+                </div>
+            ))}
+        </dl>
+    );
+}
 
 type HealthProps = {
     lastRanAt: number | null;
@@ -157,11 +196,19 @@ export default function AdminHealth({ lastRanAt, checks }: HealthProps) {
                                             </CardDescription>
                                         ) : null}
                                     </CardHeader>
-                                    {check.notificationMessage ? (
-                                        <CardContent>
-                                            <p className="text-sm text-muted-foreground">
-                                                {check.notificationMessage}
-                                            </p>
+                                    {check.notificationMessage ||
+                                    check.status !== 'ok' ? (
+                                        <CardContent className="space-y-2">
+                                            {check.notificationMessage ? (
+                                                <p className="text-sm text-muted-foreground">
+                                                    {check.notificationMessage}
+                                                </p>
+                                            ) : null}
+                                            {check.status !== 'ok' ? (
+                                                <MetaDetails
+                                                    meta={check.meta}
+                                                />
+                                            ) : null}
                                         </CardContent>
                                     ) : null}
                                 </Card>
