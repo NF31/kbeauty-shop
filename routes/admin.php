@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ProductLineController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use Illuminate\Support\Facades\Route;
+use Spatie\Health\Http\Controllers\HealthCheckResultsController;
 
 Route::middleware(['auth', 'role:admin|staff|support'])
     ->prefix('admin')
@@ -71,3 +72,11 @@ Route::middleware(['auth', 'role:admin|staff|support'])
                 ->name('orders.refund');
         });
     });
+
+// Vue infra (spatie/laravel-health, 22.5) - reservee au role admin strict
+// (pas staff/support) : expose l'etat de la queue, de Horizon et des
+// sauvegardes, hors perimetre operationnel du reste du back-office.
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->get('health', HealthCheckResultsController::class)
+    ->name('admin.health');

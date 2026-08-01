@@ -45,6 +45,7 @@ composer require artesaos/seotools
 composer require barryvdh/laravel-dompdf
 composer require laravel/horizon
 composer require sentry/sentry-laravel
+composer require spatie/laravel-health
 ```
 
 ### Dev only (Composer)
@@ -113,6 +114,7 @@ starter.
 | `spatie/laravel-sitemap` + `artesaos/seotools` | SEO technique (sitemap.xml, meta tags dynamiques) |
 | `laravel/horizon` + Redis | supervision des queues (emails, indexation Scout, jobs Sendcloud) |
 | `sentry/sentry-laravel` | remontée d'erreurs prod, indispensable dès la mise en ligne réelle |
+| `spatie/laravel-health` | vue d'ensemble santé infra (DB, Redis, queue, Horizon, disque, sauvegardes) sur `/admin/health` (22.5) — complète Sentry (erreurs applicatives) par une vision infra que Sentry ne couvre pas |
 | `laravel/telescope` / `barryvdh/laravel-debugbar` | debug local uniquement — **ne jamais activer en production** |
 | `laravel-react-i18n` + `spatie/laravel-translatable` | multi-langue FR/EN : `t()`/`tChoice()` côté front (clés = phrase française) + colonnes JSON traduisibles côté back (`Product.name`/`description`/etc.) — voir `ARCHITECTURE.md` §3ter |
 
