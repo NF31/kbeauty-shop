@@ -30,6 +30,9 @@ class CategorySeeder extends Seeder
             'Patch' => 'patch',
             'Brume' => 'brume',
             'Tonique' => 'tonique',
+            'Maquillage' => 'maquillage',
+            'Kit / Coffret' => 'kit-coffret',
+            'Soin ciblé' => 'soin-cible',
         ];
 
         foreach ($categories as $name => $slug) {
