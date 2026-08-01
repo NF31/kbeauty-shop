@@ -32,6 +32,8 @@ import admin from '@/routes/admin';
 
 type Option = { id: number; name: string };
 
+type ProductLineOption = { id: number; label: string };
+
 type SkinTypeOption = { value: string; label: string };
 
 type OptionValue = { id: number; value: string; position: number };
@@ -70,6 +72,7 @@ type ProductData = {
     status: 'draft' | 'published' | 'archived';
     is_featured: boolean;
     brand: { id: number; name: string } | null;
+    productLine: { id: number; name: string } | null;
     categories: { id: number; name: string }[];
     options: ProductOptionData[];
     variants: ProductVariantData[];
@@ -81,6 +84,7 @@ type ProductsEditProps = {
     imageUrls: Record<number, string>;
     brandOptions: Option[];
     categoryOptions: Option[];
+    productLineOptions: ProductLineOption[];
     statusOptions: string[];
     skinTypeOptions: SkinTypeOption[];
 };
@@ -94,6 +98,7 @@ export default function ProductsEdit({
     imageUrls,
     brandOptions,
     categoryOptions,
+    productLineOptions,
     statusOptions,
     skinTypeOptions,
 }: ProductsEditProps) {
@@ -236,6 +241,44 @@ export default function ProductsEdit({
                                             </SelectContent>
                                         </Select>
                                         <InputError message={errors.brand_id} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="product_line_id">
+                                            Gamme
+                                        </Label>
+                                        <Select
+                                            name="product_line_id"
+                                            defaultValue={
+                                                product.productLine
+                                                    ? String(
+                                                          product.productLine
+                                                              .id,
+                                                      )
+                                                    : undefined
+                                            }
+                                        >
+                                            <SelectTrigger id="product_line_id">
+                                                <SelectValue placeholder="Aucune" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {productLineOptions.map(
+                                                    (option) => (
+                                                        <SelectItem
+                                                            key={option.id}
+                                                            value={String(
+                                                                option.id,
+                                                            )}
+                                                        >
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError
+                                            message={errors.product_line_id}
+                                        />
                                     </div>
 
                                     <div className="grid gap-2">

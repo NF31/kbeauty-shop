@@ -6,6 +6,7 @@ use App\Enums\SkinType;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductLine;
 use App\Services\CloudinaryService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -25,6 +26,7 @@ class CatalogPresenter
         ?SkinType $skinType,
         ?Category $category,
         ?Brand $brand,
+        ?ProductLine $productLine,
         ?string $search,
         Request $request,
         CloudinaryService $cloudinary,
@@ -58,6 +60,9 @@ class CatalogPresenter
             'activeBrand' => $brand
                 ? ['slug' => $brand->slug, 'name' => $brand->name]
                 : null,
+            'activeProductLine' => $productLine
+                ? ['slug' => $productLine->slug, 'name' => $productLine->name]
+                : null,
             'search' => $search !== '' ? $search : null,
             'priceMin' => $request->query('price_min'),
             'priceMax' => $request->query('price_max'),
@@ -74,6 +79,10 @@ class CatalogPresenter
                 ->orderBy('name')
                 ->get(['slug', 'name'])
                 ->map(fn (Brand $b) => ['slug' => $b->slug, 'name' => $b->name]),
+            'productLineOptions' => ProductLine::query()
+                ->orderBy('name')
+                ->get(['slug', 'name'])
+                ->map(fn (ProductLine $line) => ['slug' => $line->slug, 'name' => $line->name]),
         ];
     }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductImageController;
+use App\Http\Controllers\Admin\ProductLineController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use Illuminate\Support\Facades\Route;
@@ -23,6 +24,7 @@ Route::middleware(['auth', 'role:admin|staff|support'])
             Route::middleware('throttle:60,1,admin-catalog-write')->group(function () {
                 Route::resource('categories', CategoryController::class)->except('show');
                 Route::resource('brands', BrandController::class)->except('show');
+                Route::resource('product-lines', ProductLineController::class)->except('show');
                 Route::resource('products', ProductController::class)->except('show');
 
                 Route::post('products/{product}/options', [ProductOptionController::class, 'store'])

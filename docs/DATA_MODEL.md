@@ -97,11 +97,26 @@ GiftThresholdRule ──< GiftThresholdRuleReward
 | slug | string unique | |
 | position | integer | ordre d'affichage / mega-menu |
 
+### product_lines
+
+Une gamme (ex. "Advanced Snail" chez COSRX, "Rice Water Bright" chez Etude) : une collection de
+produits au sein d'**une seule marque**, orthogonale à `categories` (le type de produit : toner,
+sérum...). Voir `ARCHITECTURE.md` pour le contexte.
+
+| Colonne | Type | Notes |
+| --- | --- | --- |
+| id | bigint pk | |
+| brand_id | bigint fk(brands) | `cascadeOnDelete` — une gamme appartient entièrement à sa marque |
+| name | string | |
+| slug | string unique | |
+| created_at / updated_at | timestamps | |
+
 ### products
 | Colonne | Type | Notes |
 | --- | --- | --- |
 | id | bigint pk | |
 | brand_id | bigint fk(brands) nullable | |
+| product_line_id | bigint fk(product_lines) nullable | `nullOnDelete` — la plupart des produits n'appartiennent à aucune gamme identifiée |
 | name | string | |
 | slug | string unique | |
 | short_description | string nullable | |

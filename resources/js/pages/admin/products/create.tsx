@@ -26,11 +26,14 @@ import admin from '@/routes/admin';
 
 type Option = { id: number; name: string };
 
+type ProductLineOption = { id: number; label: string };
+
 type SkinTypeOption = { value: string; label: string };
 
 type ProductsCreateProps = {
     brandOptions: Option[];
     categoryOptions: Option[];
+    productLineOptions: ProductLineOption[];
     statusOptions: string[];
     skinTypeOptions: SkinTypeOption[];
 };
@@ -38,6 +41,7 @@ type ProductsCreateProps = {
 export default function ProductsCreate({
     brandOptions,
     categoryOptions,
+    productLineOptions,
     statusOptions,
     skinTypeOptions,
 }: ProductsCreateProps) {
@@ -98,6 +102,34 @@ export default function ProductsCreate({
                                             </SelectContent>
                                         </Select>
                                         <InputError message={errors.brand_id} />
+                                    </div>
+
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="product_line_id">
+                                            Gamme
+                                        </Label>
+                                        <Select name="product_line_id">
+                                            <SelectTrigger id="product_line_id">
+                                                <SelectValue placeholder="Aucune" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {productLineOptions.map(
+                                                    (option) => (
+                                                        <SelectItem
+                                                            key={option.id}
+                                                            value={String(
+                                                                option.id,
+                                                            )}
+                                                        >
+                                                            {option.label}
+                                                        </SelectItem>
+                                                    ),
+                                                )}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError
+                                            message={errors.product_line_id}
+                                        />
                                     </div>
 
                                     <div className="grid gap-2">

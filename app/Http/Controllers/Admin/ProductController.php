@@ -10,9 +10,11 @@ use App\Http\Requests\Admin\UpdateProductRequest;
 use App\Models\Brand;
 use App\Models\Category;
 use App\Models\Product;
+use App\Models\ProductLine;
 use App\Services\CloudinaryService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -77,6 +79,7 @@ class ProductController extends Controller
         return Inertia::render('admin/products/create', [
             'brandOptions' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categoryOptions' => Category::query()->orderBy('name')->get(['id', 'name']),
+            'productLineOptions' => $this->productLineOptions(),
             'statusOptions' => ProductStatus::cases(),
             'skinTypeOptions' => array_map(
                 fn (SkinType $type) => ['value' => $type->value, 'label' => $type->label()],
@@ -100,6 +103,7 @@ class ProductController extends Controller
     {
         $product->load([
             'brand:id,name',
+            'productLine:id,name',
             'categories:id,name',
             'options.values',
             'variants.optionValues',
@@ -121,6 +125,7 @@ class ProductController extends Controller
                 'status' => $product->status->value,
                 'is_featured' => $product->is_featured,
                 'brand' => $product->brand,
+                'productLine' => $product->productLine,
                 'categories' => $product->categories,
                 'options' => $product->options,
                 'variants' => $product->variants,
@@ -129,6 +134,7 @@ class ProductController extends Controller
             'imageUrls' => $product->images->mapWithKeys(fn ($image) => [$image->id => $image->url(400, 400)]),
             'brandOptions' => Brand::query()->orderBy('name')->get(['id', 'name']),
             'categoryOptions' => Category::query()->orderBy('name')->get(['id', 'name']),
+            'productLineOptions' => $this->productLineOptions(),
             'statusOptions' => ProductStatus::cases(),
             'skinTypeOptions' => array_map(
                 fn (SkinType $type) => ['value' => $type->value, 'label' => $type->label()],
@@ -155,5 +161,20 @@ class ProductController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => 'Produit supprimé.']);
 
         return to_route('admin.products.index');
+    }
+
+    /**
+     * @return Collection<int, array{id: int, label: non-falsy-string}>
+     */
+    private function productLineOptions(): Collection
+    {
+        return ProductLine::query()
+            ->with('brand:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(fn (ProductLine $line) => [
+                'id' => $line->id,
+                'label' => "{$line->brand->name} — {$line->name}",
+            ]);
     }
 }
