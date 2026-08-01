@@ -36,6 +36,9 @@ class BrandSeeder extends Seeder
             'TOCOBO' => 'tocobo',
             'PYUNKANG YUL' => 'pyunkang-yul',
             'TORRIDEN' => 'torriden',
+            'IUNIK' => 'iunik',
+            'su:m7' => 'sum7',
+            'MIZON' => 'mizon',
         ];
 
         foreach ($brands as $name => $slug) {
