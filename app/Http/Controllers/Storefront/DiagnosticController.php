@@ -14,6 +14,8 @@ use Inertia\Response;
 
 class DiagnosticController extends Controller
 {
+    private const MAX_RECOMMENDED_PRODUCTS = 4;
+
     public function index(): Response
     {
         return Inertia::render('storefront/diagnostic', [
@@ -40,14 +42,13 @@ class DiagnosticController extends Controller
 
         $diagnosticId = $aiCore->createDiagnosticRequest();
 
-        $product = Product::query()
+        $products = Product::query()
             ->published()
             ->whereJsonContains('skin_types', $skinType->value)
             ->with(['variants', 'primaryImage', 'brand'])
             ->inRandomOrder()
-            ->first();
-
-        $defaultVariant = $product?->variants->firstWhere('is_default', true) ?? $product?->variants->first();
+            ->limit(self::MAX_RECOMMENDED_PRODUCTS)
+            ->get();
 
         return Inertia::render('storefront/diagnostic', [
             'skinTypeOptions' => $this->skinTypeOptions(),
@@ -56,17 +57,21 @@ class DiagnosticController extends Controller
                 'diagnosticId' => $diagnosticId,
                 'skinType' => ['value' => $skinType->value, 'label' => $skinType->label()],
                 'analysis' => $this->hardcodedAnalysis($skinType),
-                'recommendedProduct' => $product ? [
-                    'id' => $product->id,
-                    'slug' => $product->slug,
-                    'name' => $product->name,
-                    'brand' => $product->brand,
-                    'defaultVariantId' => $defaultVariant?->id,
-                    'priceCents' => $defaultVariant?->price_cents,
-                    'thumbnailUrl' => $product->primaryImage
-                        ? $cloudinary->url($product->primaryImage->path, 400, 400)
-                        : null,
-                ] : null,
+                'recommendedProducts' => $products->map(function (Product $product) use ($cloudinary) {
+                    $defaultVariant = $product->variants->firstWhere('is_default', true) ?? $product->variants->first();
+
+                    return [
+                        'id' => $product->id,
+                        'slug' => $product->slug,
+                        'name' => $product->name,
+                        'brand' => $product->brand,
+                        'defaultVariantId' => $defaultVariant?->id,
+                        'priceCents' => $defaultVariant?->price_cents,
+                        'thumbnailUrl' => $product->primaryImage
+                            ? $cloudinary->url($product->primaryImage->path, 400, 400)
+                            : null,
+                    ];
+                })->all(),
             ],
         ]);
     }

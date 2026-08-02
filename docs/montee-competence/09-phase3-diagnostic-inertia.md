@@ -20,7 +20,7 @@ La Phase 3 devient donc : une page diagnostic **normale**, dans le même monolit
 4. Le contrôleur :
    - notifie `kbeauty-ai-core-service` (le microservice Spring Boot de la Phase 2) via un `POST /diagnostics` HTTP — ça enregistre une ligne en base Neon et publie un événement RabbitMQ, exactement le pipeline construit en Phase 2 ;
    - construit une analyse **bidon** (texte hardcodé par type de peau — le vrai contenu IA arrive en Phase 5) ;
-   - cherche un produit publié qui correspond à ce type de peau (`whereJsonContains('skin_types', ...)`, un champ qui existait déjà pour le filtre catalogue) ;
+   - cherche jusqu'à 4 produits publiés qui correspondent à ce type de peau (`whereJsonContains('skin_types', ...)`, un champ qui existait déjà pour le filtre catalogue) ;
    - renvoie la même page Inertia, mais avec un `result` rempli.
 5. Le visiteur clique "Ajouter au panier" → ça réutilise directement la route `storefront.cart.store` existante (`POST /panier`), le même chemin que le bouton "Ajouter au panier" de la fiche produit. Aucune logique panier dupliquée.
 

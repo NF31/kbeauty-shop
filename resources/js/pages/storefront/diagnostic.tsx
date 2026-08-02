@@ -8,19 +8,21 @@ import { localizedPath } from '@/lib/locale-path';
 
 type SkinTypeOption = { value: string; label: string };
 
+type RecommendedProduct = {
+    id: number;
+    slug: string;
+    name: string;
+    brand: { id: number; name: string } | null;
+    defaultVariantId: number | null;
+    priceCents: number | null;
+    thumbnailUrl: string | null;
+};
+
 type DiagnosticResult = {
     diagnosticId: number | null;
     skinType: { value: string; label: string };
     analysis: string;
-    recommendedProduct: {
-        id: number;
-        slug: string;
-        name: string;
-        brand: { id: number; name: string } | null;
-        defaultVariantId: number | null;
-        priceCents: number | null;
-        thumbnailUrl: string | null;
-    } | null;
+    recommendedProducts: RecommendedProduct[];
 };
 
 type DiagnosticPageProps = {
@@ -41,7 +43,8 @@ export default function DiagnosticPage({
     const { t } = useLaravelReactI18n();
     const { locale } = usePage().props;
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [addError, setAddError] = useState<string | null>(null);
+    const [addingVariantId, setAddingVariantId] = useState<number | null>(null);
+    const [addErrors, setAddErrors] = useState<Record<number, string>>({});
 
     setLayoutProps({
         breadcrumbs: [
@@ -66,26 +69,32 @@ export default function DiagnosticPage({
         );
     };
 
-    const addToCart = () => {
-        if (!result?.recommendedProduct?.defaultVariantId) {
+    const addToCart = (variantId: number | null) => {
+        if (!variantId) {
             return;
         }
 
-        setAddError(null);
+        setAddingVariantId(variantId);
+        setAddErrors((errors) => {
+            const rest = { ...errors };
+            delete rest[variantId];
+
+            return rest;
+        });
 
         router.post(
             cartPath,
-            {
-                product_variant_id: result.recommendedProduct.defaultVariantId,
-                quantity: 1,
-            },
+            { product_variant_id: variantId, quantity: 1 },
             {
                 preserveScroll: true,
                 onError: (errors) =>
-                    setAddError(
-                        errors.quantity ??
+                    setAddErrors((prev) => ({
+                        ...prev,
+                        [variantId]:
+                            errors.quantity ??
                             t("Impossible d'ajouter ce produit au panier."),
-                    ),
+                    })),
+                onFinish: () => setAddingVariantId(null),
             },
         );
     };
@@ -97,7 +106,7 @@ export default function DiagnosticPage({
                 description={seo.description}
                 image={seo.image}
             />
-            <div className="mx-auto max-w-xl p-4 md:p-8">
+            <div className="mx-auto max-w-2xl p-4 md:p-8">
                 <div className="mb-6">
                     <PageHeading
                         title={t('Diagnostic peau')}
@@ -132,56 +141,72 @@ export default function DiagnosticPage({
                             <p>{result.analysis}</p>
                         </div>
 
-                        {result.recommendedProduct && (
-                            <div className="flex items-center gap-4 rounded-md border p-4">
-                                {result.recommendedProduct.thumbnailUrl && (
-                                    <img
-                                        src={
-                                            result.recommendedProduct
-                                                .thumbnailUrl
-                                        }
-                                        alt={result.recommendedProduct.name}
-                                        className="h-20 w-20 rounded-md object-cover"
-                                    />
-                                )}
-                                <div className="flex-1">
-                                    {result.recommendedProduct.brand && (
-                                        <p className="text-sm text-muted-foreground">
-                                            {
-                                                result.recommendedProduct.brand
-                                                    .name
-                                            }
-                                        </p>
-                                    )}
-                                    <p className="font-medium">
-                                        {result.recommendedProduct.name}
-                                    </p>
-                                    {result.recommendedProduct.priceCents !==
-                                        null && (
-                                        <p className="text-sm">
-                                            {euros(
-                                                result.recommendedProduct
-                                                    .priceCents,
+                        {result.recommendedProducts.length > 0 && (
+                            <div className="grid gap-4 sm:grid-cols-2">
+                                {result.recommendedProducts.map((product) => (
+                                    <div
+                                        key={product.id}
+                                        className="flex flex-col gap-3 rounded-md border p-4"
+                                    >
+                                        <div className="flex items-center gap-4">
+                                            {product.thumbnailUrl && (
+                                                <img
+                                                    src={product.thumbnailUrl}
+                                                    alt={product.name}
+                                                    className="h-20 w-20 rounded-md object-cover"
+                                                />
                                             )}
-                                        </p>
-                                    )}
-                                </div>
-                                <Button
-                                    onClick={addToCart}
-                                    disabled={
-                                        !result.recommendedProduct
-                                            .defaultVariantId
-                                    }
-                                >
-                                    {t('Ajouter au panier')}
-                                </Button>
-                            </div>
-                        )}
+                                            <div className="flex-1">
+                                                {product.brand && (
+                                                    <p className="text-sm text-muted-foreground">
+                                                        {product.brand.name}
+                                                    </p>
+                                                )}
+                                                <p className="font-medium">
+                                                    {product.name}
+                                                </p>
+                                                {product.priceCents !==
+                                                    null && (
+                                                    <p className="text-sm">
+                                                        {euros(
+                                                            product.priceCents,
+                                                        )}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
 
-                        {addError && (
-                            <p className="text-sm text-destructive">
-                                {addError}
-                            </p>
+                                        <Button
+                                            onClick={() =>
+                                                addToCart(
+                                                    product.defaultVariantId,
+                                                )
+                                            }
+                                            disabled={
+                                                !product.defaultVariantId ||
+                                                addingVariantId ===
+                                                    product.defaultVariantId
+                                            }
+                                        >
+                                            {t('Ajouter au panier')}
+                                        </Button>
+
+                                        {product.defaultVariantId &&
+                                            addErrors[
+                                                product.defaultVariantId
+                                            ] && (
+                                                <p className="text-sm text-destructive">
+                                                    {
+                                                        addErrors[
+                                                            product
+                                                                .defaultVariantId
+                                                        ]
+                                                    }
+                                                </p>
+                                            )}
+                                    </div>
+                                ))}
+                            </div>
                         )}
 
                         <button
