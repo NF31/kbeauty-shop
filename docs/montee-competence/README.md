@@ -13,3 +13,4 @@
 7. [Axes hors programme (extensions libres)](07-axes-hors-programme.md)
 8. [Structure de dossiers sous WSL Ubuntu](08-structure-ubuntu.md)
 9. [Roadmap de développement phasée](ROADMAP.md)
+10. [Phase 3 — Page diagnostic en Inertia (pas de pont Next.js)](09-phase3-diagnostic-inertia.md)
