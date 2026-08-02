@@ -32,9 +32,9 @@
 
 Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **publie un message RabbitMQ** — sans IA, sans Next.js. C'est le noyau qui prouve que l'event-driven fonctionne.
 
-- [ ] `kbeauty-ai-core-service` : squelette Spring Boot (pom.xml corrigé), connexion Neon via `application.properties`
-- [ ] Une entité JPA simple (ex: `DiagnosticRequest`) + un endpoint REST `POST /diagnostics` qui l'enregistre
-- [ ] `@RabbitListener` qui consomme un message de test et log le résultat (pas encore branché à un vrai producteur)
+- [x] `kbeauty-ai-core-service` : squelette Spring Boot (pom.xml corrigé), connexion Neon via `application.properties`
+- [x] Une entité JPA simple (ex: `DiagnosticRequest`) + un endpoint REST `POST /diagnostics` qui l'enregistre
+- [x] `@RabbitListener` qui consomme un message de test et log le résultat — branché en vrai au producteur (`DiagnosticEventPublisher`/`DiagnosticEventListener`), pas juste un test isolé
 - [ ] Contrat OpenAPI via Springdoc, testé dans Swagger UI
 
 **Livrable** : `curl POST /diagnostics` → ligne en base Neon → message publié dans RabbitMQ → consommé et loggé. Bout en bout, sans façade.
@@ -45,20 +45,20 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 > Décision (2026-08-02) : pas de pont Next.js pour cette fonctionnalité. Inertia fait déjà tourner du React moderne dans le monolithe Laravel (composants, hooks, SSR optionnel) — un pont Sanctum + Next.js séparé n'aurait ajouté que de la complexité sans bénéfice produit. Next.js est repoussé à un morceau où une vraie séparation frontend a du sens (ex. Phase 6, dashboard analytics découplé), ou à un projet dédié si l'objectif est de pratiquer Next.js pour lui-même.
 
-- [ ] Route Laravel dédiée (`web.php`, middleware `auth` classique) qui rend une page Inertia `Diagnostic/Show`
-- [ ] Contrôleur qui appelle `kbeauty-ai-core-service` (Phase 2) pour créer le `DiagnosticRequest` et passe les données en props Inertia
-- [ ] Rate limiting via le middleware Laravel standard (`throttle:3,60`) sur la route — le garde-fou doit exister dès le début, même avec un diagnostic bidon
-- [ ] Bouton "Ajouter au panier" sur la page qui appelle directement `CartService` (même contrôleur, pas de redirection inter-app)
+- [x] Route Laravel dédiée (`web.php`, middleware `auth` classique) qui rend une page Inertia `Diagnostic/Show` — `GET/POST diagnostic-peau` dans `routes/storefront.php`
+- [x] Contrôleur qui appelle `kbeauty-ai-core-service` (Phase 2) pour créer le `DiagnosticRequest` et passe les données en props Inertia — `Storefront\DiagnosticController` + `AiCoreDiagnosticClient`
+- [x] Rate limiting via le middleware Laravel standard (`throttle:3,60`) sur la route — le garde-fou doit exister dès le début, même avec un diagnostic bidon
+- [x] Bouton "Ajouter au panier" sur la page qui appelle directement `CartService` (même contrôleur, pas de redirection inter-app)
 
 **Livrable** : clic depuis la boutique → page diagnostic Inertia → panier peuplé. Le contenu du diagnostic peut être bidon (hardcodé) à ce stade — l'objectif est le flux, pas l'IA.
 
 ## Phase 4 — Data engineering (J3) — ~1-2 semaines, en parallèle possible de la phase 3
 
-- [ ] Scrapy spider simple sur un catalogue d'ingrédients (pas encore Reddit/Playwright — commencer par du HTML statique)
-- [ ] Pipeline `cassandra-driver` pour pousser les résultats dans Cassandra
+- [x] Scrapy spider simple sur un catalogue d'ingrédients (pas encore Reddit/Playwright — commencer par du HTML statique) — [uniikon.com](https://uniikon.com), voir [détail complet](10-phase4-scraping-cassandra.md)
+- [x] Pipeline `cassandra-driver` pour pousser les résultats dans Cassandra — deux tables (`gammes`, `products`), local **et** Astra DB ("prod" managée)
 - [ ] Scrapy-Playwright + social listening une fois le pipeline de base validé
 
-**Livrable** : un spider qui tourne en cron, données visibles dans Cassandra (`cqlsh`).
+**Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`) — le cron n'est pas encore en place, le spider tourne pour l'instant manuellement.
 
 ## Phase 5 — Brancher l'IA réelle — ~2-3 semaines (le plus incertain, prévoir buffer)
 
@@ -87,4 +87,4 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 ## Prochaine étape immédiate
 
-Phase 0 (BPMN + UML) ou directement Phase 2 (squelette Spring Boot) si tu préfères commencer par du code concret — à toi de choisir selon ce qui te motive le plus pour démarrer.
+Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), le cron + Scrapy-Playwright (dernier point Phase 4), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
