@@ -41,14 +41,16 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 **Point de contrôle** : si cette phase prend plus de 3 semaines, il vaut mieux réduire le périmètre (ex. sauter JPA et écrire du SQL natif) que de laisser traîner.
 
-## Phase 3 — Frontend diagnostic + pont Laravel (J5) — ~1-2 semaines
+## Phase 3 — Page diagnostic en Inertia (J5) — ~3-5 jours
 
-- [ ] Route API Laravel dédiée (Sanctum) qui émet un jeton signé courte durée — **pas Inertia**, une vraie API REST
-- [ ] Next.js 16 : Server Component qui reçoit le jeton, valide côté serveur contre Laravel
-- [ ] Rate limiting sur la Server Action (ex. 3 req/h/IP) même avant d'avoir une vraie IA derrière — le garde-fou doit exister dès le début
-- [ ] Redirection finale vers une route Laravel qui peuple le panier via `CartService`
+> Décision (2026-08-02) : pas de pont Next.js pour cette fonctionnalité. Inertia fait déjà tourner du React moderne dans le monolithe Laravel (composants, hooks, SSR optionnel) — un pont Sanctum + Next.js séparé n'aurait ajouté que de la complexité sans bénéfice produit. Next.js est repoussé à un morceau où une vraie séparation frontend a du sens (ex. Phase 6, dashboard analytics découplé), ou à un projet dédié si l'objectif est de pratiquer Next.js pour lui-même.
 
-**Livrable** : clic depuis la boutique → jeton → Next.js → retour panier peuplé. Le contenu du diagnostic peut être bidon (hardcodé) à ce stade — l'objectif est le pont, pas l'IA.
+- [ ] Route Laravel dédiée (`web.php`, middleware `auth` classique) qui rend une page Inertia `Diagnostic/Show`
+- [ ] Contrôleur qui appelle `kbeauty-ai-core-service` (Phase 2) pour créer le `DiagnosticRequest` et passe les données en props Inertia
+- [ ] Rate limiting via le middleware Laravel standard (`throttle:3,60`) sur la route — le garde-fou doit exister dès le début, même avec un diagnostic bidon
+- [ ] Bouton "Ajouter au panier" sur la page qui appelle directement `CartService` (même contrôleur, pas de redirection inter-app)
+
+**Livrable** : clic depuis la boutique → page diagnostic Inertia → panier peuplé. Le contenu du diagnostic peut être bidon (hardcodé) à ce stade — l'objectif est le flux, pas l'IA.
 
 ## Phase 4 — Data engineering (J3) — ~1-2 semaines, en parallèle possible de la phase 3
 

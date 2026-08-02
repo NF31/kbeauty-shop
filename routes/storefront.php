@@ -7,6 +7,7 @@ use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CheckoutController;
 use App\Http\Controllers\Storefront\ContactController;
+use App\Http\Controllers\Storefront\DiagnosticController;
 use App\Http\Controllers\Storefront\LegalController;
 use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
@@ -148,6 +149,13 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
     Route::get('guide-de-choix', [SkinGuideController::class, 'index'])
         ->name('storefront.skin-guide');
 
+    Route::get('diagnostic-peau', [DiagnosticController::class, 'index'])
+        ->name('storefront.diagnostic.index');
+
+    Route::post('diagnostic-peau', [DiagnosticController::class, 'analyze'])
+        ->middleware('throttle:3,60,storefront-diagnostic')
+        ->name('storefront.diagnostic.analyze');
+
     Route::get('mentions-legales', [LegalController::class, 'mentions'])
         ->name('storefront.legal.mentions');
 
@@ -200,6 +208,17 @@ Route::get('marques/{brand:slug}', [BrandController::class, 'show'])
 Route::get('guide-de-choix', [SkinGuideController::class, 'index'])
     ->middleware('locale:fr')
     ->name('storefront.skin-guide');
+
+// Diagnostic peau (montee en competence, Phase 3 - voir docs/montee-competence/ROADMAP.md).
+// Le formulaire (GET) n'est pas throttle, seule l'analyse (POST) l'est : c'est
+// elle qui appelle kbeauty-ai-core-service et qu'on veut proteger d'un abus.
+Route::get('diagnostic-peau', [DiagnosticController::class, 'index'])
+    ->middleware('locale:fr')
+    ->name('storefront.diagnostic.index');
+
+Route::post('diagnostic-peau', [DiagnosticController::class, 'analyze'])
+    ->middleware(['locale:fr', 'throttle:3,60,storefront-diagnostic'])
+    ->name('storefront.diagnostic.analyze');
 
 Route::get('mentions-legales', [LegalController::class, 'mentions'])
     ->middleware('locale:fr')

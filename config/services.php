@@ -65,4 +65,8 @@ return [
         'alert_email' => env('HORIZON_ALERT_EMAIL'),
     ],
 
+    'ai_core' => [
+        'url' => env('AI_CORE_SERVICE_URL', 'http://localhost:8080'),
+    ],
+
 ];

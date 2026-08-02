@@ -18,7 +18,7 @@ import {
  * anglaise (auth, admin, settings...), il bascule vers /produits.
  */
 const LOCALIZED_PATH_PATTERN =
-    /^\/(en\/)?(produits|panier|commande|marques|guide-de-choix|mentions-legales|cgv|confidentialite|livraison|retours|mon-compte|dashboard)(\/.*)?$/;
+    /^\/(en\/)?(produits|panier|commande|marques|guide-de-choix|diagnostic-peau|mentions-legales|cgv|confidentialite|livraison|retours|mon-compte|dashboard)(\/.*)?$/;
 const FALLBACK_LOCALIZED_PATH = '/produits';
 
 function alternateLocaleHref(currentUrl: string): string {

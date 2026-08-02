@@ -116,7 +116,7 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                             asChild
                         >
                             <Link
-                                href={localizedPath('/guide-de-choix', locale)}
+                                href={localizedPath('/diagnostic-peau', locale)}
                             >
                                 {t("Besoin d'aide pour choisir ?")}
                             </Link>
