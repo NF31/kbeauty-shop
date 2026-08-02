@@ -4,6 +4,7 @@ import { Menu, Search } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AppLogo from '@/components/app-logo';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { MegaMenu } from '@/components/storefront/mega-menu';
 import { MiniCartSheet } from '@/components/storefront/mini-cart-sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -35,19 +36,20 @@ import { useCartStore } from '@/stores/cart-store';
 
 export function StorefrontHeader() {
     const { t } = useLaravelReactI18n();
-    const { auth, cart, locale } = usePage().props;
+    const { auth, cart, locale, megaMenuCategories } = usePage().props;
     const getInitials = useInitials();
     const { whenCurrentUrl } = useCurrentUrl();
     const sync = useCartStore((state) => state.sync);
     const [isScrolled, setIsScrolled] = useState(false);
 
+    const productsUrl = localizedPath('/produits', locale);
+
     /**
-     * Catégories du mega-menu (24.3) : cette liste alimentera un futur
-     * composant MegaMenu sans changer la structure du header. Vide tant que
-     * le catalogue (Phase 2) n'existe pas.
+     * Le mega-menu (24.3) remplace le lien "Produits" plat par un panneau
+     * branché sur l'arbre `categories` — voir `<MegaMenu>`. Les autres liens
+     * restent de simples entrées de nav.
      */
-    const categoryNavItems = [
-        { title: t('Produits'), href: localizedPath('/produits', locale) },
+    const staticNavItems = [
         { title: t('Marques'), href: localizedPath('/marques', locale) },
     ];
 
@@ -93,7 +95,38 @@ export function StorefrontHeader() {
                                 <SheetTitle>{t('Menu')}</SheetTitle>
                             </SheetHeader>
                             <nav className="flex flex-col space-y-4 p-4 text-sm">
-                                {categoryNavItems.map((item) => (
+                                <Link
+                                    href={productsUrl}
+                                    className="font-medium"
+                                >
+                                    {t('Produits')}
+                                </Link>
+                                {megaMenuCategories.length > 0 && (
+                                    <div className="flex flex-col space-y-2 border-l pl-3">
+                                        {megaMenuCategories.map((category) =>
+                                            category.hasOwnProducts ? (
+                                                <Link
+                                                    key={category.id}
+                                                    href={localizedPath(
+                                                        `/produits?category=${category.slug}`,
+                                                        locale,
+                                                    )}
+                                                    className="text-muted-foreground"
+                                                >
+                                                    {category.name}
+                                                </Link>
+                                            ) : (
+                                                <span
+                                                    key={category.id}
+                                                    className="text-muted-foreground"
+                                                >
+                                                    {category.name}
+                                                </span>
+                                            ),
+                                        )}
+                                    </div>
+                                )}
+                                {staticNavItems.map((item) => (
                                     <Link
                                         key={item.title}
                                         href={item.href}
@@ -118,7 +151,8 @@ export function StorefrontHeader() {
                 <div className="ml-6 hidden h-full items-center lg:flex">
                     <NavigationMenu className="flex h-full items-stretch">
                         <NavigationMenuList className="flex h-full items-stretch space-x-2">
-                            {categoryNavItems.map((item) => (
+                            <MegaMenu />
+                            {staticNavItems.map((item) => (
                                 <NavigationMenuItem
                                     key={item.title}
                                     className="relative flex h-full items-center"

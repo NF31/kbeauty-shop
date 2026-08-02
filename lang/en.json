@@ -173,5 +173,18 @@
     "Inscription impossible.": "Subscription failed.",
     "Inscription à la newsletter confirmée.": "Newsletter subscription confirmed.",
     "Tu es déjà inscrit à la newsletter.": "You're already subscribed to the newsletter.",
-    "Vérifie ta boîte mail pour confirmer ton inscription.": "Check your inbox to confirm your subscription."
+    "Vérifie ta boîte mail pour confirmer ton inscription.": "Check your inbox to confirm your subscription.",
+    "Voir tous les produits": "View all products",
+    "Nom": "Name",
+    "Sujet": "Subject",
+    "Message": "Message",
+    "Envoyer": "Send",
+    "Une question sur un produit ou une commande ? Contacte notre équipe.": "A question about a product or an order? Contact our team.",
+    "Une question, une suggestion ? Écris-nous, nous te répondrons rapidement.": "A question, a suggestion? Write to us, we'll get back to you quickly.",
+    "Le nom est requis.": "Name is required.",
+    "Adresse email invalide.": "Invalid email address.",
+    "Le sujet est requis.": "Subject is required.",
+    "Le message est requis.": "Message is required.",
+    "Impossible d'envoyer le message, réessaie dans quelques instants.": "Unable to send the message, please try again in a moment.",
+    "Message envoyé ! Nous te répondrons rapidement.": "Message sent! We'll get back to you quickly."
 }

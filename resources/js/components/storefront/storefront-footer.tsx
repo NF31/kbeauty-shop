@@ -79,7 +79,14 @@ export function StorefrontFooter() {
                                 {t('Retours')}
                             </Link>
                         </li>
-                        <li>{t('Contact')}</li>
+                        <li>
+                            <Link
+                                href={localizedPath('/contact', locale)}
+                                className="hover:underline"
+                            >
+                                {t('Contact')}
+                            </Link>
+                        </li>
                     </ul>
                 </div>
 
