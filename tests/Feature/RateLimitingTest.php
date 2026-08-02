@@ -84,6 +84,26 @@ test('admin refunds are rate limited', function () {
         ->assertTooManyRequests();
 });
 
+test('skin diagnostic analysis is rate limited', function () {
+    for ($i = 0; $i < 3; $i++) {
+        $this->post(route('storefront.diagnostic.analyze'), ['skin_type' => 'normale']);
+    }
+
+    $this->post(route('storefront.diagnostic.analyze'), ['skin_type' => 'normale'])
+        ->assertTooManyRequests();
+});
+
+test('a throttled inertia visit gets a friendly toast instead of a raw 429', function () {
+    for ($i = 0; $i < 3; $i++) {
+        $this->post(route('storefront.diagnostic.analyze'), ['skin_type' => 'normale']);
+    }
+
+    $this->withHeaders(['X-Inertia' => 'true'])
+        ->post(route('storefront.diagnostic.analyze'), ['skin_type' => 'normale'])
+        ->assertRedirect()
+        ->assertInertiaFlash('toast.type', 'error');
+});
+
 test('admin product image uploads are rate limited', function () {
     $this->seed(RolePermissionSeeder::class);
     $admin = User::factory()->create();
