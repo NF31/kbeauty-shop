@@ -36,6 +36,8 @@ services:
     container_name: kbeauty_valkey
     ports:
       - "6379:6379" # Port compatible avec la configuration Redis de Laravel Horizon
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes # Dev uniquement — l'image Bitnami refuse de demarrer sans mot de passe ni ce flag
     volumes:
       - valkey_data:/bitnami/valkey/data
     networks:
