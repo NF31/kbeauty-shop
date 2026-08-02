@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
 test('the skin guide page lists the skin type options', function () {
     $this->get('/guide-de-choix')
         ->assertOk()

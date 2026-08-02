@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Services\CartService;
 use App\Services\CloudinaryService;
 use App\Support\CartPresenter;
+use App\Support\MegaMenuPresenter;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 use Spatie\Honeypot\Honeypot;
@@ -57,6 +58,7 @@ class HandleInertiaRequests extends Middleware
                 app(CloudinaryService::class),
             ),
             'honeypot' => fn () => app(Honeypot::class)->toArray(),
+            'megaMenuCategories' => fn () => MegaMenuPresenter::categories(),
         ];
     }
 }

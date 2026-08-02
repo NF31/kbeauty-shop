@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
+
+uses(RefreshDatabase::class);
+
 test('the mentions legales page renders', function () {
     $this->get('/mentions-legales')
         ->assertOk()

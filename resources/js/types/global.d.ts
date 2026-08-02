@@ -36,6 +36,13 @@ declare module '@inertiajs/core' {
                 validFromFieldName: string;
                 encryptedValidFrom: string;
             };
+            megaMenuCategories: {
+                id: number;
+                name: string;
+                slug: string;
+                hasOwnProducts: boolean;
+                children: { id: number; name: string; slug: string }[];
+            }[];
             [key: string]: unknown;
         };
     }

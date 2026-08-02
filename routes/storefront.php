@@ -6,6 +6,7 @@ use App\Http\Controllers\Storefront\BrandController;
 use App\Http\Controllers\Storefront\CartController;
 use App\Http\Controllers\Storefront\CatalogController;
 use App\Http\Controllers\Storefront\CheckoutController;
+use App\Http\Controllers\Storefront\ContactController;
 use App\Http\Controllers\Storefront\LegalController;
 use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
@@ -55,6 +56,17 @@ Route::get('newsletter/confirmer/{subscriber}', [NewsletterController::class, 'c
     ->middleware(['locale:fr', 'signed'])
     ->name('storefront.newsletter.confirm');
 
+// Formulaire de contact (26.5) : pas de table dediee, le message part directement en email aux
+// admins (ContactController::store) - meme throttle/honeypot que newsletter (formulaire public).
+Route::get('contact', [ContactController::class, 'index'])
+    ->middleware('locale:fr')
+    ->name('storefront.contact.index');
+
+Route::middleware(['locale:fr', 'throttle:10,1,storefront-contact', ProtectAgainstSpam::class])->group(function () {
+    Route::post('contact', [ContactController::class, 'store'])
+        ->name('storefront.contact.store');
+});
+
 // Le tunnel de commande exige un compte (pas de checkout invité) — un
 // visiteur non connecté est redirigé vers /login, puis renvoyé ici une fois
 // connecté/inscrit via le mécanisme "intended URL" de Laravel (voir
@@ -103,6 +115,14 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
     Route::middleware(['throttle:10,1,storefront-newsletter', ProtectAgainstSpam::class])->group(function () {
         Route::post('newsletter', [NewsletterController::class, 'store'])
             ->name('storefront.newsletter.store');
+    });
+
+    Route::get('contact', [ContactController::class, 'index'])
+        ->name('storefront.contact.index');
+
+    Route::middleware(['throttle:10,1,storefront-contact', ProtectAgainstSpam::class])->group(function () {
+        Route::post('contact', [ContactController::class, 'store'])
+            ->name('storefront.contact.store');
     });
 
     Route::middleware(['checkout.auth', 'throttle:20,1,storefront-checkout'])->group(function () {

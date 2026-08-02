@@ -5,6 +5,7 @@ import {
     History,
     LayoutGrid,
     Layers,
+    Mail,
     Package,
     ShoppingCart,
     Tags,
@@ -44,6 +45,11 @@ export function AdminSidebar() {
             title: 'Commandes',
             href: OrderController.index.url(),
             icon: ShoppingCart,
+        },
+        {
+            title: 'Messages',
+            href: admin.contactMessages.index(),
+            icon: Mail,
         },
         ...(canManageProducts
             ? [

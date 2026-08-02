@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\BrandController;
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ContactMessageController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\HealthController;
 use App\Http\Controllers\Admin\OrderController;
@@ -18,6 +19,16 @@ Route::middleware(['auth', 'role:admin|staff|support'])
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Messages du formulaire de contact (26.5) : pas de permission dediee, meme
+        // niveau d'acces que le dashboard (consultation seule, non destructif).
+        Route::get('messages', [ContactMessageController::class, 'index'])->name('contact-messages.index');
+        Route::get('messages/{contactMessage}', [ContactMessageController::class, 'show'])->name('contact-messages.show');
+        // Throttle dedie : chaque reponse declenche un envoi d'email reel (cout direct),
+        // meme logique que admin-product-images/admin-order-status.
+        Route::post('messages/{contactMessage}/reply', [ContactMessageController::class, 'reply'])
+            ->middleware('throttle:20,1,admin-contact-reply')
+            ->name('contact-messages.reply');
 
         Route::middleware('permission:products.manage')->group(function () {
             // Throttle dedie : protege le CRUD catalogue d'un compte compromis ou d'un
