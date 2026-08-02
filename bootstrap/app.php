@@ -7,8 +7,10 @@ use App\Http\Middleware\SetLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Exceptions\ThrottleRequestsException;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 use Sentry\Laravel\Integration as SentryIntegration;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
@@ -44,6 +46,23 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*') || $request->expectsJson(),
         );
+
+        // Sans ca, un 429 (throttle) sur une visite Inertia en cours ouvre la
+        // fenetre de debug d'Inertia (reponse non reconnue) au lieu d'un
+        // message lisible - on redirige vers la page precedente avec un
+        // toast d'erreur, meme pattern que RequireAccountForCheckout.
+        $exceptions->render(function (ThrottleRequestsException $e, Request $request) {
+            if (! $request->header('X-Inertia')) {
+                return null;
+            }
+
+            Inertia::flash('toast', [
+                'type' => 'error',
+                'message' => __('Trop de tentatives, réessaie dans quelques instants.'),
+            ]);
+
+            return back();
+        });
 
         SentryIntegration::handles($exceptions);
     })->create();
