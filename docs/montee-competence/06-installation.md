@@ -74,7 +74,7 @@ docker compose ps
 
 ## 📁 B. Configuration du Micro-service Java Spring Boot (`pom.xml`)
 
-Créez le répertoire `kbeauty-ai-core-service` sur votre WSL et injectez les dépendances pour Hibernate, OpenAPI et RabbitMQ :
+`~/projects/kbeauty-ai-core-service` — dépendances réellement utilisées (Hibernate/JPA, PostgreSQL, RabbitMQ). L'OpenAPI/Springdoc et Lombok, envisagés au départ, n'ont pas encore été ajoutés (dernier point restant de la Phase 2, voir [`ROADMAP.md`](ROADMAP.md)) :
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -102,11 +102,6 @@ Créez le répertoire `kbeauty-ai-core-service` sur votre WSL et injectez les d�
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springdoc</groupId>
-            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-            <version>2.6.0</version>
-        </dependency>
-        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
@@ -118,11 +113,6 @@ Créez le répertoire `kbeauty-ai-core-service` sur votre WSL et injectez les d�
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
-            <scope>provided</scope>
-        </dependency>
     </dependencies>
 </project>
 ```
@@ -133,29 +123,20 @@ mkdir -p src/main/java/com/kbeauty/aicore src/main/resources
 mvn clean compile
 ```
 
-## 📁 C. Configuration du Robot Scrapy Python (`requirements.txt`)
+## 📁 C. Configuration du Robot Scrapy Python
 
-Créez le répertoire `kbeauty-data-scraper` sur votre WSL Ubuntu, initialisez son environnement virtuel (`.venv`) et installez la stack :
+Repo réel : `kbeauty-ingredients-scraper` (module Python `ingredients_scraper`, pas `core_scraper`) — voir [`10-phase4-scraping-cassandra.md`](10-phase4-scraping-cassandra.md) pour le détail de ce qui a été construit dessus.
 
 ```bash
+cd ~/projects/kbeauty-ingredients-scraper
 python3 -m venv .venv
 source .venv/bin/activate
-cat <<'EOT' > requirements.txt
-scrapy>=2.11.0
-scrapy-playwright>=0.4
-cassandra-driver>=3.29
-pika>=1.3.2
-python-dotenv>=1.0.1
-EOT
-pip install --upgrade pip
-pip install -r requirements.txt
-scrapy startproject core_scraper .
+pip install scrapy cassandra-driver
+scrapy startproject ingredients_scraper .
 ```
 
-## 📁 D. Configuration de l'Interface Next.js 16
+`scrapy-playwright`, `pika` et `python-dotenv` envisagés au départ ne sont pas encore installés — à ajouter quand la Phase 4 avancée (JS rendering, social listening) démarrera réellement (dernier point non coché de la Phase 4).
 
-```bash
-npx create-next-app@latest kbeauty-diagnostic-frontend --typescript --tailwind --eslint --src-dir --app
-cd kbeauty-diagnostic-frontend
-npm install zustand zod react-hook-form @radix-ui/react-tabs @sentry/nextjs
-```
+## 📁 D. Interface Next.js — abandonnée pour la page diagnostic
+
+> Décision (2026-08-02, voir [`ROADMAP.md`](ROADMAP.md) et [`09-phase3-diagnostic-inertia.md`](09-phase3-diagnostic-inertia.md)) : la page diagnostic utilise Inertia (React déjà intégré au monolithe Laravel), pas un frontend Next.js séparé — un pont Sanctum + Next.js aurait ajouté de la complexité sans bénéfice produit pour cette fonctionnalité précise. Next.js reste une option pour un futur découplage frontend (Phase 6, dashboard analytics) ou un projet dédié si l'objectif est de pratiquer Next.js pour lui-même — pas de commande d'installation à date, cette section n'est plus d'actualité pour le diagnostic peau.

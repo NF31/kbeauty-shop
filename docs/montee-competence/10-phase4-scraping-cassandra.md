@@ -23,9 +23,10 @@ Les trois bloquent explicitement soit Scrapy, soit les agents IA/Claude. Utilise
 ### Infra
 
 - `docker compose up -d cassandra` dans `kbeauty-ecosystem` (le service existait déjà dans le `docker-compose.yml`, juste pas démarré).
-- Keyspace + table créés via `cqlsh` :
+- Keyspace + tables créés via `cqlsh` :
   ```sql
   CREATE KEYSPACE kbeauty_ingredients WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1};
+
   CREATE TABLE kbeauty_ingredients.gammes (
     name text PRIMARY KEY,
     source_url text,
@@ -34,30 +35,42 @@ Les trois bloquent explicitement soit Scrapy, soit les agents IA/Claude. Utilise
     actifs_cles text,
     scraped_at timestamp
   );
+
+  CREATE TABLE kbeauty_ingredients.products (
+    sku text PRIMARY KEY,
+    source_url text,
+    name text,
+    price decimal,
+    currency text,
+    availability text,
+    rating decimal,
+    ratings_count int,
+    benefits text,
+    description text,
+    ingredients_raw text,
+    scraped_at timestamp
+  );
   ```
+  Deux tables distinctes mais reliées par `source_url` (une page produit alimente les deux) : `gammes` pour le tableau comparatif (répété à l'identique sur toutes les pages, cf. section "Résultats du crawl complet"), `products` pour la fiche produit elle-même — un concept différent, donc pas mélangé dans la même table.
 
 ### Le projet Scrapy
 
 `~/projects/kbeauty-ingredients-scraper` (nouveau, séparé du monolithe Laravel — un venv Python, pas de dépendance croisée) :
 
-- `ingredients_scraper/items.py` — `GammeItem` (name, source_url, ideal_pour, actions_principales, actifs_cles).
-- `ingredients_scraper/spiders/uniikon_gammes.py` — un `SitemapSpider` qui suit `sitemap.xml`, ne garde que les URLs `/products/...` (pas les traductions `/es/...`), et pour chaque page extrait les blocs `.card-comparaison .card-info`. Le HTML de chaque bloc est irrégulier (parfois label + valeur dans le même `<p>`, parfois la valeur étalée sur plusieurs `<p>` suivants) — `_extract_labelled_values()` gère les deux cas en accumulant le texte jusqu'au label suivant.
+- `ingredients_scraper/items.py` — deux items :
+  - `GammeItem` (name, source_url, ideal_pour, actions_principales, actifs_cles) : une ligne du tableau comparatif de gammes.
+  - `ProductItem` (sku, source_url, name, price, currency, availability, rating, ratings_count, benefits, description, ingredients_raw) : la fiche produit elle-même.
+- `ingredients_scraper/spiders/uniikon_gammes.py` — un `SitemapSpider` qui suit `sitemap.xml`, ne garde que les URLs `/products/...` (pas les traductions `/es/...`), et pour chaque page extrait deux choses en parallèle :
+  - **`parse_product()`** — les blocs `.card-comparaison .card-info` (tableau de gammes). Le HTML de chaque bloc est irrégulier (parfois label + valeur dans le même `<p>`, parfois la valeur étalée sur plusieurs `<p>` suivants) — `_extract_labelled_values()` gère les deux cas en accumulant le texte jusqu'au label suivant.
+  - **`_extract_product()`** — un `ProductItem` construit à partir du bloc **JSON-LD `schema.org/Product`** que Shopify injecte sur chaque page (`<script type="application/ld+json">`) : `sku`, `price`, `priceCurrency`, `availability`, et la note Loox (`aggregateRating.ratingValue`/`ratingCount`). Bien plus fiable à parser que du HTML classique — structuré, pas de sélecteurs CSS fragiles. Complété avec deux onglets HTML de la page (`benefits` depuis `.tab-content-0 .check-item`, `ingredients_raw` — la vraie liste **INCI** — depuis `.tab-content-2`). Le site duplique ces deux blocs (versions desktop/mobile identiques) : seule la première occurrence est gardée pour éviter les doublons.
   - `USER_AGENT` explicite et honnête (`kbeauty-montee-competence-bot/1.0`, avec contact) plutôt que de se faire passer pour un navigateur — bonne pratique de scraping, même quand le `robots.txt` autorise.
   - `DOWNLOAD_DELAY = 1.5` et `CONCURRENT_REQUESTS_PER_DOMAIN = 2` pour rester poli.
-- `ingredients_scraper/pipelines.py` — `CassandraPipeline` : ouvre une connexion Cassandra une fois par run (`open_spider`/`close_spider`), insère chaque item via une requête préparée.
+- `ingredients_scraper/pipelines.py` — `CassandraPipeline` : ouvre une connexion Cassandra une fois par run (`open_spider`/`close_spider`), et route chaque item vers la bonne table (`gammes` ou `products`) selon son type (`isinstance`). Conversions `Decimal`/`int` explicites pour les colonnes typées (`price`, `rating`, `ratings_count`) — le driver Cassandra n'accepte pas une string brute pour une colonne `decimal`/`int`.
 - `settings.py` — pipeline activé (`ITEM_PIPELINES`).
 
 ### Validation
 
-Le parsing a été testé hors-ligne sur une fixture HTML réelle (`fixtures/sample_product.html`, une page produit capturée avant le blocage — voir plus bas) : 4 gammes extraites correctement (nom, public cible, actions, actifs). Les items ont ensuite été poussés dans Cassandra via le pipeline réel pour valider tout le chemin `parse → item → insert` :
-
-```
-name                 | ideal_pour                                     | actifs_cles
-❤️ Gamme The One      | Tous types de cheveux, normaux à gras          | 🌟 Kératine 🌱 Biotine 🥥 Extrait de lait de coco
-💚 Gamme Résistance   | Cheveux abîmés, cassants, traités chimiquement | 🌿 Kératine, 🌱 Biotine, 💧 Acide hyaluronique
-💙 Gamme Amla Tanino  | Cheveux en quête de lissage,                   | 🍇 Huile d'Amla, 🌱 Biotine, 🍂 Extrait de tanin
-💛 Gamme Collagène    | Cheveux très secs, texturisés                  | 💪 Collagène, 🌱 Biotine, 🧈 Beurre de karité
-```
+Le parsing a d'abord été testé hors-ligne sur une fixture HTML réelle (`fixtures/sample_product.html`), via `scripts/test_parse_fixture.py` (construit une fausse `HtmlResponse` Scrapy à partir du fichier local, sans requête réseau — utile pour itérer sur le parsing sans se faire rate-limiter). Puis validé en conditions réelles par le crawl complet (voir section suivante).
 
 ### Persistance polyglotte "local + prod" (comme Neon)
 
@@ -107,20 +120,24 @@ winget install --id dbeaver.dbeaver -e --accept-package-agreements --accept-sour
 
 Puis dans DBeaver : Gestionnaire des pilotes → nouveau pilote → JAR téléchargé depuis les [releases GitHub du wrapper](https://github.com/ing-bank/cassandra-jdbc-wrapper/releases) (`cassandra-jdbc-wrapper-5.0.2-bundle.jar`) → classe `com.ing.data.cassandra.jdbc.CassandraDriver`.
 
-## Point bloquant en cours
+## Résultats du crawl complet
 
-En testant manuellement l'accessibilité du site (`curl` répétés pendant le développement du spider), la protection anti-bot de Shopify a déclenché un `429 local_rate_limited` sur l'IP utilisée pour les tests — toujours actif au moment d'écrire cette page, même après plusieurs minutes d'attente. Rien à voir avec le spider lui-même (jamais lancé en conditions réelles à pleine vitesse) : c'est un effet de bord du debugging manuel, pas du crawl.
+Le rate-limit Shopify rencontré pendant le debugging manuel (`curl` répétés déclenchant un `429 local_rate_limited`) a fini par se lever de lui-même après quelques minutes sans requête — rien à voir avec le spider, c'est bien un effet de bord du debugging, pas du crawl. Premier crawl complet (`scrapy crawl uniikon_gammes`) :
 
-Le crawl complet n'a donc pas encore tourné sur l'ensemble du catalogue. Dès que le blocage se lève :
+- **78 pages produits** crawlées (sitemap complet, hors traductions `/es/...`), toutes en `200 OK`.
+- **268 items "gamme"** extraits, mais seulement **5 lignes uniques** en base (`kbeauty_ingredients.gammes`) : le même tableau comparatif des gammes de la marque est répété à l'identique sur les 78 fiches produit, et la clé primaire (`name`) écrase les doublons à l'insertion — comportement voulu, pas un bug. En creusant, deux des cinq lignes (`❤️ Gamme The One` / `🩷 Gamme The One`) sont en fait la même gamme avec un simple variant d'emoji côté site : 4 gammes distinctes en réalité.
+- Un run a également déclenché 5 `429` en cours de crawl (le site reste sensible même en respectant `DOWNLOAD_DELAY`), tous absorbés automatiquement par le `RetryMiddleware` de Scrapy sans intervention.
+
+Ce constat (beaucoup de volume scrapé, peu de matière réellement nouvelle) a motivé l'ajout de `ProductItem` : en plus du tableau de gammes, chaque page produit alimente maintenant aussi `kbeauty_ingredients.products` avec des données propres à *chaque* produit (prix, note, avis, description, liste INCI) — potentiellement jusqu'à 78 lignes uniques (une par SKU), au lieu de 4-5.
+
+Vérification après un run :
 
 ```bash
-cd ~/projects/kbeauty-ingredients-scraper
-source .venv/bin/activate
-scrapy crawl uniikon_gammes
+docker exec kbeauty_cassandra cqlsh -e "SELECT COUNT(*) FROM kbeauty_ingredients.gammes;"
+docker exec kbeauty_cassandra cqlsh -e "SELECT COUNT(*) FROM kbeauty_ingredients.products;"
+docker exec kbeauty_cassandra cqlsh -e "SELECT sku, name, price, rating FROM kbeauty_ingredients.products;"
 ```
-
-Puis vérifier avec `docker exec kbeauty_cassandra cqlsh -e "SELECT * FROM kbeauty_ingredients.gammes;"`.
 
 ## Prochaine étape
 
-Une fois le crawl complet validé sur l'ensemble du catalogue : Scrapy-Playwright + social listening (prévu Phase 4 avancée), ou enchaîner sur la Phase 0 (BPMN/UML, toujours en attente) / Phase 5 (IA réelle).
+Une fois le crawl `products` validé sur l'ensemble du catalogue et les données réelles poussées vers Astra (à la place des fixtures de test) : Scrapy-Playwright + social listening (prévu Phase 4 avancée), ou enchaîner sur la Phase 0 (BPMN/UML, toujours en attente) / Phase 5 (IA réelle).
