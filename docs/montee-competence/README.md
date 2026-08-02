@@ -1,0 +1,15 @@
+# Dossier technique — Montée en compétence (préparation Master MIAGE)
+
+> Exercice de montée en compétence dans le cadre des études (préparation à un Master MIAGE — ingénierie des processus métier). Ne décrit **pas** l'architecture réelle du projet Kbeauty en production, qui reste un monolithe Laravel/Inertia/React volontairement simple. L'objectif est pédagogique : manipuler des briques (microservices Java, event-driven, NoSQL, Big Data, urbanisation SI) absentes de la stack de production, connectées en périphérie du projet existant à titre d'expérimentation.
+
+## Sommaire
+
+1. [Vue d'ensemble de l'écosystème distribué](01-vue-ensemble.md)
+2. [Référentiel des bases de données & flux (persistance polyglotte)](02-bases-donnees.md)
+3. [Gestion des emails & monitoring croisé](03-emails-monitoring.md)
+4. [Architecture de sécurité & authentification (Fortify Headless)](04-securite-auth.md)
+5. [Outils de gouvernance, modélisation & pilotage (SI)](05-gouvernance-outils.md)
+6. [Manuel d'installation des composants (WSL Ubuntu)](06-installation.md)
+7. [Axes hors programme (extensions libres)](07-axes-hors-programme.md)
+8. [Structure de dossiers sous WSL Ubuntu](08-structure-ubuntu.md)
+9. [Roadmap de développement phasée](ROADMAP.md)
