@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Storefront;
 
+use App\Rules\ValidTurnstileToken;
 use Illuminate\Foundation\Http\FormRequest;
 
 class SendContactMessageRequest extends FormRequest
@@ -16,6 +17,7 @@ class SendContactMessageRequest extends FormRequest
             'email' => ['required', 'email', 'max:255'],
             'subject' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string', 'max:5000'],
+            'cf-turnstile-response' => [new ValidTurnstileToken],
         ];
     }
 }

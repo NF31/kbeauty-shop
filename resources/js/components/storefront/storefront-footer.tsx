@@ -1,11 +1,15 @@
 import { Link, router, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { TurnstileWidget } from '@/components/turnstile-widget';
+import type { TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { localizedPath } from '@/lib/locale-path';
+
+const TURNSTILE_REQUIRED = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
 
 export function StorefrontFooter() {
     const { t } = useLaravelReactI18n();
@@ -14,6 +18,8 @@ export function StorefrontFooter() {
     const [consent, setConsent] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
     function handleNewsletterSubmit(event: React.FormEvent) {
         event.preventDefault();
@@ -27,18 +33,26 @@ export function StorefrontFooter() {
                 consent,
                 [honeypot.nameFieldName]: '',
                 [honeypot.validFromFieldName]: honeypot.encryptedValidFrom,
+                'cf-turnstile-response': turnstileToken,
             },
             {
                 preserveScroll: true,
-                onError: (errors) =>
+                onError: (errors) => {
+                    turnstileRef.current?.reset();
+                    setTurnstileToken('');
                     setError(
                         errors.email ??
                             errors.consent ??
+                            errors['cf-turnstile-response'] ??
+                            errors.spam ??
                             t('Inscription impossible.'),
-                    ),
+                    );
+                },
                 onSuccess: () => {
                     setEmail('');
                     setConsent(false);
+                    setTurnstileToken('');
+                    turnstileRef.current?.reset();
                 },
                 onFinish: () => setIsSubmitting(false),
             },
@@ -148,7 +162,13 @@ export function StorefrontFooter() {
                                 onChange={(e) => setEmail(e.target.value)}
                                 className="bg-background"
                             />
-                            <Button type="submit" disabled={isSubmitting}>
+                            <Button
+                                type="submit"
+                                disabled={
+                                    isSubmitting ||
+                                    (TURNSTILE_REQUIRED && !turnstileToken)
+                                }
+                            >
                                 {t("S'inscrire")}
                             </Button>
                         </div>
@@ -169,6 +189,11 @@ export function StorefrontFooter() {
                                 )}
                             </Label>
                         </div>
+                        <TurnstileWidget
+                            ref={turnstileRef}
+                            onVerify={setTurnstileToken}
+                            onExpire={() => setTurnstileToken('')}
+                        />
                         {error ? (
                             <p className="text-xs text-destructive">{error}</p>
                         ) : null}

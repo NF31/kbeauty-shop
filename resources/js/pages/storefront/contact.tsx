@@ -1,17 +1,22 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { router, setLayoutProps, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
+import { useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { toast } from 'sonner';
 import { z } from 'zod';
 import { PageHeading } from '@/components/storefront/page-heading';
 import { SeoHead } from '@/components/storefront/seo-head';
+import { TurnstileWidget } from '@/components/turnstile-widget';
+import type { TurnstileWidgetHandle } from '@/components/turnstile-widget';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { localizedPath } from '@/lib/locale-path';
 import contact from '@/routes/storefront/contact';
+
+const TURNSTILE_REQUIRED = Boolean(import.meta.env.VITE_TURNSTILE_SITE_KEY);
 
 const contactSchema = z.object({
     name: z.string().min(1, 'Le nom est requis.'),
@@ -25,6 +30,8 @@ type ContactFormValues = z.infer<typeof contactSchema>;
 export default function ContactPage() {
     const { t } = useLaravelReactI18n();
     const { auth, locale, honeypot } = usePage().props;
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const turnstileRef = useRef<TurnstileWidgetHandle>(null);
 
     setLayoutProps({
         breadcrumbs: [
@@ -55,22 +62,31 @@ export default function ContactPage() {
                 ...values,
                 [honeypot.nameFieldName]: '',
                 [honeypot.validFromFieldName]: honeypot.encryptedValidFrom,
+                'cf-turnstile-response': turnstileToken,
             },
             {
                 preserveScroll: true,
-                onSuccess: () =>
+                preserveState: (page) =>
+                    Object.keys(page.props.errors ?? {}).length > 0,
+                onSuccess: () => {
                     reset({
                         name: auth.user?.name ?? '',
                         email: auth.user?.email ?? '',
                         subject: '',
                         message: '',
-                    }),
-                onError: () =>
+                    });
+                    setTurnstileToken('');
+                    turnstileRef.current?.reset();
+                },
+                onError: () => {
+                    turnstileRef.current?.reset();
+                    setTurnstileToken('');
                     toast.error(
                         t(
                             "Impossible d'envoyer le message, réessaie dans quelques instants.",
                         ),
-                    ),
+                    );
+                },
             },
         );
     };
@@ -91,6 +107,7 @@ export default function ContactPage() {
                     )}
                 />
 
+                {/* eslint-disable-next-line react-hooks/refs -- handleSubmit() ne fait qu'envelopper onSubmit, turnstileRef.current n'est lu qu'au submit (onSuccess/onError), jamais pendant le render */}
                 <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                     <div className="grid gap-4 sm:grid-cols-2">
                         <div>
@@ -142,7 +159,19 @@ export default function ContactPage() {
                         )}
                     </div>
 
-                    <Button type="submit" disabled={isSubmitting}>
+                    <TurnstileWidget
+                        ref={turnstileRef}
+                        onVerify={setTurnstileToken}
+                        onExpire={() => setTurnstileToken('')}
+                    />
+
+                    <Button
+                        type="submit"
+                        disabled={
+                            isSubmitting ||
+                            (TURNSTILE_REQUIRED && !turnstileToken)
+                        }
+                    >
                         {t('Envoyer')}
                     </Button>
                 </form>
