@@ -69,4 +69,9 @@ return [
         'url' => env('AI_CORE_SERVICE_URL', 'http://localhost:8080'),
     ],
 
+    'turnstile' => [
+        'site_key' => env('TURNSTILE_SITE_KEY'),
+        'secret_key' => env('TURNSTILE_SECRET_KEY'),
+    ],
+
 ];

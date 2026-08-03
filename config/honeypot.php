@@ -1,7 +1,7 @@
 <?php
 
+use App\Support\Honeypot\InertiaSpamResponder;
 use Spatie\Honeypot\SpamProtection;
-use Spatie\Honeypot\SpamResponder\BlankPageResponder;
 
 return [
     /*
@@ -48,8 +48,13 @@ return [
      *
      * A valid responder is any class that implements
      * `Spatie\Honeypot\SpamResponder\SpamResponder`
+     *
+     * Le BlankPageResponder par defaut renvoie une reponse vide sans header
+     * X-Inertia, ce qui casse silencieusement les requetes XHR d'Inertia
+     * (aucune erreur visible, formulaire qui semble ne rien faire). On utilise
+     * donc un responder qui redirige (compatible avec le flux Inertia normal).
      */
-    'respond_to_spam_with' => BlankPageResponder::class,
+    'respond_to_spam_with' => InertiaSpamResponder::class,
 
     /*
      * When activated, requests will be checked if honeypot fields are missing,
