@@ -6,6 +6,13 @@ type SeoHeadProps = {
     image?: string | null;
     type?: 'website' | 'product' | 'article';
     jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+    /**
+     * URL de l'image LCP de la page (premiere image de grille/galerie,
+     * affichee avec fetchPriority="high" dans le composant) - prechargee
+     * ici pour que le navigateur la decouvre avant meme le parsing du JS,
+     * plutot que d'attendre l'hydratation React.
+     */
+    preloadImage?: string | null;
 };
 
 export function SeoHead({
@@ -14,6 +21,7 @@ export function SeoHead({
     image = null,
     type = 'website',
     jsonLd,
+    preloadImage = null,
 }: SeoHeadProps) {
     const { props, url } = usePage();
     const canonical = `${props.appUrl}${url.split('?')[0]}`;
@@ -23,6 +31,15 @@ export function SeoHead({
         <Head title={title}>
             <meta name="description" content={description} />
             <link rel="canonical" href={canonical} />
+
+            {preloadImage && (
+                <link
+                    rel="preload"
+                    as="image"
+                    href={preloadImage}
+                    fetchPriority="high"
+                />
+            )}
 
             <meta property="og:type" content={type} />
             <meta property="og:site_name" content={props.name} />

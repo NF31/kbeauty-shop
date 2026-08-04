@@ -173,7 +173,11 @@ export default function CatalogPage({
 
     return (
         <>
-            <SeoHead title={seoTitle} description={seoDescription} />
+            <SeoHead
+                title={seoTitle}
+                description={seoDescription}
+                preloadImage={products.data[0]?.thumbnailUrl}
+            />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
                 <div className="mb-6">
                     <PageHeading
@@ -367,6 +371,8 @@ export default function CatalogPage({
                                         <img
                                             src={product.thumbnailUrl}
                                             alt={product.name}
+                                            width={400}
+                                            height={400}
                                             // Premiere image de la grille =
                                             // candidate LCP sur le catalogue.
                                             fetchPriority={

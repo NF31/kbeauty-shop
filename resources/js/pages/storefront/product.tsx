@@ -142,6 +142,7 @@ export default function ProductPage({
                 image={seo.image}
                 type="product"
                 jsonLd={jsonLd}
+                preloadImage={images[0]?.url}
             />
             <div className="mx-auto grid max-w-6xl gap-10 px-4 py-8 md:grid-cols-2 md:gap-16 md:px-16 md:py-16">
                 <ProductGallery images={images} productName={product.name} />
