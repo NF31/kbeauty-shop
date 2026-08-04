@@ -76,6 +76,11 @@ createInertiaApp({
     layout: (name) => {
         const resolved = (() => {
             switch (true) {
+                // Autonome (pas de header/footer) : peut s'afficher hors de toute
+                // route matchee (404), donc sans les props partagees dont
+                // StorefrontLayout/AppLayout dependent (panier, categories...).
+                case name === 'error':
+                    return null;
                 case name.startsWith('auth/'):
                     return AuthLayout;
                 case name.startsWith('settings/'):
