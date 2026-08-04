@@ -22,3 +22,10 @@ Schedule::command('backup:monitor')->dailyAt('03:00')->onOneServer();
 // checks (dont ce meme QueueCheck) et notifie en cas d'echec.
 Schedule::command('health:queue-check-heartbeat')->everyMinute();
 Schedule::command('health:check')->everyMinute();
+
+// Purge Telescope (jamais fait jusqu'ici - telescope_entries a rempli a lui
+// seul les 512 Mo du plan Neon gratuit, cf. incident du 2026-08-05). 48h de
+// retention suffisent pour investiguer une exception recente en prod ; le
+// developpement local pointe sur la meme base Neon partagee, donc chaque
+// session de dev local re-remplit vite la table sans cette purge.
+Schedule::command('telescope:prune', ['--hours' => 48])->daily()->onOneServer();
