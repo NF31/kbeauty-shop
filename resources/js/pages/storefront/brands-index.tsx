@@ -60,6 +60,8 @@ export default function BrandsIndexPage({ brands, seo }: BrandsIndexPageProps) {
                                         <img
                                             src={brand.logo_path}
                                             alt={brand.name}
+                                            width={80}
+                                            height={80}
                                             // Premiere image de la grille =
                                             // candidate LCP sur la liste des
                                             // marques.

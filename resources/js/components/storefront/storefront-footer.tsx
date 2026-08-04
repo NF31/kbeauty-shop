@@ -66,6 +66,8 @@ export function StorefrontFooter() {
                     <img
                         src="/logo-mark.png"
                         alt="Korea Beauty"
+                        width={56}
+                        height={56}
                         loading="lazy"
                         className="mb-3 size-14 rounded-full"
                     />

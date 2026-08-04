@@ -89,6 +89,7 @@ export default function BrandPage({
                 title={seo.title}
                 description={seo.description}
                 image={seo.image}
+                preloadImage={products.data[0]?.thumbnailUrl}
             />
             <div className="mx-auto max-w-7xl p-4 md:p-8">
                 <div className="mb-8 flex flex-col items-center gap-4 border-b pb-8 text-center">
@@ -96,6 +97,8 @@ export default function BrandPage({
                         <img
                             src={brand.logoUrl}
                             alt={brand.name}
+                            width={96}
+                            height={96}
                             className="h-24 w-24 rounded-full object-cover"
                         />
                     )}
@@ -219,6 +222,8 @@ export default function BrandPage({
                                         <img
                                             src={product.thumbnailUrl}
                                             alt={product.name}
+                                            width={400}
+                                            height={400}
                                             // Premiere image de la grille =
                                             // candidate LCP sur la page
                                             // marque.

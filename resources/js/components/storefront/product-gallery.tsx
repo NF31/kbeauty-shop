@@ -107,6 +107,8 @@ export function ProductGallery({
                                 <img
                                     src={image.url}
                                     alt={image.alt_text ?? productName}
+                                    width={800}
+                                    height={800}
                                     // Premiere image = candidate LCP (visible
                                     // des l'arrivee sur la fiche produit) :
                                     // priorite haute pour ne pas la faire
@@ -149,6 +151,8 @@ export function ProductGallery({
                             <img
                                 src={image.url}
                                 alt=""
+                                width={800}
+                                height={800}
                                 loading="lazy"
                                 className="size-full object-cover"
                             />
@@ -197,6 +201,8 @@ export function ProductGallery({
                                     <img
                                         src={image.url}
                                         alt={image.alt_text ?? productName}
+                                        width={800}
+                                        height={800}
                                         loading="lazy"
                                         className="max-h-full max-w-full animate-in rounded-lg object-contain duration-500 ease-out zoom-in-95 fade-in"
                                     />
@@ -229,6 +235,8 @@ export function ProductGallery({
                                     <img
                                         src={image.url}
                                         alt=""
+                                        width={800}
+                                        height={800}
                                         className="size-full object-cover"
                                     />
                                 </button>

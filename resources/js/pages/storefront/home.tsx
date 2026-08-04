@@ -76,6 +76,7 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                 description={seo.description}
                 image={seo.image}
                 jsonLd={jsonLd}
+                preloadImage={products[0]?.thumbnailUrl}
             />
 
             <div className="relative overflow-hidden bg-gradient-to-b from-secondary/60 via-secondary/15 to-background">
@@ -154,6 +155,8 @@ export default function HomePage({ products, brands, seo }: HomePageProps) {
                                         <img
                                             src={product.thumbnailUrl}
                                             alt={product.name}
+                                            width={400}
+                                            height={400}
                                             // Premiere image de la grille =
                                             // candidate LCP sur la page
                                             // d'accueil.

@@ -121,6 +121,8 @@ export default function AccountOrdersPage({
                                                 <img
                                                     src={item.imageUrl}
                                                     alt=""
+                                                    width={200}
+                                                    height={200}
                                                     loading="lazy"
                                                     className="size-10 rounded-md object-cover"
                                                 />

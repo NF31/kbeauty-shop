@@ -153,6 +153,8 @@ export default function DiagnosticPage({
                                                 <img
                                                     src={product.thumbnailUrl}
                                                     alt={product.name}
+                                                    width={400}
+                                                    height={400}
                                                     className="h-20 w-20 rounded-md object-cover"
                                                 />
                                             )}
