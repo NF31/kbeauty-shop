@@ -15,6 +15,7 @@ use Sentry\Laravel\Integration as SentryIntegration;
 use Spatie\Permission\Middleware\PermissionMiddleware;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
+use Symfony\Component\HttpFoundation\Response;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -62,6 +63,36 @@ return Application::configure(basePath: dirname(__DIR__))
             ]);
 
             return back();
+        });
+
+        // Page d'erreur Inertia (resources/js/pages/error.tsx) au lieu de la
+        // page Laravel/Symfony brute par defaut - coherente avec le design
+        // du site pour les codes qu'un visiteur peut reellement rencontrer.
+        // La locale ne peut pas venir des props partagees Inertia (HandleInertiaRequests
+        // ne tourne pas sur une route non matchee, ex. 404) - deduite du prefixe
+        // d'URL /en, meme convention que SetLocale.
+        $exceptions->respond(function (Response $response, Throwable $e, Request $request) {
+            if (app()->hasDebugModeEnabled() || ! in_array($response->getStatusCode(), [403, 404, 419, 500, 503], true)) {
+                return $response;
+            }
+
+            if ($response->getStatusCode() === 419) {
+                return back()->with([
+                    'toast' => [
+                        'type' => 'error',
+                        'message' => __('La page a expiré, réessaie.'),
+                    ],
+                ]);
+            }
+
+            $locale = $request->is('en') || $request->is('en/*') ? 'en' : 'fr';
+
+            return Inertia::render('error', [
+                'status' => $response->getStatusCode(),
+                'locale' => $locale,
+            ])
+                ->toResponse($request)
+                ->setStatusCode($response->getStatusCode());
         });
 
         SentryIntegration::handles($exceptions);
