@@ -28,6 +28,19 @@ jobs:
           --health-timeout 5s
           --health-retries 5
 
+      # CACHE_STORE=redis (.env.example) est touche des le "composer setup"
+      # (migration create_permission_tables appelle Cache::forget()), avant
+      # meme que phpunit.xml ne bascule sur CACHE_STORE=array pour les tests.
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
