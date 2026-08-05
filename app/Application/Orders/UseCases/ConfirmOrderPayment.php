@@ -17,8 +17,9 @@ use Illuminate\Support\Facades\Notification;
 
 /**
  * Seule source de vérité pour la confirmation d'un paiement (docs/FEATURES.md
- * 9.4) : appelé uniquement depuis le webhook Stripe `payment_intent.succeeded`,
- * jamais depuis un retour navigateur.
+ * 9.4) : appelé uniquement depuis le webhook Stripe (`checkout.session.completed`
+ * / `checkout.session.async_payment_succeeded`), jamais depuis un retour
+ * navigateur.
  */
 class ConfirmOrderPayment
 {
@@ -31,12 +32,20 @@ class ConfirmOrderPayment
         private readonly UserRepositoryInterface $users,
     ) {}
 
-    public function __invoke(string $providerPaymentId): void
+    /**
+     * `$sessionId` est l'id de Checkout Session, celui stocké dans
+     * `provider_payment_id` tant que le paiement est `pending`.
+     * `$paymentIntentId` est le vrai id du PaymentIntent Stripe, désormais
+     * connu puisque le client a confirmé le paiement — c'est lui qui
+     * remplace `provider_payment_id` une fois le paiement marqué réussi
+     * (nécessaire pour les remboursements, cf. RefundOrder).
+     */
+    public function __invoke(string $sessionId, string $paymentIntentId): void
     {
-        $payment = $this->payments->findByProviderPaymentId($providerPaymentId, ['order.items', 'order.user']);
+        $payment = $this->payments->findByProviderPaymentId($sessionId, ['order.items', 'order.user']);
 
         if (! $payment) {
-            Log::warning('Webhook Stripe : PaymentIntent sans Payment correspondant.', ['payment_intent_id' => $providerPaymentId]);
+            Log::warning('Webhook Stripe : Checkout Session sans Payment correspondant.', ['session_id' => $sessionId]);
 
             return;
         }
@@ -49,8 +58,8 @@ class ConfirmOrderPayment
             return;
         }
 
-        $this->unitOfWork->run(function () use ($payment) {
-            $this->payments->markSucceeded($payment);
+        $this->unitOfWork->run(function () use ($payment, $paymentIntentId) {
+            $this->payments->markSucceeded($payment, $paymentIntentId);
 
             $order = $payment->order;
             $this->orders->markPaid($order);

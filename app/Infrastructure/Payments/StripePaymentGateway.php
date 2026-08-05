@@ -3,13 +3,12 @@
 namespace App\Infrastructure\Payments;
 
 use App\Domain\Payments\CheckoutSessionResult;
+use App\Domain\Payments\CheckoutSessionStatusResult;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
-use App\Domain\Payments\PaymentIntentResult;
 use App\Domain\Payments\RefundResult;
 use App\Domain\Payments\WebhookEvent;
 use App\Models\Order;
 use Stripe\Exception\SignatureVerificationException;
-use Stripe\PaymentIntent;
 use Stripe\Refund;
 use Stripe\StripeClient;
 use Stripe\Webhook;
@@ -25,6 +24,12 @@ class StripePaymentGateway implements PaymentGatewayInterface
      * `PaymentElement` intégré sur la page du site (pas de redirection vers une
      * page Stripe hébergée). Le tunnel n'accepte pas les invités
      * (`checkout.auth`), `$order->user` est donc toujours défini.
+     *
+     * Le PaymentIntent sous-jacent (`session.payment_intent`) n'est PAS créé
+     * synchroniquement pour `ui_mode: elements` — il n'existe qu'une fois le
+     * client confirmé côté navigateur (incident du 2026-08-05, `NULL` renvoyé
+     * ici en prod). C'est pourquoi seul l'id de session est renvoyé ici ; le
+     * suivi du statut de paiement se fait via `retrieveCheckoutSession()`.
      */
     public function createCheckoutSession(Order $order, string $returnUrl): CheckoutSessionResult
     {
@@ -51,27 +56,33 @@ class StripePaymentGateway implements PaymentGatewayInterface
         return new CheckoutSessionResult(
             id: $session->id,
             clientSecret: $session->client_secret,
-            paymentIntentId: $session->payment_intent,
         );
     }
 
     /**
-     * Une `Checkout Session` en mode `payment` crée automatiquement un
-     * `PaymentIntent` sous-jacent (`session.payment_intent`) — c'est son id
-     * qui est stocké dans `payments.provider_payment_id`, jamais l'id de la
-     * session elle-même. Utilisé pour vérifier si un paiement est déjà
-     * confirmé (rechargement de la page, reprise de paiement 9.7) et par le
-     * webhook (`payment_intent.succeeded`).
+     * Utilisé tant qu'un `Payment` est encore `pending` : `provider_payment_id`
+     * stocke alors l'id de la Checkout Session (jamais un PaymentIntent, cf.
+     * `createCheckoutSession()`). Vérifie si le paiement est déjà passé côté
+     * Stripe (ex. rechargement de la page après un paiement réussi) sans
+     * attendre le webhook.
      */
-    public function retrievePaymentIntent(string $paymentIntentId): PaymentIntentResult
+    public function retrieveCheckoutSession(string $sessionId): CheckoutSessionStatusResult
     {
-        return $this->toPaymentIntentResult($this->stripe->paymentIntents->retrieve($paymentIntentId));
+        $session = $this->stripe->checkout->sessions->retrieve($sessionId);
+
+        return new CheckoutSessionStatusResult(
+            id: $session->id,
+            paymentStatus: $session->payment_status,
+            paymentIntentId: $session->payment_intent,
+        );
     }
 
     /**
      * Rembourse tout ou partie d'un paiement déjà capturé. `amountCents` est
      * toujours fourni explicitement (jamais le montant total du `PaymentIntent`
      * par défaut) pour supporter aussi bien un remboursement partiel que total.
+     * `$paymentIntentId` doit être un vrai id de PaymentIntent — vrai une fois
+     * `ConfirmOrderPayment` passé, cf. `EloquentPaymentRepository::markSucceeded()`.
      */
     public function refund(string $paymentIntentId, int $amountCents): RefundResult
     {
@@ -91,24 +102,24 @@ class StripePaymentGateway implements PaymentGatewayInterface
      * besoin de connaître sa forme, tout le reste du code métier ne dépend que
      * de `WebhookEvent`.
      *
+     * L'objet porté par l'event est une Checkout Session pour
+     * `checkout.session.completed`/`checkout.session.async_payment_succeeded`
+     * (ceux réellement traités, cf. StripeWebhookController) : `id` est l'id
+     * de session, `payment_intent`/`payment_status` sont ses propriétés
+     * natives.
+     *
      * @throws SignatureVerificationException si la signature est invalide/absente.
      */
     public function verifyWebhookSignature(string $payload, string $signature): WebhookEvent
     {
         $event = Webhook::constructEvent($payload, $signature, config('services.stripe.webhook_secret'));
+        $object = $event->data->object;
 
         return new WebhookEvent(
             type: $event->type,
-            paymentIntentId: $event->data->object->id ?? null,
-        );
-    }
-
-    private function toPaymentIntentResult(PaymentIntent $intent): PaymentIntentResult
-    {
-        return new PaymentIntentResult(
-            id: $intent->id,
-            clientSecret: $intent->client_secret,
-            status: $intent->status,
+            sessionId: $object->id ?? null,
+            paymentIntentId: $object->payment_intent ?? null,
+            paymentStatus: $object->payment_status ?? null,
         );
     }
 

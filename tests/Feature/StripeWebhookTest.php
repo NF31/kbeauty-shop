@@ -27,13 +27,22 @@ beforeEach(function () {
     $this->seed(RolePermissionSeeder::class);
 });
 
-function fakeWebhookEvent(string $type, ?string $paymentIntentId = 'pi_fake123'): WebhookEvent
-{
-    return new WebhookEvent(type: $type, paymentIntentId: $paymentIntentId);
+function fakeWebhookEvent(
+    string $type,
+    ?string $sessionId = 'cs_fake123',
+    ?string $paymentIntentId = 'pi_fake123',
+    ?string $paymentStatus = 'paid',
+): WebhookEvent {
+    return new WebhookEvent(
+        type: $type,
+        sessionId: $sessionId,
+        paymentIntentId: $paymentIntentId,
+        paymentStatus: $paymentStatus,
+    );
 }
 
 test('a request without a Stripe-Signature header is rejected', function () {
-    $this->postJson('/stripe/webhook', ['type' => 'payment_intent.succeeded'])
+    $this->postJson('/stripe/webhook', ['type' => 'checkout.session.completed'])
         ->assertStatus(400);
 });
 
@@ -51,7 +60,7 @@ test('a request with an invalid signature is rejected', function () {
 test('an unhandled event type is acknowledged without side effects', function () {
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.payment_failed', null)
+            fakeWebhookEvent('payment_intent.payment_failed', null, null, null)
         );
     });
 
@@ -59,7 +68,26 @@ test('an unhandled event type is acknowledged without side effects', function ()
         ->assertOk();
 });
 
-test('payment_intent.succeeded marks the order/payment as paid and decrements stock', function () {
+test('a checkout.session.completed event with payment_status unpaid is acknowledged without side effects', function () {
+    // Cas d'un moyen de paiement à confirmation différée (ex. virement SEPA) :
+    // le premier événement arrive avant que le paiement soit réellement
+    // confirmé — seul `payment_status === 'paid'` doit déclencher la
+    // confirmation (cf. checkout.session.async_payment_succeeded).
+    Payment::factory()->create(['provider_payment_id' => 'cs_fake123', 'status' => PaymentStatus::Pending]);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
+            fakeWebhookEvent('checkout.session.completed', 'cs_fake123', null, 'unpaid')
+        );
+    });
+
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])
+        ->assertOk();
+
+    expect(Payment::query()->sole()->status)->toBe(PaymentStatus::Pending);
+});
+
+test('checkout.session.completed marks the order/payment as paid, swaps provider_payment_id to the PaymentIntent id and decrements stock', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
     $order = Order::factory()->create(['status' => OrderStatus::Pending]);
     OrderItem::factory()->create([
@@ -69,13 +97,13 @@ test('payment_intent.succeeded marks the order/payment as paid and decrements st
     ]);
     $payment = Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -84,12 +112,39 @@ test('payment_intent.succeeded marks the order/payment as paid and decrements st
 
     expect($order->fresh()->status)->toBe(OrderStatus::Paid);
     expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+    expect($payment->fresh()->provider_payment_id)->toBe('pi_fake123');
     expect($payment->fresh()->paid_at)->not->toBeNull();
     expect($variant->fresh()->stock_quantity)->toBe(7);
     expect(InventoryMovement::query()->where('product_variant_id', $variant->id)->count())->toBe(1);
 });
 
-test('payment_intent.succeeded sends an order confirmation email to the order owner', function () {
+test('checkout.session.async_payment_succeeded also confirms the payment (delayed payment methods)', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
+    $order = Order::factory()->create(['status' => OrderStatus::Pending]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_variant_id' => $variant->id,
+        'quantity' => 3,
+    ]);
+    Payment::factory()->create([
+        'order_id' => $order->id,
+        'provider_payment_id' => 'cs_fake123',
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
+            fakeWebhookEvent('checkout.session.async_payment_succeeded')
+        );
+    });
+
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])
+        ->assertOk();
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Paid);
+});
+
+test('checkout.session.completed sends an order confirmation email to the order owner', function () {
     Notification::fake();
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
@@ -101,13 +156,13 @@ test('payment_intent.succeeded sends an order confirmation email to the order ow
     ]);
     Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -129,13 +184,13 @@ test('replaying the same succeeded event does not resend the confirmation email'
     ]);
     Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->twice()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -155,13 +210,13 @@ test('replaying the same succeeded event does not decrement stock twice', functi
     ]);
     Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->twice()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -172,7 +227,7 @@ test('replaying the same succeeded event does not decrement stock twice', functi
     expect(InventoryMovement::query()->where('product_variant_id', $variant->id)->count())->toBe(1);
 });
 
-test('payment_intent.succeeded notifies admins of the new paid order', function () {
+test('checkout.session.completed notifies admins of the new paid order', function () {
     Notification::fake();
 
     $admin = User::factory()->create();
@@ -189,13 +244,13 @@ test('payment_intent.succeeded notifies admins of the new paid order', function 
     ]);
     Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -206,7 +261,7 @@ test('payment_intent.succeeded notifies admins of the new paid order', function 
     Notification::assertNotSentTo($staff, NewPaidOrderAlert::class);
 });
 
-test('payment_intent.succeeded dispatches the Klaviyo Placed Order event job', function () {
+test('checkout.session.completed dispatches the Klaviyo Placed Order event job', function () {
     Bus::fake();
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
@@ -218,13 +273,13 @@ test('payment_intent.succeeded dispatches the Klaviyo Placed Order event job', f
     ]);
     Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -248,9 +303,13 @@ test('a late/duplicate succeeded event on an already refunded payment does not r
         'status' => PaymentStatus::Refunded,
     ]);
 
+    // Une fois `Succeeded`/`Refunded`, `provider_payment_id` est déjà le
+    // PaymentIntent (plus la session) — un événement en retard référence
+    // toujours la session d'origine, donc `findByProviderPaymentId` ne
+    // retrouve plus rien : c'est cette absence de match qui protège ici.
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -261,10 +320,10 @@ test('a late/duplicate succeeded event on an already refunded payment does not r
     expect($variant->fresh()->stock_quantity)->toBe(10);
 });
 
-test('a succeeded PaymentIntent with no matching Payment is acknowledged without error', function () {
+test('a succeeded Checkout Session with no matching Payment is acknowledged without error', function () {
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_unknown')
+            fakeWebhookEvent('checkout.session.completed', 'cs_unknown')
         );
     });
 
@@ -274,7 +333,7 @@ test('a succeeded PaymentIntent with no matching Payment is acknowledged without
     expect(Payment::query()->count())->toBe(0);
 });
 
-test('payment_intent.succeeded generates and stores the order invoice', function () {
+test('checkout.session.completed generates and stores the order invoice', function () {
     Storage::fake('invoices');
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
@@ -286,13 +345,13 @@ test('payment_intent.succeeded generates and stores the order invoice', function
     ]);
     Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 
@@ -319,13 +378,13 @@ test('replaying the same succeeded event does not generate a duplicate invoice',
     ]);
     Payment::factory()->create([
         'order_id' => $order->id,
-        'provider_payment_id' => 'pi_fake123',
+        'provider_payment_id' => 'cs_fake123',
         'status' => PaymentStatus::Pending,
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->twice()->andReturn(
-            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+            fakeWebhookEvent('checkout.session.completed')
         );
     });
 

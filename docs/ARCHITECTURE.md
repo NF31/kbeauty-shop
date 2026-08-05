@@ -48,7 +48,7 @@ Kbeauty/
 │   ├── Domain/                         # Clean Architecture pragmatique (§3bis) — Cart/Orders/Payments/Stock/Shared
 │   │   ├── Cart/Contracts/
 │   │   ├── Orders/Contracts/           # + Exceptions/
-│   │   ├── Payments/                   # Contracts/ + DTOs (PaymentIntentResult, RefundResult...)
+│   │   ├── Payments/                   # Contracts/ + DTOs (CheckoutSessionResult, RefundResult...)
 │   │   ├── Stock/Contracts/
 │   │   └── Shared/Contracts/           # UnitOfWorkInterface
 │   ├── Application/                    # Use cases invocables, un module par sous-dossier
@@ -190,7 +190,7 @@ mappées à la main). Ce qui compte : plus aucune classe de logique métier ne p
 SDK Stripe directement, elle passe par une interface (`Domain/*/Contracts/*`), liée à son
 implémentation concrète dans `AppServiceProvider::register()`.
 
-- **`Domain/`** : contrats (interfaces de repository/gateway) + DTOs readonly (`PaymentIntentResult`,
+- **`Domain/`** : contrats (interfaces de repository/gateway) + DTOs readonly (`CheckoutSessionResult`,
   `RefundResult`, `CheckoutPaymentResult`, `WebhookEvent`) qui évitent d'exposer les types SDK
   (Stripe) aux use cases/controllers, + exceptions métier nommées.
 - **`Application/*/UseCases/`** : logique métier invocable (une classe = une action), remplace les
@@ -267,12 +267,20 @@ traduire du texte provisoire). Détail des routes déjà traduites : `docs/FEATU
 1. Le client valide le récapitulatif → `POST /commande/paiement` (contrôleur Inertia) crée l'`Order`
    en statut `pending` + une `Checkout Session` Stripe (`ui_mode: elements`, migration 2026-08-06 —
    remplace l'ancien PaymentIntent brut, garde le Payment Element intégré sur la page, pas de
-   redirection vers une page Stripe hébergée). La session crée automatiquement un `PaymentIntent`
-   sous-jacent (CB, Apple Pay, Google Pay) dont l'id est stocké dans `payments.provider_payment_id`.
+   redirection vers une page Stripe hébergée). **Le PaymentIntent sous-jacent n'existe pas encore à
+   ce stade** — pour `ui_mode: elements`, Stripe ne le crée qu'une fois le paiement confirmé côté
+   client (incident du 2026-08-05 en prod : `session->payment_intent` valait `null`
+   immédiatement après création, plantait `POST /commande/paiement` en 500). Tant que le `Payment`
+   est `pending`, `payments.provider_payment_id` stocke donc l'**id de la Checkout Session**, jamais
+   un id de PaymentIntent.
 2. Le paiement est confirmé côté client (Stripe.js), puis **confirmé côté serveur uniquement via
-   webhook Stripe** (`payment_intent.succeeded`) — jamais faire confiance au retour navigateur seul.
-3. Le webhook met à jour `Order.status = paid`, `Payment.status = succeeded`, déclenche un Job
-   Horizon (email confirmation via Resend, décrément stock, création `Shipment` à traiter).
+   webhook Stripe** (`checkout.session.completed` / `checkout.session.async_payment_succeeded`, avec
+   `payment_status === 'paid'`) — jamais faire confiance au retour navigateur seul. Ces événements
+   portent enfin le vrai id du PaymentIntent (`data.object.payment_intent`).
+3. Le webhook met à jour `Order.status = paid`, `Payment.status = succeeded`, **repointe
+   `payments.provider_payment_id` sur le vrai id du PaymentIntent** (nécessaire pour les
+   remboursements, cf. `RefundOrder`), déclenche un Job Horizon (email confirmation via Resend,
+   décrément stock, création `Shipment` à traiter).
 4. Les remboursements passent par l'admin (Inertia/React) → Action `RefundOrder` → API Stripe → `Refund`.
 
 ## 5. Recherche (Scout + Meilisearch)
