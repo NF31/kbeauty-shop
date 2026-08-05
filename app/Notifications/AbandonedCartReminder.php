@@ -3,6 +3,7 @@
 namespace App\Notifications;
 
 use App\Models\Cart;
+use App\Models\Order;
 use App\Models\User;
 use App\Support\Salutation;
 use Illuminate\Bus\Queueable;
@@ -14,7 +15,16 @@ class AbandonedCartReminder extends Notification implements ShouldQueue
 {
     use Queueable;
 
-    public function __construct(private readonly Cart $cart) {}
+    /**
+     * $pendingOrder : commande déjà créée si le client a commencé le
+     * paiement puis abandonné (9.7) — pointe alors vers la reprise de
+     * paiement plutôt que vers le panier, pour ne pas créer une commande
+     * en doublon en repassant par le tunnel de commande.
+     */
+    public function __construct(
+        private readonly Cart $cart,
+        private readonly ?Order $pendingOrder = null,
+    ) {}
 
     /**
      * @return array<int, string>
@@ -35,9 +45,11 @@ class AbandonedCartReminder extends Notification implements ShouldQueue
             $mail->line("{$item->quantity} x {$item->variant->product->name} — {$this->formatCents($item->lineTotalCents($this->cart->currency))}");
         }
 
-        return $mail
-            ->line("Total : {$this->formatCents($this->cart->totalCents())}")
-            ->action('Reprendre mon panier', route('storefront.cart.index'));
+        $mail->line("Total : {$this->formatCents($this->cart->totalCents())}");
+
+        return $this->pendingOrder
+            ? $mail->action('Continuer le paiement', route('storefront.checkout.resume', $this->pendingOrder))
+            : $mail->action('Reprendre mon panier', route('storefront.cart.index'));
     }
 
     private function formatCents(int $cents): string

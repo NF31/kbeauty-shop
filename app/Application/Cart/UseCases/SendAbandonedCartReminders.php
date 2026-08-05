@@ -2,6 +2,7 @@
 
 namespace App\Application\Cart\UseCases;
 
+use App\Enums\OrderStatus;
 use App\Models\Cart;
 use App\Notifications\AbandonedCartReminder;
 use Illuminate\Support\Carbon;
@@ -40,7 +41,15 @@ class SendAbandonedCartReminders
                     return;
                 }
 
-                $cart->user->notify(new AbandonedCartReminder($cart));
+                // Le client a peut-être déjà commencé le paiement (Order en `pending`,
+                // cf. 9.7) : renvoyer vers le panier créerait alors une 2e commande en
+                // doublon au lieu de reprendre celle déjà entamée.
+                $pendingOrder = $cart->user->orders()
+                    ->where('status', OrderStatus::Pending)
+                    ->latest('placed_at')
+                    ->first();
+
+                $cart->user->notify(new AbandonedCartReminder($cart, $pendingOrder));
                 $cart->update(['abandoned_cart_reminder_sent_at' => now()]);
                 $sent++;
             });
