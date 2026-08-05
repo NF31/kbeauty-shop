@@ -47,6 +47,7 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'appUrl' => config('app.url'),
             'gtmId' => config('services.gtm.id'),
+            'crispWebsiteId' => config('services.crisp.website_id'),
             'auth' => [
                 'user' => $user,
                 'roles' => $user?->getRoleNames() ?? [],

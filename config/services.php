@@ -61,6 +61,10 @@ return [
         'id' => env('GTM_ID'),
     ],
 
+    'crisp' => [
+        'website_id' => env('CRISP_WEBSITE_ID'),
+    ],
+
     'horizon' => [
         'alert_email' => env('HORIZON_ALERT_EMAIL'),
     ],
