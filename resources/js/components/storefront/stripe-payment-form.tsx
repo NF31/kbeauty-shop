@@ -1,10 +1,8 @@
-import { usePage } from '@inertiajs/react';
 import {
-    Elements,
+    CheckoutElementsProvider,
     PaymentElement,
-    useElements,
-    useStripe,
-} from '@stripe/react-stripe-js';
+    useCheckoutElements,
+} from '@stripe/react-stripe-js/checkout';
 import { loadStripe } from '@stripe/stripe-js';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { useState } from 'react';
@@ -30,7 +28,6 @@ export function StripePaymentForm({
     customerEmail?: string | null;
 }) {
     const { t } = useLaravelReactI18n();
-    const { locale } = usePage().props;
 
     if (!stripePromise) {
         return (
@@ -43,44 +40,64 @@ export function StripePaymentForm({
     }
 
     return (
-        <Elements
+        <CheckoutElementsProvider
             stripe={stripePromise}
-            options={{ clientSecret, locale: locale === 'en' ? 'en' : 'fr' }}
+            options={{
+                clientSecret,
+                // Préremplit le Payment Element avec ce qu'on a déjà collecté
+                // à l'étape adresse — plus au niveau du provider, pas de
+                // l'Element, depuis la migration vers l'API Checkout Sessions
+                // (voir docs/FEATURES.md 9.4).
+                defaultValues: {
+                    email: customerEmail ?? undefined,
+                    phoneNumber: billingAddress?.phone ?? undefined,
+                    billingAddress: billingAddress
+                        ? {
+                              name: billingAddress.full_name,
+                              address: {
+                                  country: billingAddress.country_code,
+                                  line1: billingAddress.line1,
+                                  line2: billingAddress.line2 ?? undefined,
+                                  city: billingAddress.city,
+                                  postal_code: billingAddress.postal_code,
+                              },
+                          }
+                        : undefined,
+                },
+            }}
         >
-            <PaymentForm
-                totalCents={totalCents}
-                currency={currency}
-                billingAddress={billingAddress}
-                customerEmail={customerEmail}
-            />
-        </Elements>
+            <PaymentForm totalCents={totalCents} currency={currency} />
+        </CheckoutElementsProvider>
     );
 }
 
 function PaymentForm({
     totalCents,
     currency,
-    billingAddress,
-    customerEmail,
 }: {
     totalCents: number;
     currency: string;
-    billingAddress: AddressProp | null;
-    customerEmail?: string | null;
 }) {
     const { t } = useLaravelReactI18n();
-    const { locale } = usePage().props;
-    const stripe = useStripe();
-    const elements = useElements();
+    const checkoutState = useCheckoutElements();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isElementReady, setIsElementReady] = useState(false);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+    if (checkoutState.type === 'error') {
+        return (
+            <p className="text-sm text-destructive">
+                {checkoutState.error.message ??
+                    t("Le formulaire de paiement n'a pas pu se charger.")}
+            </p>
+        );
+    }
+
     const onSubmit = async (event: React.FormEvent) => {
         event.preventDefault();
 
-        if (!stripe || !elements || !isElementReady) {
+        if (checkoutState.type !== 'success' || !isElementReady) {
             setErrorMessage(
                 t(
                     'Le formulaire de paiement est encore en cours de chargement, réessayez dans un instant.',
@@ -93,16 +110,12 @@ function PaymentForm({
         setIsSubmitting(true);
         setErrorMessage(null);
 
-        const { error } = await stripe.confirmPayment({
-            elements,
-            confirmParams: {
-                return_url: `${window.location.origin}${locale === 'en' ? '/en' : ''}/commande/confirmation`,
-            },
-        });
+        const result = await checkoutState.checkout.confirm();
 
-        if (error) {
+        if (result.type === 'error') {
             setErrorMessage(
-                error.message ?? t('Le paiement a échoué. Veuillez réessayer.'),
+                result.error.message ??
+                    t('Le paiement a échoué. Veuillez réessayer.'),
             );
             setIsSubmitting(false);
         }
@@ -110,7 +123,7 @@ function PaymentForm({
 
     return (
         <form onSubmit={onSubmit} className="space-y-6">
-            {!isElementReady && !loadError && (
+            {checkoutState.type === 'loading' && !loadError && (
                 <p className="text-sm text-muted-foreground">
                     {t('Chargement du formulaire de paiement…')}
                 </p>
@@ -121,24 +134,6 @@ function PaymentForm({
             )}
 
             <PaymentElement
-                options={{
-                    defaultValues: {
-                        billingDetails: {
-                            name: billingAddress?.full_name,
-                            email: customerEmail ?? undefined,
-                            phone: billingAddress?.phone ?? undefined,
-                            address: billingAddress
-                                ? {
-                                      line1: billingAddress.line1,
-                                      line2: billingAddress.line2 ?? '',
-                                      postal_code: billingAddress.postal_code,
-                                      city: billingAddress.city,
-                                      country: billingAddress.country_code,
-                                  }
-                                : undefined,
-                        },
-                    },
-                }}
                 onReady={() => setIsElementReady(true)}
                 onLoadError={(event) =>
                     setLoadError(
@@ -157,7 +152,9 @@ function PaymentForm({
             <Button
                 type="submit"
                 disabled={
-                    !stripe || !elements || !isElementReady || isSubmitting
+                    checkoutState.type !== 'success' ||
+                    !isElementReady ||
+                    isSubmitting
                 }
                 className="w-full"
             >

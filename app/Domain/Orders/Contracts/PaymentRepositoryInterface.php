@@ -23,7 +23,7 @@ interface PaymentRepositoryInterface
      */
     public function create(array $data): Payment;
 
-    public function updateAmount(Payment $payment, int $amountCents): void;
+    public function replaceProviderPaymentId(Payment $payment, string $providerPaymentId, int $amountCents): void;
 
     public function markSucceeded(Payment $payment): void;
 

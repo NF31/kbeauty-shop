@@ -2,6 +2,7 @@
 
 namespace App\Domain\Payments\Contracts;
 
+use App\Domain\Payments\CheckoutSessionResult;
 use App\Domain\Payments\PaymentIntentResult;
 use App\Domain\Payments\RefundResult;
 use App\Domain\Payments\WebhookEvent;
@@ -10,11 +11,9 @@ use Stripe\Exception\SignatureVerificationException;
 
 interface PaymentGatewayInterface
 {
-    public function createPaymentIntent(Order $order): PaymentIntentResult;
+    public function createCheckoutSession(Order $order, string $returnUrl): CheckoutSessionResult;
 
     public function retrievePaymentIntent(string $paymentIntentId): PaymentIntentResult;
-
-    public function updatePaymentIntentAmount(string $paymentIntentId, int $amountCents): PaymentIntentResult;
 
     public function refund(string $paymentIntentId, int $amountCents): RefundResult;
 

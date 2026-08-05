@@ -51,9 +51,9 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
         return Payment::query()->create($data);
     }
 
-    public function updateAmount(Payment $payment, int $amountCents): void
+    public function replaceProviderPaymentId(Payment $payment, string $providerPaymentId, int $amountCents): void
     {
-        $payment->update(['amount_cents' => $amountCents]);
+        $payment->update(['provider_payment_id' => $providerPaymentId, 'amount_cents' => $amountCents]);
     }
 
     public function markSucceeded(Payment $payment): void

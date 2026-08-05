@@ -2,6 +2,7 @@
 
 namespace App\Infrastructure\Payments;
 
+use App\Domain\Payments\CheckoutSessionResult;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Payments\PaymentIntentResult;
 use App\Domain\Payments\RefundResult;
@@ -18,48 +19,53 @@ class StripePaymentGateway implements PaymentGatewayInterface
     public function __construct(private readonly StripeClient $stripe) {}
 
     /**
-     * Crée un `PaymentIntent` Stripe pour le montant total de la commande.
-     * `automatic_payment_methods` laisse Stripe proposer CB/Apple Pay/Google Pay
-     * selon la configuration du dashboard (docs/ARCHITECTURE.md §4), sans lister
-     * les méthodes une à une côté code.
+     * Crée une `Checkout Session` Stripe (`ui_mode: elements`, docs/ARCHITECTURE.md
+     * §4) pour le montant total de la commande — un seul poste de facturation,
+     * Stripe ne voit jamais le détail du panier. `ui_mode: elements` garde le
+     * `PaymentElement` intégré sur la page du site (pas de redirection vers une
+     * page Stripe hébergée). Le tunnel n'accepte pas les invités
+     * (`checkout.auth`), `$order->user` est donc toujours défini.
      */
-    public function createPaymentIntent(Order $order): PaymentIntentResult
+    public function createCheckoutSession(Order $order, string $returnUrl): CheckoutSessionResult
     {
-        $intent = $this->stripe->paymentIntents->create([
-            'amount' => $order->total_cents,
-            'currency' => strtolower($order->currency),
-            'automatic_payment_methods' => ['enabled' => true],
+        $session = $this->stripe->checkout->sessions->create([
+            'mode' => 'payment',
+            'ui_mode' => 'elements',
+            'return_url' => $returnUrl,
+            'locale' => app()->getLocale() === 'en' ? 'en' : 'fr',
+            'customer_email' => $order->user?->email,
+            'line_items' => [[
+                'price_data' => [
+                    'currency' => strtolower($order->currency),
+                    'product_data' => ['name' => "Commande {$order->order_number}"],
+                    'unit_amount' => $order->total_cents,
+                ],
+                'quantity' => 1,
+            ]],
             'metadata' => [
                 'order_id' => (string) $order->id,
                 'order_number' => $order->order_number,
             ],
         ]);
 
-        return $this->toPaymentIntentResult($intent);
+        return new CheckoutSessionResult(
+            id: $session->id,
+            clientSecret: $session->client_secret,
+            paymentIntentId: $session->payment_intent,
+        );
     }
 
     /**
-     * Ré-utilisée quand une commande a déjà un `PaymentIntent` en attente
-     * (rechargement de la page de paiement) plutôt que d'en recréer un.
+     * Une `Checkout Session` en mode `payment` crée automatiquement un
+     * `PaymentIntent` sous-jacent (`session.payment_intent`) — c'est son id
+     * qui est stocké dans `payments.provider_payment_id`, jamais l'id de la
+     * session elle-même. Utilisé pour vérifier si un paiement est déjà
+     * confirmé (rechargement de la page, reprise de paiement 9.7) et par le
+     * webhook (`payment_intent.succeeded`).
      */
     public function retrievePaymentIntent(string $paymentIntentId): PaymentIntentResult
     {
         return $this->toPaymentIntentResult($this->stripe->paymentIntents->retrieve($paymentIntentId));
-    }
-
-    /**
-     * Le montant peut changer entre la création du `PaymentIntent` et le
-     * moment où le client paie (ex. modification du panier dans un autre
-     * onglet) — on resynchronise plutôt que de faire confiance à un montant
-     * potentiellement obsolète.
-     */
-    public function updatePaymentIntentAmount(string $paymentIntentId, int $amountCents): PaymentIntentResult
-    {
-        $intent = $this->stripe->paymentIntents->update($paymentIntentId, [
-            'amount' => $amountCents,
-        ]);
-
-        return $this->toPaymentIntentResult($intent);
     }
 
     /**

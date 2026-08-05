@@ -11,7 +11,7 @@ use App\Models\Order;
 
 /**
  * Étape "Payer" du récapitulatif (docs/ARCHITECTURE.md §4) : crée (ou
- * remet à jour) le `PaymentIntent` Stripe correspondant à la commande. La
+ * remplace) la `Checkout Session` Stripe correspondant à la commande. La
  * confirmation définitive du paiement n'arrive jamais ici mais via le
  * webhook Stripe (tâche 9.4, voir ConfirmOrderPayment).
  */
@@ -22,42 +22,43 @@ class ProcessCheckoutPayment
         private readonly PaymentRepositoryInterface $payments,
     ) {}
 
-    public function __invoke(Order $order): CheckoutPaymentResult
+    public function __invoke(Order $order, string $returnUrl): CheckoutPaymentResult
     {
         $payment = $this->payments->findLatestPending($order);
 
         if ($payment) {
             // Le statut local reste `pending` tant que le webhook (9.4) n'a
             // pas confirmé le paiement — mais côté Stripe le PaymentIntent
-            // peut déjà être `succeeded` (ex. rechargement de la page après
-            // un paiement réussi). Stripe refuse de modifier le montant d'un
-            // PaymentIntent qui n'est plus modifiable, donc on vérifie son
-            // statut réel avant de le mettre à jour.
+            // sous-jacent peut déjà être `succeeded` (ex. rechargement de la
+            // page après un paiement réussi).
             $intent = $this->gateway->retrievePaymentIntent($payment->provider_payment_id);
 
             if ($intent->status === 'succeeded') {
                 return CheckoutPaymentResult::alreadySucceeded();
             }
 
-            if (in_array($intent->status, ['requires_payment_method', 'requires_confirmation', 'requires_action'], true)) {
-                $intent = $this->gateway->updatePaymentIntentAmount($payment->provider_payment_id, $order->total_cents);
+            // Contrairement à l'ancien PaymentIntent, une Checkout Session ne
+            // peut pas être mise à jour en place (ex. montant modifié entre
+            // deux passages) — on en crée toujours une nouvelle tant que le
+            // paiement précédent n'a pas réussi, et on repointe la ligne
+            // Payment existante dessus.
+            $session = $this->gateway->createCheckoutSession($order, $returnUrl);
 
-                $this->payments->updateAmount($payment, $order->total_cents);
-            }
+            $this->payments->replaceProviderPaymentId($payment, $session->paymentIntentId, $order->total_cents);
 
-            return CheckoutPaymentResult::pending($intent);
+            return CheckoutPaymentResult::pending($session);
         }
 
-        $intent = $this->gateway->createPaymentIntent($order);
+        $session = $this->gateway->createCheckoutSession($order, $returnUrl);
 
         $this->payments->create([
             'order_id' => $order->id,
             'provider' => PaymentProvider::Stripe,
-            'provider_payment_id' => $intent->id,
+            'provider_payment_id' => $session->paymentIntentId,
             'status' => PaymentStatus::Pending,
             'amount_cents' => $order->total_cents,
         ]);
 
-        return CheckoutPaymentResult::pending($intent);
+        return CheckoutPaymentResult::pending($session);
     }
 }

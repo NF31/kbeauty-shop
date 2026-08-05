@@ -133,7 +133,7 @@ class CheckoutController extends Controller
 
         $request->session()->put(self::SESSION_ORDER_ID, $order->id);
 
-        $result = $processCheckoutPayment($order);
+        $result = $processCheckoutPayment($order, route($this->localizedRoute('storefront.checkout.confirmation')));
 
         if ($result->alreadySucceeded) {
             return redirect()->route($this->localizedRoute('storefront.checkout.confirmation'));
@@ -149,8 +149,7 @@ class CheckoutController extends Controller
                 'totalCents' => $order->total_cents,
                 'currency' => $order->currency,
             ],
-            'clientSecret' => $result->intent->clientSecret,
-            'stripeKey' => config('services.stripe.key'),
+            'clientSecret' => $result->session->clientSecret,
             // Préremplit le Payment Element avec ce qu'on a déjà collecté à
             // l'étape adresse — inutile de redemander nom/adresse/téléphone,
             // et l'email du compte s'il est connecté (pas encore capturé pour
@@ -232,7 +231,7 @@ class CheckoutController extends Controller
 
         $request->session()->put(self::SESSION_ORDER_ID, $order->id);
 
-        $result = $processCheckoutPayment($order);
+        $result = $processCheckoutPayment($order, route($this->localizedRoute('storefront.checkout.confirmation')));
 
         if ($result->alreadySucceeded) {
             return redirect()->route($this->localizedRoute('storefront.checkout.confirmation'));
@@ -265,8 +264,7 @@ class CheckoutController extends Controller
                 'totalCents' => $order->total_cents,
                 'currency' => $order->currency,
             ],
-            'clientSecret' => $result->intent->clientSecret,
-            'stripeKey' => config('services.stripe.key'),
+            'clientSecret' => $result->session->clientSecret,
             'customerEmail' => $request->user()->email,
         ]);
     }
