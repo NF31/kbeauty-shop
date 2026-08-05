@@ -5,6 +5,7 @@ import type { ProductGalleryImage } from '@/components/storefront/product-galler
 import { ProductGallery } from '@/components/storefront/product-gallery';
 import { QuantitySelector } from '@/components/storefront/quantity-selector';
 import { SeoHead } from '@/components/storefront/seo-head';
+import { WishlistButton } from '@/components/storefront/wishlist-button';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -13,6 +14,7 @@ import { localizedPath } from '@/lib/locale-path';
 type ProductPageProps = {
     product: {
         id: number;
+        slug: string;
         name: string;
         short_description: string | null;
         description: string;
@@ -25,6 +27,7 @@ type ProductPageProps = {
     compareAtPriceCents: number | null;
     stockQuantity: number | null;
     images: ProductGalleryImage[];
+    isWishlisted: boolean;
     seo: { title: string; description: string; image: string | null };
 };
 
@@ -39,6 +42,7 @@ export default function ProductPage({
     compareAtPriceCents,
     stockQuantity,
     images,
+    isWishlisted,
     seo,
 }: ProductPageProps) {
     const { t } = useLaravelReactI18n();
@@ -188,13 +192,20 @@ export default function ProductPage({
                                 max={stockQuantity ?? 1}
                             />
 
-                            <Button
-                                size="lg"
-                                onClick={addToCart}
-                                disabled={isAdding || !defaultVariantId}
-                            >
-                                {t('Ajouter au panier')}
-                            </Button>
+                            <div className="flex gap-2">
+                                <Button
+                                    size="lg"
+                                    className="flex-1"
+                                    onClick={addToCart}
+                                    disabled={isAdding || !defaultVariantId}
+                                >
+                                    {t('Ajouter au panier')}
+                                </Button>
+                                <WishlistButton
+                                    productSlug={product.slug}
+                                    isWishlisted={isWishlisted}
+                                />
+                            </div>
 
                             {addError && (
                                 <p className="text-sm text-destructive">
@@ -203,12 +214,18 @@ export default function ProductPage({
                             )}
                         </div>
                     ) : (
-                        <Badge
-                            variant="outline"
-                            className="w-fit text-muted-foreground"
-                        >
-                            {t('Rupture de stock')}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                            <Badge
+                                variant="outline"
+                                className="w-fit text-muted-foreground"
+                            >
+                                {t('Rupture de stock')}
+                            </Badge>
+                            <WishlistButton
+                                productSlug={product.slug}
+                                isWishlisted={isWishlisted}
+                            />
+                        </div>
                     )}
                 </div>
             </div>

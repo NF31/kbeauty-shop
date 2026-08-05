@@ -12,6 +12,7 @@ use App\Http\Controllers\Storefront\LegalController;
 use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\SkinGuideController;
+use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
 use Spatie\Honeypot\ProtectAgainstSpam;
 
@@ -42,6 +43,23 @@ Route::middleware(['locale:fr', 'throttle:30,1,storefront-cart'])->group(functio
     Route::delete('panier/{cartItem}', [CartController::class, 'destroy'])
         ->name('storefront.cart.destroy');
 });
+
+// Favoris (26.3) : ajout/retrait reserves aux comptes connectes (pas de wishlist
+// invite, contrairement au panier) - throttle par utilisateur pour eviter le
+// spam de clics sur le coeur d'une fiche produit.
+Route::middleware(['auth', 'locale:fr', 'throttle:30,1,storefront-wishlist'])->group(function () {
+    Route::post('favoris/{product:slug}', [WishlistController::class, 'store'])
+        ->name('storefront.wishlist.store');
+
+    Route::delete('favoris/{product:slug}', [WishlistController::class, 'destroy'])
+        ->name('storefront.wishlist.destroy');
+});
+
+// Lien de partage public (26.3) : lecture seule, pas d'auth requise - n'importe
+// qui en possession du token peut consulter la wishlist, jamais la modifier.
+Route::get('favoris/partages/{token}', [WishlistController::class, 'public'])
+    ->middleware('locale:fr')
+    ->name('storefront.wishlist.public');
 
 // Formulaire newsletter du footer (13.2), accessible depuis n'importe quelle page - throttle
 // dedie + honeypot (13.4) : les champs sont fournis via le prop Inertia partage 'honeypot'
@@ -112,6 +130,17 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
         Route::delete('panier/{cartItem}', [CartController::class, 'destroy'])
             ->name('storefront.cart.destroy');
     });
+
+    Route::middleware(['auth', 'throttle:30,1,storefront-wishlist'])->group(function () {
+        Route::post('favoris/{product:slug}', [WishlistController::class, 'store'])
+            ->name('storefront.wishlist.store');
+
+        Route::delete('favoris/{product:slug}', [WishlistController::class, 'destroy'])
+            ->name('storefront.wishlist.destroy');
+    });
+
+    Route::get('favoris/partages/{token}', [WishlistController::class, 'public'])
+        ->name('storefront.wishlist.public');
 
     Route::middleware(['throttle:10,1,storefront-newsletter', ProtectAgainstSpam::class])->group(function () {
         Route::post('newsletter', [NewsletterController::class, 'store'])
@@ -194,6 +223,12 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
             Route::delete('mon-compte/adresses/{address}', [AccountAddressController::class, 'destroy'])
                 ->name('storefront.account.addresses.destroy');
         });
+
+        Route::get('mon-compte/favoris', [WishlistController::class, 'index'])
+            ->name('storefront.account.wishlist.index');
+
+        Route::post('mon-compte/favoris/partager', [WishlistController::class, 'regenerateShareLink'])
+            ->name('storefront.account.wishlist.share');
     });
 });
 
@@ -263,4 +298,10 @@ Route::middleware(['auth', 'locale:fr'])->group(function () {
         Route::delete('mon-compte/adresses/{address}', [AccountAddressController::class, 'destroy'])
             ->name('storefront.account.addresses.destroy');
     });
+
+    Route::get('mon-compte/favoris', [WishlistController::class, 'index'])
+        ->name('storefront.account.wishlist.index');
+
+    Route::post('mon-compte/favoris/partager', [WishlistController::class, 'regenerateShareLink'])
+        ->name('storefront.account.wishlist.share');
 });

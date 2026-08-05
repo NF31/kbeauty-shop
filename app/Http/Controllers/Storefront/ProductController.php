@@ -6,13 +6,14 @@ use App\Enums\ProductStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Product;
 use App\Services\CloudinaryService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ProductController extends Controller
 {
-    public function show(Product $product, CloudinaryService $cloudinary): Response
+    public function show(Request $request, Product $product, CloudinaryService $cloudinary): Response
     {
         abort_if($product->status !== ProductStatus::Published, 404);
 
@@ -30,6 +31,7 @@ class ProductController extends Controller
         return Inertia::render('storefront/product', [
             'product' => [
                 'id' => $product->id,
+                'slug' => $product->slug,
                 'name' => $product->name,
                 'short_description' => $product->short_description,
                 'description' => $product->description,
@@ -42,6 +44,10 @@ class ProductController extends Controller
             'compareAtPriceCents' => $defaultVariant?->compare_at_price_cents,
             'stockQuantity' => $defaultVariant?->stock_quantity,
             'images' => $images,
+            'isWishlisted' => $request->user()
+                ?->wishlists()
+                ->where('product_id', $product->id)
+                ->exists() ?? false,
             'seo' => [
                 'title' => $product->meta_title ?? $product->name,
                 'description' => $product->meta_description

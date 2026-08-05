@@ -1,5 +1,6 @@
 import { Link, router } from '@inertiajs/react';
 import {
+    Heart,
     LayoutDashboard,
     LogOut,
     MapPin,
@@ -71,6 +72,17 @@ export function UserMenuContent({ user }: Props) {
                     >
                         <MapPin className="mr-2" />
                         Mes adresses
+                    </Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                    <Link
+                        className="block w-full cursor-pointer"
+                        href={accountRoutes.wishlist.index()}
+                        prefetch
+                        onClick={cleanup}
+                    >
+                        <Heart className="mr-2" />
+                        Mes favoris
                     </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem asChild>
