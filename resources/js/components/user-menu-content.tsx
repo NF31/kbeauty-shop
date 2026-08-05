@@ -1,4 +1,4 @@
-import { Link, router } from '@inertiajs/react';
+import { Link, router, usePage } from '@inertiajs/react';
 import {
     Heart,
     LayoutDashboard,
@@ -6,6 +6,7 @@ import {
     MapPin,
     Package,
     Settings,
+    Shield,
 } from 'lucide-react';
 import {
     DropdownMenuGroup,
@@ -16,6 +17,7 @@ import {
 import { UserInfo } from '@/components/user-info';
 import { useMobileNavigation } from '@/hooks/use-mobile-navigation';
 import { dashboard, logout } from '@/routes';
+import admin from '@/routes/admin';
 import { edit } from '@/routes/profile';
 import accountRoutes from '@/routes/storefront/account';
 import type { User } from '@/types';
@@ -26,6 +28,10 @@ type Props = {
 
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
+    const { auth } = usePage().props;
+    const canAccessAdmin = ['admin', 'staff', 'support'].some((role) =>
+        auth.roles.includes(role),
+    );
 
     const handleLogout = () => {
         cleanup();
@@ -96,6 +102,19 @@ export function UserMenuContent({ user }: Props) {
                         Settings
                     </Link>
                 </DropdownMenuItem>
+                {canAccessAdmin && (
+                    <DropdownMenuItem asChild>
+                        <Link
+                            className="block w-full cursor-pointer"
+                            href={admin.dashboard()}
+                            prefetch
+                            onClick={cleanup}
+                        >
+                            <Shield className="mr-2" />
+                            Back-office
+                        </Link>
+                    </DropdownMenuItem>
+                )}
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
