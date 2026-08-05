@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Payments\CheckoutSessionResult;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Payments\PaymentIntentResult;
 use App\Enums\OrderStatus;
@@ -12,6 +13,15 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
+
+function fakeCheckoutSession(string $paymentIntentId = 'pi_fake123', string $sessionId = 'cs_fake123'): CheckoutSessionResult
+{
+    return new CheckoutSessionResult(
+        id: $sessionId,
+        clientSecret: $sessionId.'_secret',
+        paymentIntentId: $paymentIntentId,
+    );
+}
 
 function fakePaymentIntent(string $id = 'pi_fake123', string $status = 'requires_payment_method'): PaymentIntentResult
 {
@@ -57,12 +67,12 @@ test('a user is redirected to /commande if addresses are not set before paying',
     expect(Order::query()->count())->toBe(0);
 });
 
-test('paying creates a pending order, its items and a payment tied to a Stripe PaymentIntent', function () {
+test('paying creates a pending order, its items and a payment tied to a Stripe Checkout Session', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5, 'price_cents' => 2500]);
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent());
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession());
     });
 
     $this->actingAs($user)
@@ -71,7 +81,7 @@ test('paying creates a pending order, its items and a payment tied to a Stripe P
         ->assertInertia(fn ($page) => $page
             ->component('storefront/checkout')
             ->where('step', 'payment')
-            ->where('clientSecret', 'pi_fake123_secret')
+            ->where('clientSecret', 'cs_fake123_secret')
         );
 
     $order = Order::query()->sole();
@@ -90,10 +100,12 @@ test('reloading the payment step with a GET request re-renders it instead of ret
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
+    // Une Checkout Session ne peut pas être mise à jour en place (contrairement
+    // à l'ancien PaymentIntent) : chaque passage tant que le paiement n'a pas
+    // réussi en crée une nouvelle.
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent());
+        $mock->shouldReceive('createCheckoutSession')->twice()->andReturn(fakeCheckoutSession());
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent());
-        $mock->shouldReceive('updatePaymentIntentAmount')->once()->andReturn(fakePaymentIntent());
     });
 
     $this->actingAs($user)->post('/commande/paiement');
@@ -114,9 +126,8 @@ test('paying twice reuses the same pending order instead of creating a duplicate
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
+        $mock->shouldReceive('createCheckoutSession')->twice()->andReturn(fakeCheckoutSession('pi_first'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
-        $mock->shouldReceive('updatePaymentIntentAmount')->once()->andReturn(fakePaymentIntent('pi_first'));
     });
 
     $this->actingAs($user)->post('/commande/paiement');
@@ -131,7 +142,7 @@ test('visiting the confirmation page empties the cart once the PaymentIntent has
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done'));
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession('pi_done'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done', 'succeeded'));
     });
 
@@ -151,7 +162,7 @@ test('a new cart started after a completed order does not reuse the old paid ord
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done'));
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession('pi_done'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_done', 'succeeded'));
     });
 
@@ -202,7 +213,7 @@ test('paying for a product with no english translation still snapshots a product
     ]);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent());
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession());
     });
 
     $this->actingAs($user)
@@ -219,9 +230,8 @@ test('a customer can resume payment on their own pending order', function () {
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
+        $mock->shouldReceive('createCheckoutSession')->twice()->andReturn(fakeCheckoutSession('pi_first'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
-        $mock->shouldReceive('updatePaymentIntentAmount')->once()->andReturn(fakePaymentIntent('pi_first'));
     });
 
     $this->actingAs($user)->post('/commande/paiement');
@@ -233,7 +243,7 @@ test('a customer can resume payment on their own pending order', function () {
         ->assertInertia(fn ($page) => $page
             ->component('storefront/checkout')
             ->where('step', 'payment')
-            ->where('clientSecret', 'pi_first_secret')
+            ->where('clientSecret', 'cs_fake123_secret')
             ->where('order.orderNumber', $order->order_number)
         );
 
@@ -266,9 +276,8 @@ test('paying again after the PaymentIntent already succeeded redirects to the co
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_paid'));
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession('pi_paid'));
         $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_paid', 'succeeded'));
-        $mock->shouldNotReceive('updatePaymentIntentAmount');
     });
 
     $this->actingAs($user)->post('/commande/paiement');

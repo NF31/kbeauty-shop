@@ -264,8 +264,11 @@ traduire du texte provisoire). Détail des routes déjà traduites : `docs/FEATU
 
 ## 4. Flux de paiement (Stripe)
 
-1. Le client valide le récapitulatif → `POST /checkout` (contrôleur Inertia) crée l'`Order`
-   en statut `pending` + un `PaymentIntent` Stripe (Payment Element : CB, Apple Pay, Google Pay).
+1. Le client valide le récapitulatif → `POST /commande/paiement` (contrôleur Inertia) crée l'`Order`
+   en statut `pending` + une `Checkout Session` Stripe (`ui_mode: elements`, migration 2026-08-06 —
+   remplace l'ancien PaymentIntent brut, garde le Payment Element intégré sur la page, pas de
+   redirection vers une page Stripe hébergée). La session crée automatiquement un `PaymentIntent`
+   sous-jacent (CB, Apple Pay, Google Pay) dont l'id est stocké dans `payments.provider_payment_id`.
 2. Le paiement est confirmé côté client (Stripe.js), puis **confirmé côté serveur uniquement via
    webhook Stripe** (`payment_intent.succeeded`) — jamais faire confiance au retour navigateur seul.
 3. Le webhook met à jour `Order.status = paid`, `Payment.status = succeeded`, déclenche un Job

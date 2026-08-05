@@ -6,7 +6,7 @@ final readonly class CheckoutPaymentResult
 {
     private function __construct(
         public bool $alreadySucceeded,
-        public ?PaymentIntentResult $intent,
+        public ?CheckoutSessionResult $session,
     ) {}
 
     public static function alreadySucceeded(): self
@@ -14,8 +14,8 @@ final readonly class CheckoutPaymentResult
         return new self(true, null);
     }
 
-    public static function pending(PaymentIntentResult $intent): self
+    public static function pending(CheckoutSessionResult $session): self
     {
-        return new self(false, $intent);
+        return new self(false, $session);
     }
 }
