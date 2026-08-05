@@ -11,6 +11,8 @@ declare module 'react' {
 declare global {
     interface Window {
         dataLayer?: Record<string, unknown>[];
+        $crisp?: unknown[];
+        CRISP_WEBSITE_ID?: string;
     }
 }
 
@@ -20,6 +22,7 @@ declare module '@inertiajs/core' {
             name: string;
             appUrl: string;
             gtmId: string | null;
+            crispWebsiteId: string | null;
             auth: Auth;
             locale: string;
             sidebarOpen: boolean;
