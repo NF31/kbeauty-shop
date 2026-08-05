@@ -24,8 +24,14 @@ class HealthServiceProvider extends ServiceProvider
             QueueCheck::new(),
             HorizonCheck::new(),
             UsedDiskSpaceCheck::new(),
+            // ->locatedAt() est indispensable : BackupsCheck liste uniquement la
+            // racine du disque (pas de recursion), or spatie/laravel-backup range
+            // chaque sauvegarde dans un sous-dossier nomme d'apres config('backup.backup.name')
+            // (ex. "kbeauty-shop/2026-08-05-...zip") - sans ce glob, le check
+            // ne trouve jamais aucune sauvegarde et echoue toujours en "No backups found".
             BackupsCheck::new()
                 ->onDisk('backups')
+                ->locatedAt(config('backup.backup.name'))
                 ->youngestBackShouldHaveBeenMadeBefore(now()->subDay()),
         ]);
     }

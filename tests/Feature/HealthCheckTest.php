@@ -3,12 +3,14 @@
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Health\Checks\Checks\BackupsCheck;
 use Spatie\Health\Checks\Checks\DatabaseCheck;
 use Spatie\Health\Checks\Checks\HorizonCheck;
 use Spatie\Health\Checks\Checks\QueueCheck;
 use Spatie\Health\Checks\Checks\RedisCheck;
 use Spatie\Health\Checks\Checks\UsedDiskSpaceCheck;
+use Spatie\Health\Enums\Status;
 use Spatie\Health\Facades\Health;
 
 uses(RefreshDatabase::class);
@@ -46,4 +48,19 @@ test('the admin role can view the health dashboard', function () {
     $admin->assignRole('admin');
 
     $this->actingAs($admin)->get('/admin/health')->assertOk();
+});
+
+test('the backups check finds a backup nested in the app-name subfolder', function () {
+    Storage::fake('backups');
+    Storage::disk('backups')->put(
+        config('backup.backup.name').'/2026-08-05-00-23-33.zip',
+        'contenu-de-test',
+    );
+
+    $result = BackupsCheck::new()
+        ->onDisk('backups')
+        ->locatedAt(config('backup.backup.name'))
+        ->run();
+
+    expect($result->status)->toBe(Status::ok());
 });
