@@ -234,6 +234,33 @@ test('payment_intent.succeeded dispatches the Klaviyo Placed Order event job', f
     Bus::assertDispatched(SendPlacedOrderEventToKlaviyo::class, fn ($job) => $job->order->is($order));
 });
 
+test('a late/duplicate succeeded event on an already refunded payment does not revert the order to paid', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
+    $order = Order::factory()->create(['status' => OrderStatus::Refunded]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_variant_id' => $variant->id,
+        'quantity' => 3,
+    ]);
+    Payment::factory()->create([
+        'order_id' => $order->id,
+        'provider_payment_id' => 'pi_fake123',
+        'status' => PaymentStatus::Refunded,
+    ]);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
+            fakeWebhookEvent('payment_intent.succeeded', 'pi_fake123')
+        );
+    });
+
+    $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])
+        ->assertOk();
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Refunded);
+    expect($variant->fresh()->stock_quantity)->toBe(10);
+});
+
 test('a succeeded PaymentIntent with no matching Payment is acknowledged without error', function () {
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('verifyWebhookSignature')->once()->andReturn(
