@@ -9,9 +9,11 @@ use App\Domain\Orders\Contracts\OrderRepositoryInterface;
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\AddressType;
+use App\Enums\OrderStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutAddressRequest;
 use App\Models\Address;
+use App\Models\Order;
 use App\Services\CartService;
 use App\Services\CloudinaryService;
 use App\Support\CartPresenter;
@@ -208,6 +210,64 @@ class CheckoutController extends Controller
                 'value' => $order->total_cents / 100,
                 'currency' => $order->currency,
             ] : null,
+        ]);
+    }
+
+    /**
+     * Reprise du paiement d'une commande existante restée en `pending`
+     * (carte refusée, 3D Secure abandonné, onglet fermé...), depuis l'espace
+     * client. Ne repasse ni par le panier ni par l'étape adresse — déjà
+     * collectées lors du premier passage — et relit/recrée directement le
+     * PaymentIntent Stripe via ProcessCheckoutPayment (idempotent).
+     */
+    public function resume(Request $request, Order $order, ProcessCheckoutPayment $processCheckoutPayment): Response|RedirectResponse
+    {
+        abort_if($order->user_id !== $request->user()->id, 403);
+
+        if ($order->status !== OrderStatus::Pending) {
+            return redirect()->route($this->localizedRoute('storefront.account.orders.show'), $order);
+        }
+
+        $order->loadMissing(['items', 'shippingAddress', 'billingAddress']);
+
+        $request->session()->put(self::SESSION_ORDER_ID, $order->id);
+
+        $result = $processCheckoutPayment($order);
+
+        if ($result->alreadySucceeded) {
+            return redirect()->route($this->localizedRoute('storefront.checkout.confirmation'));
+        }
+
+        $formatAddress = fn (?Address $address) => $address ? [
+            'fullName' => $address->full_name,
+            'line1' => $address->line1,
+            'line2' => $address->line2,
+            'postalCode' => $address->postal_code,
+            'city' => $address->city,
+            'countryCode' => $address->country_code,
+            'phone' => $address->phone,
+        ] : null;
+
+        return Inertia::render('storefront/checkout', [
+            'step' => 'payment',
+            'cart' => [
+                'subtotalCents' => $order->subtotal_cents,
+                'totalCents' => $order->total_cents,
+                'currency' => $order->currency,
+                'itemCount' => $order->items->sum('quantity'),
+            ],
+            'savedShippingAddresses' => [],
+            'savedBillingAddresses' => [],
+            'shippingAddress' => $formatAddress($order->shippingAddress),
+            'billingAddress' => $formatAddress($order->billingAddress),
+            'order' => [
+                'orderNumber' => $order->order_number,
+                'totalCents' => $order->total_cents,
+                'currency' => $order->currency,
+            ],
+            'clientSecret' => $result->intent->clientSecret,
+            'stripeKey' => config('services.stripe.key'),
+            'customerEmail' => $request->user()->email,
         ]);
     }
 

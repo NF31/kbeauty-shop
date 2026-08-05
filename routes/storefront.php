@@ -105,6 +105,9 @@ Route::middleware(['locale:fr', 'checkout.auth', 'throttle:20,1,storefront-check
 
     Route::get('commande/confirmation', [CheckoutController::class, 'confirmation'])
         ->name('storefront.checkout.confirmation');
+
+    Route::get('commande/{order}/reprendre', [CheckoutController::class, 'resume'])
+        ->name('storefront.checkout.resume');
 });
 
 // Pilote i18n (25.1) puis extension au tunnel d'achat : version anglaise des
@@ -167,6 +170,9 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
 
         Route::get('commande/confirmation', [CheckoutController::class, 'confirmation'])
             ->name('storefront.checkout.confirmation');
+
+        Route::get('commande/{order}/reprendre', [CheckoutController::class, 'resume'])
+            ->name('storefront.checkout.resume');
     });
 
     Route::get('marques', [BrandController::class, 'index'])

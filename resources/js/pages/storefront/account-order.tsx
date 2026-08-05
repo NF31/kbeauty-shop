@@ -132,6 +132,17 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                             <p className="text-sm font-medium">
                                 {order.statusLabel}
                             </p>
+                            {order.status === 'pending' && (
+                                <Link
+                                    href={localizedPath(
+                                        `/commande/${order.id}/reprendre`,
+                                        locale,
+                                    )}
+                                    className="text-sm text-primary underline"
+                                >
+                                    {t('Continuer le paiement')}
+                                </Link>
+                            )}
                             {order.hasInvoice && (
                                 <a
                                     href={localizedPath(
