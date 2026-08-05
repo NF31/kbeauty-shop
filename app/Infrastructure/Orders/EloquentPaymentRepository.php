@@ -56,9 +56,13 @@ class EloquentPaymentRepository implements PaymentRepositoryInterface
         $payment->update(['provider_payment_id' => $providerPaymentId, 'amount_cents' => $amountCents]);
     }
 
-    public function markSucceeded(Payment $payment): void
+    public function markSucceeded(Payment $payment, string $paymentIntentId): void
     {
-        $payment->update(['status' => PaymentStatus::Succeeded, 'paid_at' => now()]);
+        $payment->update([
+            'status' => PaymentStatus::Succeeded,
+            'paid_at' => now(),
+            'provider_payment_id' => $paymentIntentId,
+        ]);
     }
 
     public function markRefunded(Payment $payment): void

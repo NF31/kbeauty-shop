@@ -10,6 +10,7 @@ use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\AddressType;
 use App\Enums\OrderStatus;
+use App\Enums\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Storefront\StoreCheckoutAddressRequest;
 use App\Models\Address;
@@ -175,9 +176,24 @@ class CheckoutController extends Controller
         $paymentConfirmed = false;
 
         if ($order) {
-            $payment = $payments->findLatest($order);
+            if ($order->status === OrderStatus::Paid) {
+                // Le webhook (9.4) a déjà confirmé le paiement — inutile
+                // d'interroger Stripe, et surtout `provider_payment_id` est
+                // désormais un id de PaymentIntent, pas de Checkout Session
+                // (cf. ConfirmOrderPayment), donc `retrieveCheckoutSession`
+                // échouerait dessus.
+                $paymentConfirmed = true;
+            } else {
+                $payment = $payments->findLatest($order);
 
-            $paymentConfirmed = $payment && $gateway->retrievePaymentIntent($payment->provider_payment_id)->status === 'succeeded';
+                // Tant que le paiement est `pending`, `provider_payment_id`
+                // est toujours un id de Checkout Session (jamais un
+                // PaymentIntent) — c'est le seul cas où on peut encore
+                // interroger Stripe ici sans risquer un mauvais type d'objet.
+                $paymentConfirmed = $payment
+                    && $payment->status === PaymentStatus::Pending
+                    && $gateway->retrieveCheckoutSession($payment->provider_payment_id)->paymentStatus === 'paid';
+            }
 
             if ($paymentConfirmed) {
                 $cartService->findExisting($request)?->items()->delete();

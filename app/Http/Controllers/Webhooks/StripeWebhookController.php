@@ -16,6 +16,16 @@ use Stripe\Exception\SignatureVerificationException;
  */
 class StripeWebhookController extends Controller
 {
+    /**
+     * `checkout.session.completed` est l'événement principal ; on écoute
+     * aussi `checkout.session.async_payment_succeeded` pour les moyens de
+     * paiement à confirmation différée (ex. virements SEPA) où le premier
+     * événement arrive avec `payment_status: unpaid`. Dans les deux cas, seul
+     * `payment_status === 'paid'` déclenche la confirmation (recommandation
+     * Stripe).
+     */
+    private const PAYMENT_SUCCEEDED_EVENTS = ['checkout.session.completed', 'checkout.session.async_payment_succeeded'];
+
     public function __invoke(Request $request, PaymentGatewayInterface $gateway, ConfirmOrderPayment $confirmOrderPayment): Response
     {
         $signature = $request->header('Stripe-Signature');
@@ -30,8 +40,13 @@ class StripeWebhookController extends Controller
             return response('Signature invalide.', 400);
         }
 
-        if ($event->type === 'payment_intent.succeeded' && $event->paymentIntentId) {
-            $confirmOrderPayment($event->paymentIntentId);
+        if (
+            in_array($event->type, self::PAYMENT_SUCCEEDED_EVENTS, true)
+            && $event->paymentStatus === 'paid'
+            && $event->sessionId
+            && $event->paymentIntentId
+        ) {
+            $confirmOrderPayment($event->sessionId, $event->paymentIntentId);
         }
 
         return response('', 200);
