@@ -281,86 +281,99 @@ export default function OrderShow({
 
                 <div className="rounded-lg border p-4">
                     <h2 className="mb-3 font-medium">Statut de la commande</h2>
-                    <Form
-                        {...OrderController.updateStatus.form(order.id)}
-                        className="flex flex-wrap items-end gap-3"
-                    >
-                        {({ processing, errors, submit }) => (
-                            <>
-                                <div className="grid gap-2">
-                                    <Label htmlFor="status">Statut</Label>
-                                    <Select
-                                        name="status"
-                                        defaultValue={order.status}
-                                    >
-                                        <SelectTrigger
-                                            id="status"
-                                            className="w-48"
+                    {order.status === 'refunded' ? (
+                        <p className="text-sm text-muted-foreground">
+                            Commande remboursée : le statut ne peut plus être
+                            modifié.
+                        </p>
+                    ) : (
+                        <Form
+                            {...OrderController.updateStatus.form(order.id)}
+                            className="flex flex-wrap items-end gap-3"
+                        >
+                            {({ processing, errors, submit }) => (
+                                <>
+                                    <div className="grid gap-2">
+                                        <Label htmlFor="status">Statut</Label>
+                                        <Select
+                                            name="status"
+                                            defaultValue={order.status}
                                         >
-                                            <SelectValue />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {statusOptions.map((option) => (
-                                                <SelectItem
-                                                    key={option.value}
-                                                    value={option.value}
-                                                >
-                                                    {option.label}
-                                                </SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                    <InputError message={errors.status} />
-                                </div>
-                                <Button
-                                    type="button"
-                                    disabled={processing}
-                                    onClick={() => setStatusConfirmOpen(true)}
-                                >
-                                    Mettre à jour
-                                </Button>
+                                            <SelectTrigger
+                                                id="status"
+                                                className="w-48"
+                                            >
+                                                <SelectValue />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {statusOptions.map((option) => (
+                                                    <SelectItem
+                                                        key={option.value}
+                                                        value={option.value}
+                                                    >
+                                                        {option.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <InputError message={errors.status} />
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        disabled={processing}
+                                        onClick={() =>
+                                            setStatusConfirmOpen(true)
+                                        }
+                                    >
+                                        Mettre à jour
+                                    </Button>
 
-                                <Dialog
-                                    open={statusConfirmOpen}
-                                    onOpenChange={setStatusConfirmOpen}
-                                >
-                                    <DialogContent>
-                                        <DialogHeader>
-                                            <DialogTitle>
-                                                Confirmer le changement de
-                                                statut
-                                            </DialogTitle>
-                                            <DialogDescription>
-                                                Confirmer le passage de cette
-                                                commande au nouveau statut
-                                                sélectionné ?
-                                            </DialogDescription>
-                                        </DialogHeader>
-                                        <DialogFooter>
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() =>
-                                                    setStatusConfirmOpen(false)
-                                                }
-                                            >
-                                                Annuler
-                                            </Button>
-                                            <Button
-                                                type="button"
-                                                onClick={() => {
-                                                    setStatusConfirmOpen(false);
-                                                    submit();
-                                                }}
-                                            >
-                                                Confirmer
-                                            </Button>
-                                        </DialogFooter>
-                                    </DialogContent>
-                                </Dialog>
-                            </>
-                        )}
-                    </Form>
+                                    <Dialog
+                                        open={statusConfirmOpen}
+                                        onOpenChange={setStatusConfirmOpen}
+                                    >
+                                        <DialogContent>
+                                            <DialogHeader>
+                                                <DialogTitle>
+                                                    Confirmer le changement de
+                                                    statut
+                                                </DialogTitle>
+                                                <DialogDescription>
+                                                    Confirmer le passage de
+                                                    cette commande au nouveau
+                                                    statut sélectionné ?
+                                                </DialogDescription>
+                                            </DialogHeader>
+                                            <DialogFooter>
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() =>
+                                                        setStatusConfirmOpen(
+                                                            false,
+                                                        )
+                                                    }
+                                                >
+                                                    Annuler
+                                                </Button>
+                                                <Button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setStatusConfirmOpen(
+                                                            false,
+                                                        );
+                                                        submit();
+                                                    }}
+                                                >
+                                                    Confirmer
+                                                </Button>
+                                            </DialogFooter>
+                                        </DialogContent>
+                                    </Dialog>
+                                </>
+                            )}
+                        </Form>
+                    )}
                 </div>
 
                 <div className="rounded-lg border p-4">

@@ -79,6 +79,16 @@ test('the refunded status cannot be set manually', function () {
         ->assertSessionHasErrors('status');
 });
 
+test('an already refunded order status cannot be changed to something else', function () {
+    $order = Order::factory()->create(['status' => OrderStatus::Refunded]);
+
+    $this->actingAs($this->admin)
+        ->patch("/admin/orders/{$order->id}/status", ['status' => OrderStatus::Shipped->value])
+        ->assertSessionHasErrors('status');
+
+    expect($order->fresh()->status)->toBe(OrderStatus::Refunded);
+});
+
 test('a partial refund does not change the order or payment status', function () {
     Notification::fake();
     mockStripeRefund();
