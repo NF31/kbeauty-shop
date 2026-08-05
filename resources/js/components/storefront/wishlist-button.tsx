@@ -2,6 +2,11 @@ import { router, usePage } from '@inertiajs/react';
 import { Heart } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import {
+    Tooltip,
+    TooltipContent,
+    TooltipTrigger,
+} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { login } from '@/routes';
 import { destroy, store } from '@/routes/storefront/wishlist';
@@ -28,18 +33,25 @@ export function WishlistButton({
 
     if (!auth.user) {
         return (
-            <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                className={cn('shrink-0', className)}
-                aria-label="Se connecter pour ajouter aux favoris"
-                asChild
-            >
-                <a href={login().url}>
-                    <Heart className="size-5" />
-                </a>
-            </Button>
+            <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="icon"
+                        className={cn('shrink-0', className)}
+                        aria-label="Se connecter pour ajouter aux favoris"
+                        asChild
+                    >
+                        <a href={login().url}>
+                            <Heart className="size-5" />
+                        </a>
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                    Connecte-toi pour ajouter ce produit à tes favoris
+                </TooltipContent>
+            </Tooltip>
         );
     }
 
