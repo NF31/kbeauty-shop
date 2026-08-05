@@ -1,9 +1,12 @@
 <?php
 
 use App\Application\Cart\UseCases\SendAbandonedCartReminders;
+use App\Enums\OrderStatus;
 use App\Models\Cart;
 use App\Models\CartItem;
+use App\Models\Order;
 use App\Models\ProductVariant;
+use App\Models\User;
 use App\Notifications\AbandonedCartReminder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Notification;
@@ -87,6 +90,40 @@ test('a cart touched again after a reminder is reminded a second time once inact
 
     expect($sent)->toBe(1);
     Notification::assertSentTo($cart->fresh()->user, AbandonedCartReminder::class);
+});
+
+test('the reminder links to the cart when no payment was ever started', function () {
+    $user = User::factory()->create();
+    $mail = (new AbandonedCartReminder(Cart::factory()->make(['user_id' => $user->id])))->toMail($user);
+
+    expect($mail->actionText)->toBe('Reprendre mon panier');
+    expect($mail->actionUrl)->toContain('/panier');
+});
+
+test('the reminder links to resuming payment when the customer already started checkout', function () {
+    $user = User::factory()->create();
+    $order = Order::factory()->create(['user_id' => $user->id, 'status' => OrderStatus::Pending]);
+    $mail = (new AbandonedCartReminder(Cart::factory()->make(['user_id' => $user->id]), $order))->toMail($user);
+
+    expect($mail->actionText)->toBe('Continuer le paiement');
+    expect($mail->actionUrl)->toContain("/commande/{$order->id}/reprendre");
+});
+
+test('a cart abandoned after starting checkout points to the pending order instead of the cart', function () {
+    Notification::fake();
+
+    $cart = Cart::factory()->forUser()->create();
+    CartItem::factory()->for($cart)->create();
+    $cart->items()->update(['updated_at' => now()->subHours(3)]);
+    $order = Order::factory()->create(['user_id' => $cart->user_id, 'status' => OrderStatus::Pending]);
+
+    (new SendAbandonedCartReminders)();
+
+    Notification::assertSentTo($cart->fresh()->user, AbandonedCartReminder::class, function ($notification) use ($order) {
+        $mail = $notification->toMail($order->user);
+
+        return $mail->actionUrl === route('storefront.checkout.resume', $order);
+    });
 });
 
 test('the artisan command reports how many reminders were sent', function () {
