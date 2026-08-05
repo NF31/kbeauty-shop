@@ -61,7 +61,13 @@ class PlaceOrder
 
                 $itemRows[] = [
                     'product_variant_id' => $item->product_variant_id,
-                    'product_name' => $item->variant->product->name,
+                    // Filet de securite independant de config('app.fallback_locale') : un
+                    // produit sans traduction dans la locale courante (ex. achat depuis /en
+                    // sur un produit jamais traduit) ne doit jamais faire echouer la commande
+                    // (product_name est NOT NULL) - incident du 2026-08-05, cause par
+                    // APP_FALLBACK_LOCALE absent des variables d'environnement prod.
+                    'product_name' => $item->variant->product->name
+                        ?: $item->variant->product->getTranslation('name', 'fr', false),
                     'variant_label' => $variantLabel !== '' ? $variantLabel : $item->variant->sku,
                     'product_image_path' => $item->variant->product->primaryImage?->path,
                     'unit_price_cents' => $item->unit_price_cents,
