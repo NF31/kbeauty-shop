@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProductLineController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\ReturnRequestController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:admin|staff|support'])
@@ -101,18 +102,32 @@ Route::middleware(['auth', 'role:admin|staff|support'])
         });
     });
 
-// Vue infra (spatie/laravel-health, 22.5) - reservee au role admin strict
-// (pas staff/support) : expose l'etat de la queue, de Horizon et des
-// sauvegardes, hors perimetre operationnel du reste du back-office.
-Route::middleware(['auth', 'role:admin'])
+// Vue infra (spatie/laravel-health, 22.5) - expose l'etat de la queue,
+// de Horizon et des sauvegardes. Gardee par la permission settings.manage
+// (27.2) plutot que role:admin en dur, pour rester coherent avec le reste
+// du back-office et permettre de l'accorder a un autre role plus tard.
+Route::middleware(['auth', 'permission:settings.manage'])
     ->prefix('admin')
     ->get('health', [HealthController::class, 'index'])
     ->name('admin.health');
 
 // Audit trail (spatie/laravel-activitylog, 16.5) - qui a change quoi (stock,
-// statut commande, remboursement, publication produit) et quand. Reserve au
-// role admin strict, meme perimetre que la page Sante ci-dessus.
-Route::middleware(['auth', 'role:admin'])
+// statut commande, remboursement, publication produit) et quand. Meme
+// permission que la page Sante ci-dessus (27.2).
+Route::middleware(['auth', 'permission:settings.manage'])
     ->prefix('admin')
     ->get('activity-log', [ActivityLogController::class, 'index'])
     ->name('admin.activity-log');
+
+// Gestion des roles utilisateurs (27.2) - reservee au role admin strict
+// (pas staff/support) : assigner un role engage bien plus que les
+// permissions couvertes par settings.manage, donc pas la meme permission.
+Route::middleware(['auth', 'role:admin'])
+    ->prefix('admin')
+    ->name('admin.users.')
+    ->group(function () {
+        Route::get('users', [UserController::class, 'index'])->name('index');
+        Route::patch('users/{user}/role', [UserController::class, 'updateRole'])
+            ->middleware('throttle:20,1,admin-user-role')
+            ->name('update-role');
+    });

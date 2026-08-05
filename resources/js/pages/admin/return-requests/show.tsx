@@ -53,7 +53,7 @@ export default function ReturnRequestShow({
     returnRequest: ReturnRequestDetail;
 }) {
     const { auth } = usePage().props;
-    const canAccept = auth.roles.includes('admin');
+    const canAccept = auth.permissions.includes('orders.refund');
     const [acceptConfirmOpen, setAcceptConfirmOpen] = useState(false);
 
     return (
