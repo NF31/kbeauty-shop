@@ -16,8 +16,6 @@ use Illuminate\Support\Facades\Notification;
  * amont par le contrôleur/FormRequest — ce use case fait confiance à ses
  * appelants et se concentre sur la création + les deux notifications
  * (client : confirmation de réception ; admins : nouvelle demande à traiter).
- *
- * @param  list<array{order_item_id: int, quantity: int, amount_cents: int}>  $items
  */
 class SubmitReturnRequest
 {
@@ -26,6 +24,9 @@ class SubmitReturnRequest
         private readonly UserRepositoryInterface $users,
     ) {}
 
+    /**
+     * @param  list<array{order_item_id: int, quantity: int, amount_cents: int}>  $items
+     */
     public function __invoke(Order $order, string $reason, array $items): ReturnRequest
     {
         $returnRequest = $this->unitOfWork->run(function () use ($order, $reason, $items) {
