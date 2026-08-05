@@ -175,6 +175,45 @@ test('a new cart started after a completed order does not reuse the old paid ord
     expect(Order::query()->count())->toBe(1);
 });
 
+test('paying for a product with no english translation still snapshots a product name (2026-08-05 incident)', function () {
+    // Reproduit l'incident prod : APP_FALLBACK_LOCALE absent des variables
+    // d'environnement Laravel Cloud, donc Laravel retombait sur son defaut
+    // "en" plutot que "fr" - un produit jamais traduit en anglais (nom
+    // uniquement en fr, comportement par defaut de ProductFactory) faisait
+    // planter le paiement (product_name NOT NULL) des qu'un client passait
+    // commande depuis la version /en du site.
+    config(['app.fallback_locale' => 'en']);
+
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = User::factory()->create();
+
+    $this->actingAs($user)
+        ->post('/en/panier', ['product_variant_id' => $variant->id, 'quantity' => 1]);
+
+    $this->actingAs($user)->post('/en/commande/adresse', [
+        'shipping' => [
+            'full_name' => 'Jane Doe',
+            'line1' => '10 Downing Street',
+            'postal_code' => '75001',
+            'city' => 'Paris',
+            'country_code' => 'FR',
+        ],
+        'billing_same_as_shipping' => true,
+    ]);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent());
+    });
+
+    $this->actingAs($user)
+        ->post('/en/commande/paiement')
+        ->assertOk();
+
+    $orderItem = Order::query()->sole()->items()->sole();
+    expect($orderItem->product_name)->not->toBeNull();
+    expect($orderItem->product_name)->toBe($variant->product->getTranslation('name', 'fr', false));
+});
+
 test('paying again after the PaymentIntent already succeeded redirects to the confirmation page instead of erroring', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
