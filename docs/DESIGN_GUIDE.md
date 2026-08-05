@@ -15,29 +15,27 @@ sur tout le site, implémentées avec Tailwind CSS + shadcn/ui (déjà en place 
 
 ## 2. Couleurs
 
-Palette à affiner avec une identité de marque réelle, mais structure recommandée :
+**Implémenté** (`resources/css/app.css`, tokens `@theme`, thèmes clair/sombre) — la proposition
+initiale ci-dessous a été retenue quasiment telle quelle (rose poudré `#E8C4C4` = `--rose-300`) :
 
-| Rôle | Exemple | Usage |
+| Rôle | Valeur | Usage |
 | --- | --- | --- |
-| Fond principal | `#FFFFFF` / `#FAF9F7` (blanc cassé chaud) | fond de page |
-| Texte principal | `#1A1A1A` | titres, corps de texte |
-| Texte secondaire | `#6B6B6B` | descriptions, métadonnées |
-| Accent de marque | 1 couleur pastel signature (ex. rose poudré `#E8C4C4`, sauge `#B7C4B0`, ou beige `#D9C7B8`) | CTA secondaires, liens actifs, highlights |
-| CTA principal | couleur foncée neutre (`#1A1A1A`) ou l'accent en version saturée | boutons "Ajouter au panier", "Commander" |
-| Succès / stock | vert doux `#7A9B76` | disponibilité, confirmation |
-| Erreur | rouge doux `#C97064` (pas un rouge vif agressif) | erreurs formulaire |
+| Fond principal | blanc cassé chaud | fond de page |
+| Texte principal | quasi-noir | titres, corps de texte |
+| Accent de marque | échelle `--rose-50` → `--rose-600` (7 teintes, pas une seule couleur plate) | secondary/accent/ring, CTA secondaires |
+| Succès / stock | `--success` `#7A9B76` (vert doux) | disponibilité, confirmation |
+| Badges thématiques | `--brand-sage` (sauge) / `--brand-gold` (doré) — ajoutés en cours de route, pas dans la proposition initiale | ex. badge "Vedette" sur les listings admin |
 
-Éviter les couleurs vives saturées façon "promo agressive" — le positionnement K-beauty premium
-se joue sur la sobriété, pas sur le contraste criard.
-
-Implémentation : définir ces tokens comme variables Tailwind (`@theme` dans `resources/css`),
-pas de couleurs codées en dur dans les composants.
+Chaque couleur a sa variante `-foreground` associée (contraste texte garanti dessus). Éviter les
+couleurs vives saturées façon "promo agressive" reste la règle — le positionnement K-beauty
+premium se joue sur la sobriété, pas sur le contraste criard.
 
 ## 3. Typographie
 
-- **Titres** : une police serif fine ou sans-serif élégante avec bonne hauteur de x (ex. style
-  Söhne, Public Sans, ou une serif douce type Fraunces/Playfair pour un ton plus éditorial).
-- **Corps de texte** : sans-serif lisible (Inter, Public Sans).
+**Implémenté** (`--font-heading`/`--font-sans`, `resources/css/app.css`) :
+
+- **Titres** : Fraunces (serif douce, ton éditorial) — l'option envisagée ci-dessous a été retenue.
+- **Corps de texte** : Instrument Sans.
 - Hiérarchie stricte : H1 grand et aéré (peu de mots), H2/H3 discrets, éviter plus de 3 niveaux
   de titre visibles sur une même page produit.
 - Interlignage généreux (`leading-relaxed` sur les paragraphes descriptifs).
@@ -51,24 +49,29 @@ pas de couleurs codées en dur dans les composants.
 
 ## 5. Composants — ce qui existe déjà vs à construire
 
+> **La quasi-totalité de cette liste est désormais construite** (voir le détail tâche par tâche
+> dans `FEATURES.md`, Phases 4-7 majoritairement 🟢) — table conservée pour l'historique du
+> raisonnement de départ, pas comme suivi d'avancement (c'est le rôle de `FEATURES.md`).
+
 Le starter contient déjà les primitives Radix (`@radix-ui/react-*`) et plusieurs composants
 `resources/js/components/ui` (shadcn/ui). Pas besoin de les recréer — seulement les adapter au
 style et construire les composants métier storefront par-dessus.
 
-| Besoin | Déjà présent | À construire |
-| --- | --- | --- |
-| Boutons, inputs, checkbox, dialog, tooltip, select, avatar | oui (shadcn/ui) | juste re-skinner aux couleurs/rayons de la charte |
-| Menu de navigation | `NavigationMenu` | transformer en mega-menu catégories |
-| Notifications | `Sonner` | messages ajout panier / erreurs formulaire |
-| Carte produit | — | image, nom, marque, prix (+ prix barré), note moyenne |
-| Sélecteur de variante (contenance/teinte) | `ToggleGroup` (base) | pastilles arrondies, état sélectionné = accent marque |
-| Galerie produit | `Dialog` (base pour le zoom) | miniatures verticales desktop, carrousel swipe mobile |
-| Onglets fiche produit | — (pas de `Tabs` Radix installé) | Bénéfices / Description / Ingrédients (INCI) / Avis — ajouter `@radix-ui/react-tabs` |
-| Panier (drawer) | `Dialog` (base) | mini-panier accessible depuis header |
-| Sélecteur de quantité | — | composant simple `-` / input / `+` |
-| Formulaires compte | `Label`, `Checkbox` | `Input`, validation Zod + React Hook Form (voir `STACK.md`) |
-| Avis clients | — | étoiles (icône `Star` de `lucide-react`, déjà installé) + liste + formulaire |
-| Barre de progression cadeau à palier | — | ex. "Plus que 12€ pour recevoir votre cadeau" |
+| Besoin | Statut |
+| --- | --- |
+| Boutons, inputs, checkbox, dialog, tooltip, select, avatar | ✅ re-skinnés aux tokens de la charte |
+| Menu de navigation | ✅ header storefront (marques, catégories — pas un mega-menu à proprement parler) |
+| Notifications | ✅ `Sonner`, dédupliquées par `id` (cf. `FEATURES.md`, fix toast en double) |
+| Carte produit | ✅ image, nom, marque, prix, note moyenne |
+| Sélecteur de variante (contenance/teinte) | ✅ |
+| Galerie produit | ✅ |
+| Onglets fiche produit | ✅ Bénéfices / Description / Ingrédients (INCI) / Avis |
+| Panier (drawer) | ✅ |
+| Sélecteur de quantité | ✅ |
+| Formulaires compte | ✅ |
+| Avis clients | 🟡 Trustpilot + Klaviyo Reviews décidés (SaaS, pas de système maison) ; invitation post-achat en place, widget d'affichage encore bloqué sur l'obtention des clés API (`FEATURES.md` 14.1/14.2) |
+| Barre de progression cadeau à palier | ⚪ pas construit (jamais réclamé depuis) |
+| Wishlist (26.3) | ✅ ajoutée en cours de route, hors périmètre de ce document initial |
 
 ## 6. Ton éditorial
 
@@ -96,7 +99,7 @@ style et construire les composants métier storefront par-dessus.
 
 ## 9. Étapes suivantes
 
-- Choisir la couleur d'accent de marque définitive et les 2 polices (titre/corps) avant de
-  configurer les tokens Tailwind (`@theme`) — évite de tout retoucher plus tard.
-- Construire une page interne `/design-system` pour valider les composants storefront avant
-  intégration dans les vraies pages.
+- ~~Choisir la couleur d'accent de marque définitive et les 2 polices~~ **fait** (sections 2-3).
+- ~~Page interne `/design-system`~~ **jamais construite** — les composants ont été validés
+  directement dans les vraies pages storefront/admin au fil des tâches, sans détour par une
+  page bac à sable.
