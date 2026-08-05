@@ -7,6 +7,7 @@ import {
     Layers,
     Mail,
     Package,
+    RotateCcw,
     ShoppingCart,
     Tags,
 } from 'lucide-react';
@@ -45,6 +46,11 @@ export function AdminSidebar() {
             title: 'Commandes',
             href: OrderController.index.url(),
             icon: ShoppingCart,
+        },
+        {
+            title: 'Retours',
+            href: admin.returnRequests.index(),
+            icon: RotateCcw,
         },
         {
             title: 'Messages',

@@ -39,6 +39,8 @@ type OrderDetail = {
     billingAddress: Address | null;
     items: OrderItem[];
     hasInvoice: boolean;
+    canRequestReturn: boolean;
+    returnRequest: { status: string; statusLabel: string } | null;
 };
 
 function AddressBlock({
@@ -153,6 +155,23 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                                 >
                                     {t('Télécharger ma facture')}
                                 </a>
+                            )}
+                            {order.canRequestReturn && (
+                                <Link
+                                    href={localizedPath(
+                                        `/mon-compte/commandes/${order.id}/retour`,
+                                        locale,
+                                    )}
+                                    className="text-sm text-primary underline"
+                                >
+                                    {t('Demander un retour')}
+                                </Link>
+                            )}
+                            {order.returnRequest && (
+                                <p className="text-sm text-muted-foreground">
+                                    {t('Retour :')}{' '}
+                                    {order.returnRequest.statusLabel}
+                                </p>
                             )}
                         </div>
                     }

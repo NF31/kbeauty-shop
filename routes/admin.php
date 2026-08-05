@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ProductImageController;
 use App\Http\Controllers\Admin\ProductLineController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\ProductVariantController;
+use App\Http\Controllers\Admin\ReturnRequestController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth', 'role:admin|staff|support'])
@@ -73,6 +74,15 @@ Route::middleware(['auth', 'role:admin|staff|support'])
                 ->middleware('throttle:30,1,admin-order-status')
                 ->name('orders.update-status');
             Route::get('orders/{order}/invoice', [OrderController::class, 'downloadInvoice'])->name('orders.invoice');
+
+            Route::get('return-requests', [ReturnRequestController::class, 'index'])->name('return-requests.index');
+            Route::get('return-requests/{returnRequest}', [ReturnRequestController::class, 'show'])->name('return-requests.show');
+            // Le refus ne declenche aucun remboursement — reste sous orders.manage
+            // (staff/support peuvent traiter une demande), contrairement a
+            // l'acceptation ci-dessous qui, elle, engage un remboursement Stripe reel.
+            Route::post('return-requests/{returnRequest}/refuse', [ReturnRequestController::class, 'refuse'])
+                ->middleware('throttle:20,1,admin-return-requests')
+                ->name('return-requests.refuse');
         });
 
         Route::middleware('permission:orders.refund')->group(function () {
@@ -82,6 +92,12 @@ Route::middleware(['auth', 'role:admin|staff|support'])
             Route::post('orders/{order}/refund', [OrderController::class, 'refund'])
                 ->middleware('throttle:10,1,admin-refund')
                 ->name('orders.refund');
+
+            // Accepter une demande de retour declenche RefundOrder (26.2) — meme
+            // permission et meme throttle que le remboursement manuel ci-dessus.
+            Route::post('return-requests/{returnRequest}/accept', [ReturnRequestController::class, 'accept'])
+                ->middleware('throttle:10,1,admin-refund')
+                ->name('return-requests.accept');
         });
     });
 

@@ -11,6 +11,7 @@ use App\Http\Controllers\Storefront\DiagnosticController;
 use App\Http\Controllers\Storefront\LegalController;
 use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
+use App\Http\Controllers\Storefront\ReturnRequestController;
 use App\Http\Controllers\Storefront\SkinGuideController;
 use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
@@ -216,6 +217,13 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
         Route::get('mon-compte/commandes/{order}/facture', [AccountController::class, 'downloadInvoice'])
             ->name('storefront.account.orders.invoice');
 
+        Route::get('mon-compte/commandes/{order}/retour', [ReturnRequestController::class, 'create'])
+            ->name('storefront.return-requests.create');
+
+        Route::post('mon-compte/commandes/{order}/retour', [ReturnRequestController::class, 'store'])
+            ->middleware('throttle:10,1,storefront-return-requests')
+            ->name('storefront.return-requests.store');
+
         Route::get('mon-compte/adresses', [AccountAddressController::class, 'index'])
             ->name('storefront.account.addresses.index');
 
@@ -290,6 +298,13 @@ Route::middleware(['auth', 'locale:fr'])->group(function () {
 
     Route::get('mon-compte/commandes/{order}/facture', [AccountController::class, 'downloadInvoice'])
         ->name('storefront.account.orders.invoice');
+
+    Route::get('mon-compte/commandes/{order}/retour', [ReturnRequestController::class, 'create'])
+        ->name('storefront.return-requests.create');
+
+    Route::post('mon-compte/commandes/{order}/retour', [ReturnRequestController::class, 'store'])
+        ->middleware('throttle:10,1,storefront-return-requests')
+        ->name('storefront.return-requests.store');
 
     Route::get('mon-compte/adresses', [AccountAddressController::class, 'index'])
         ->name('storefront.account.addresses.index');

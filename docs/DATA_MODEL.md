@@ -233,6 +233,16 @@ filtrer/afficher un sélecteur par axe (comme sur uniikon.com : "50ml / 100ml" +
 ### refunds
 | id | order_id fk | payment_id fk | amount_cents | reason nullable | status(enum: `pending`,`succeeded`,`failed`) | created_at |
 
+### return_requests
+| id | order_id fk | user_id fk | status(enum: `submitted`,`accepted`,`refused`) default `submitted` | reason (motif du client) | admin_note nullable (motif du refus) | decided_at nullable | timestamps |
+
+### return_request_items
+| id | return_request_id fk | order_item_id fk | quantity | amount_cents (snapshot, quantity × order_item.unit_price_cents au moment de la demande) | timestamps |
+
+Une seule demande active (`submitted`/`accepted`) par commande à la fois — voir 26.2 (`Order::isEligibleForReturnRequest()`).
+`amount_cents` est sommé et transmis tel quel à `RefundOrder` (16.3) à l'acceptation, jamais recalculé depuis `order_items`
+(même philosophie snapshot que `order_items.product_name`/`variant_label`).
+
 ### shipments
 | id | order_id fk | carrier (Sendcloud) | tracking_number nullable | tracking_url nullable | status(enum: `pending`,`shipped`,`delivered`) | shipped_at nullable | delivered_at nullable |
 
