@@ -83,6 +83,7 @@ class AccountController extends Controller
 
         $order->load(['items', 'shippingAddress', 'billingAddress', 'payments']);
         $hasInvoice = (bool) $invoices->findForOrder($order);
+        $latestReturnRequest = $order->returnRequests()->latest('id')->first();
 
         $formatAddress = fn (?Address $address) => $address ? [
             'fullName' => $address->full_name,
@@ -111,6 +112,11 @@ class AccountController extends Controller
                 'billingAddress' => $formatAddress($order->billingAddress),
                 'items' => $order->items->map(fn (OrderItem $item) => $this->formatItem($item, $cloudinary)),
                 'hasInvoice' => $hasInvoice,
+                'canRequestReturn' => $order->isEligibleForReturnRequest(),
+                'returnRequest' => $latestReturnRequest ? [
+                    'status' => $latestReturnRequest->status->value,
+                    'statusLabel' => $latestReturnRequest->status->label(),
+                ] : null,
             ],
         ]);
     }
