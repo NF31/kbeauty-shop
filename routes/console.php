@@ -23,6 +23,10 @@ Schedule::command('backup:monitor')->dailyAt('03:00')->onOneServer();
 Schedule::command('health:queue-check-heartbeat')->everyMinute();
 Schedule::command('health:check')->everyMinute();
 
+// Relance panier abandonné (24.1) : seuil d'inactivité de 2h, verifie toutes
+// les 30 min pour rester precis sans multiplier les requetes.
+Schedule::command('cart:send-abandoned-reminders')->everyThirtyMinutes()->onOneServer();
+
 // Purge Telescope (jamais fait jusqu'ici - telescope_entries a rempli a lui
 // seul les 512 Mo du plan Neon gratuit, cf. incident du 2026-08-05). 48h de
 // retention suffisent pour investiguer une exception recente en prod ; le

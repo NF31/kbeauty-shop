@@ -9,18 +9,30 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property int $id
  * @property int|null $user_id
  * @property string|null $session_token
  * @property string $currency
+ * @property Carbon|null $abandoned_cart_reminder_sent_at
  */
-#[Fillable(['user_id', 'session_token', 'currency'])]
+#[Fillable(['user_id', 'session_token', 'currency', 'abandoned_cart_reminder_sent_at'])]
 class Cart extends Model
 {
     /** @use HasFactory<CartFactory> */
     use HasFactory;
+
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'abandoned_cart_reminder_sent_at' => 'datetime',
+        ];
+    }
 
     /**
      * @return BelongsTo<User, $this>
