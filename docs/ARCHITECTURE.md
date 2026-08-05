@@ -292,8 +292,17 @@ traduire du texte provisoire). Détail des routes déjà traduites : `docs/FEATU
 
 - `.env` déjà présent — séparer clairement dev/staging/prod (clés Stripe test vs live, Meilisearch
   key, Cloudinary, Resend, Sentry DSN).
+  > **Écart connu (2026-08-05)** : la base PostgreSQL Neon est en pratique **partagée entre le
+  > dev local et la prod** (même `DB_URL`), pas d'environnement staging distinct. C'est ce qui a
+  > provoqué l'incident du 512 Mo dépassé (`telescope_entries` rempli par le dev local, cf.
+  > `FEATURES.md` 22.5/13.1) — Redis/cache et le reste de l'infra Laravel Cloud sont en revanche
+  > bien isolés à la prod. Séparer réellement les bases reste à faire si le volume de dev
+  > local augmente.
 - Queues : Horizon doit tourner en process dédié (pas `sync` driver) dès que les emails/jobs sont
-  en place, y compris en dev via `composer dev` (déjà scripté pour `queue:listen`).
+  en place, y compris en dev via `composer dev` (déjà scripté pour `queue:listen`). En prod
+  (Laravel Cloud), le nombre de workers doit rester adapté à la taille de l'instance — un
+  `maxProcesses` trop élevé sur une instance `flex-512mb` a provoqué une boucle de redémarrage
+  OOM le jour de la première activation (`config/horizon.php`, cf. `FEATURES.md` 13.1).
 - CI : réutiliser les scripts déjà présents (`composer ci:check`, `pint`, `phpstan`, `pest`) et
   ajouter les tests Pest du domaine e-commerce au fur et à mesure.
 
