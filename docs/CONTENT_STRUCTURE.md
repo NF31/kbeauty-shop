@@ -2,34 +2,47 @@
 
 ## 1. Plan du site (storefront public)
 
+> Chaque route FR ci-dessous a son miroir `/en/...` (25.1, `routes/storefront.php`) — non
+> répété ligne par ligne. Toutes les URLs sont vérifiées contre `php artisan route:list` (à jour
+> au 2026-08-05), pas juste planifiées — les éventuels écarts avec ce fichier sont un bug de
+> doc à corriger, pas une source de vérité alternative.
+
 ```text
 /                                   Accueil
-/c/[category-slug]                  Liste produits par catégorie
-/c/[category-slug]/[sub-slug]       Sous-catégorie
-/marque/[brand-slug]                Page marque (brand story + produits)
-/p/[product-slug]                   Fiche produit
-/recherche?q=...                    Résultats de recherche
-/routines                           Bundles / routines packagées
-/routines/[bundle-slug]             Détail d'une routine
-/magazine                           Blog
-/magazine/[article-slug]            Article
-/a-propos                           Notre histoire
-/panier                             Panier (page + drawer)
-/commande                           Tunnel checkout (adresse → livraison → paiement)
-/commande/confirmation/[order]      Confirmation de commande
-/compte                             Tableau de bord client
-/compte/commandes                   Historique commandes
-/compte/commandes/[order]           Détail commande + suivi
-/compte/adresses                    Gestion des adresses
-/compte/favoris                     Wishlist
-/compte/parametres                  Infos perso, mot de passe, 2FA (déjà scaffoldé)
-/connexion, /inscription            Auth (déjà scaffoldé Fortify)
+/produits                           Catalogue (recherche live + filtres ?category=/?brand=/?sort=... en query string,
+                                     pas de route dédiée par catégorie — évite le contenu dupliqué, cf. 19.1)
+/produits/[product-slug]            Fiche produit
+/marques                            Annuaire des marques (6.6)
+/marques/[brand-slug]                Page marque (produits + filtre gamme)
+/guide-de-choix                     Guide de choix (quiz orientation produit)
+/diagnostic-peau                    Diagnostic peau (Phase 3 montée en compétence)
+/panier                             Panier
+/commande                           Étape adresse du tunnel checkout
+/commande/paiement                  Étape paiement (Stripe)
+/commande/confirmation              Confirmation de commande
+/favoris/partages/[token]           Wishlist partagée en lecture seule, sans compte (26.3)
+/contact
 /mentions-legales
 /cgv
 /confidentialite
 /livraison
 /retours
-/contact
+/login, /register                   Auth (Fortify — chemins restés en anglais, pas de miroir FR dédié)
+
+Espace client (auth requise) :
+/dashboard                          Tableau de bord client (pas /compte)
+/mon-compte/commandes               Historique commandes
+/mon-compte/commandes/[order]       Détail commande + suivi
+/mon-compte/commandes/[order]/facture  Téléchargement facture PDF (17.1)
+/mon-compte/adresses                Gestion des adresses
+/mon-compte/favoris                 Wishlist (26.3)
+/settings/profile, /settings/security, /settings/appearance   (pas /compte/parametres)
+
+Pas encore implémenté (aspirationnel, ordre indicatif) :
+/routines, /routines/[bundle-slug]  Bundles / routines packagées (24.2, ⚪)
+/magazine, /magazine/[article-slug] Blog (18.1/18.2, ⚪)
+/a-propos                           Notre histoire (jamais commencé)
+/recherche?q=...                    Pas de page dédiée — recherche live intégrée à /produits (7.2)
 ```
 
 ## 2. Page d'accueil — structure éditoriale
@@ -99,7 +112,7 @@ cross-sell éditorial affiché en fin d'article et sur la fiche produit.
 
 ## 7. SEO — conventions
 
-- URLs produit : `/p/nom-produit-lisible` (slug via `spatie/laravel-sluggable`, cf. `STACK.md`).
+- URLs produit : `/produits/nom-produit-lisible` (slug via `spatie/laravel-sluggable`, cf. `STACK.md`).
 - Chaque page publique a un `meta_title`/`meta_description` dédié (voir champs sur `products`
   et `articles` dans `DATA_MODEL.md`).
 - Données structurées `Product` (prix, disponibilité, note) et `BreadcrumbList` sur les fiches
