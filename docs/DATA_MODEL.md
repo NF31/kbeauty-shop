@@ -46,6 +46,7 @@ GiftThresholdRule ──< GiftThresholdRuleReward
 | two_factor_recovery_codes | text nullable | chiffré, géré par Fortify |
 | two_factor_confirmed_at | timestamp nullable | |
 | remember_token | string nullable | |
+| wishlist_share_token | string nullable, unique | généré à la demande (26.3), jamais à la création du compte — masqué du prop global `auth.user` |
 | created_at / updated_at | timestamps | |
 
 > Table déjà migrée par le starter (`0001_01_01_000000_create_users_table` +

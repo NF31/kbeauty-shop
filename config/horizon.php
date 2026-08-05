@@ -215,7 +215,14 @@ return [
     'environments' => [
         'production' => [
             'supervisor-1' => [
-                'maxProcesses' => 10,
+                // maxProcesses:10 (defaut Laravel) a fait tourner l'instance
+                // "flex-512mb" en boucle de redemarrage OOM des le premier
+                // deploiement avec Horizon actif (cf. incident du 2026-08-05) -
+                // Horizon partage la RAM avec nginx/php-fpm sur cette meme
+                // instance. Le volume de jobs de ce projet (confirmations de
+                // commande, formulaire de contact, newsletter) est faible :
+                // 2 workers suffisent largement et laissent de la marge memoire.
+                'maxProcesses' => 2,
                 'balanceMaxShift' => 1,
                 'balanceCooldown' => 3,
             ],
