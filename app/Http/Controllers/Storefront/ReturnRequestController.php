@@ -51,7 +51,10 @@ class ReturnRequestController extends Controller
 
         $order->loadMissing('items');
 
-        $items = collect($request->validated('items'))
+        /** @var list<array{order_item_id: int|string, quantity: int|string}> $itemsInput */
+        $itemsInput = $request->validated('items');
+
+        $items = array_values(collect($itemsInput)
             ->map(function (array $item) use ($order) {
                 $orderItem = $order->items->first(fn (OrderItem $orderItem) => $orderItem->id === (int) $item['order_item_id']);
                 $quantity = (int) $item['quantity'];
@@ -62,7 +65,7 @@ class ReturnRequestController extends Controller
                     'amount_cents' => $orderItem->unit_price_cents * $quantity,
                 ];
             })
-            ->all();
+            ->all());
 
         $submitReturnRequest($order, $request->validated('reason'), $items);
 
