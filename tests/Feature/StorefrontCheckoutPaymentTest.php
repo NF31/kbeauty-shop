@@ -214,6 +214,53 @@ test('paying for a product with no english translation still snapshots a product
     expect($orderItem->product_name)->toBe($variant->product->getTranslation('name', 'fr', false));
 });
 
+test('a customer can resume payment on their own pending order', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = reachPaymentStep($variant);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('createPaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
+        $mock->shouldReceive('retrievePaymentIntent')->once()->andReturn(fakePaymentIntent('pi_first'));
+        $mock->shouldReceive('updatePaymentIntentAmount')->once()->andReturn(fakePaymentIntent('pi_first'));
+    });
+
+    $this->actingAs($user)->post('/commande/paiement');
+    $order = Order::query()->sole();
+
+    $this->actingAs($user)
+        ->get("/commande/{$order->id}/reprendre")
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page
+            ->component('storefront/checkout')
+            ->where('step', 'payment')
+            ->where('clientSecret', 'pi_first_secret')
+            ->where('order.orderNumber', $order->order_number)
+        );
+
+    expect(Order::query()->count())->toBe(1);
+});
+
+test('resuming payment on someone else\'s order is forbidden', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $owner = reachPaymentStep($variant);
+    $this->actingAs($owner)->post('/commande/paiement');
+    $order = Order::query()->sole();
+
+    $stranger = User::factory()->create();
+
+    $this->actingAs($stranger)
+        ->get("/commande/{$order->id}/reprendre")
+        ->assertForbidden();
+});
+
+test('resuming payment on a non-pending order redirects to the order detail page instead of touching Stripe', function () {
+    $order = Order::factory()->create(['status' => OrderStatus::Paid]);
+
+    $this->actingAs($order->user)
+        ->get("/commande/{$order->id}/reprendre")
+        ->assertRedirect("/mon-compte/commandes/{$order->id}");
+});
+
 test('paying again after the PaymentIntent already succeeded redirects to the confirmation page instead of erroring', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
