@@ -41,9 +41,11 @@ class ConfirmOrderPayment
             return;
         }
 
-        // Stripe peut renvoyer le même événement plusieurs fois (livraison au moins une fois) :
-        // ne décrémenter le stock qu'une seule fois par paiement.
-        if ($payment->status === PaymentStatus::Succeeded) {
+        // Stripe peut renvoyer le même événement plusieurs fois (livraison au moins une fois),
+        // y compris en retard après un remboursement complet : ne jamais retraiter un paiement
+        // déjà `Succeeded` (double décrément de stock) ni un paiement déjà `Refunded` (ferait
+        // repasser la commande en "payée" sans passer par RefundOrder, cf. incident du 2026-08-05).
+        if (in_array($payment->status, [PaymentStatus::Succeeded, PaymentStatus::Refunded], true)) {
             return;
         }
 
