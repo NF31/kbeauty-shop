@@ -156,6 +156,14 @@ class Product extends Model
     }
 
     /**
+     * @return HasMany<Wishlist, $this>
+     */
+    public function wishlists(): HasMany
+    {
+        return $this->hasMany(Wishlist::class);
+    }
+
+    /**
      * Audit trail (16.5) : seul le statut de publication nous interesse
      * (qui a publie/depublie le produit et quand) - pas les champs de
      * contenu (nom, description...) qui changent trop souvent.

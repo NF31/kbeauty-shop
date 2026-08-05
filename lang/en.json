@@ -186,5 +186,16 @@
     "Le sujet est requis.": "Subject is required.",
     "Le message est requis.": "Message is required.",
     "Impossible d'envoyer le message, réessaie dans quelques instants.": "Unable to send the message, please try again in a moment.",
-    "Message envoyé ! Nous te répondrons rapidement.": "Message sent! We'll get back to you quickly."
+    "Message envoyé ! Nous te répondrons rapidement.": "Message sent! We'll get back to you quickly.",
+    "Mes favoris": "My wishlist",
+    "Copier le lien": "Copy link",
+    "Régénérer le lien": "Regenerate link",
+    "Partager mes favoris": "Share my wishlist",
+    "Tu n'as encore aucun produit en favori.": "You don't have any favorite products yet.",
+    "Retirer": "Remove",
+    "Les favoris de :name": ":name's wishlist",
+    "Cette liste de favoris est vide pour le moment.": "This wishlist is empty for now.",
+    "Ajouté à tes favoris.": "Added to your wishlist.",
+    "Retiré de tes favoris.": "Removed from your wishlist.",
+    "Nouveau lien de partage généré.": "New share link generated."
 }
