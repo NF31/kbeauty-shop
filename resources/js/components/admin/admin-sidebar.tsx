@@ -10,6 +10,7 @@ import {
     RotateCcw,
     ShoppingCart,
     Tags,
+    Users,
 } from 'lucide-react';
 import BrandController from '@/actions/App/Http/Controllers/Admin/BrandController';
 import CategoryController from '@/actions/App/Http/Controllers/Admin/CategoryController';
@@ -31,9 +32,8 @@ import type { NavItem } from '@/types';
 
 export function AdminSidebar() {
     const { auth } = usePage().props;
-    const canManageProducts = auth.roles.some((role) =>
-        ['admin', 'staff'].includes(role),
-    );
+    const canManageProducts = auth.permissions.includes('products.manage');
+    const canViewSystem = auth.permissions.includes('settings.manage');
     const isAdmin = auth.roles.includes('admin');
 
     const mainNavItems: NavItem[] = [
@@ -81,7 +81,7 @@ export function AdminSidebar() {
                   },
               ]
             : []),
-        ...(isAdmin
+        ...(canViewSystem
             ? [
                   {
                       title: 'Santé',
@@ -92,6 +92,15 @@ export function AdminSidebar() {
                       title: "Journal d'activité",
                       href: admin.activityLog(),
                       icon: History,
+                  },
+              ]
+            : []),
+        ...(isAdmin
+            ? [
+                  {
+                      title: 'Utilisateurs',
+                      href: admin.users.index(),
+                      icon: Users,
                   },
               ]
             : []),

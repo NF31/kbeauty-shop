@@ -134,7 +134,7 @@ export default function OrderShow({
     statusOptions: StatusOption[];
 }) {
     const { auth } = usePage().props;
-    const canRefund = auth.roles.includes('admin');
+    const canRefund = auth.permissions.includes('orders.refund');
     const [confirmOpen, setConfirmOpen] = useState(false);
     const [statusConfirmOpen, setStatusConfirmOpen] = useState(false);
 
