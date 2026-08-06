@@ -31,21 +31,43 @@ Liste etablie le 2026-08-06 suite a la veille Laravel News.
      PHP Windows natif, cf. laravel/horizon deja installe)
    - Verifie : `vendor/bin/pint --test` + `phpstan analyse` clean sur les fichiers touches
 
-=== A INSTALLER EN PRIORITE ===
+3. [FAIT 2026-08-06] spatie/laravel-webhook-client
+   - Verifie d'abord que le webhook Stripe maison avait 2 vrais trous : aucun
+     logging/tracabilite des events recus (juste un Log::warning isole), pas de dedup
+     par event.id Stripe, et traitement 100% synchrone dans la requete HTTP (pas de
+     retry local sur erreur transitoire) - cf. entree ci-dessous, deplacee de "A VERIFIER"
+   - Integration en "couche fine" plutot que la route/config du package : la route/le
+     controller par defaut du package (`Route::webhooks()`) auraient remplace
+     StripeWebhookController et change les codes de reponse (400 -> 500 par defaut sur
+     signature invalide, InvalidWebhookSignature n'a pas de render()) - pas acceptable
+     sur l'unique point de confirmation des paiements. Seuls le modele `WebhookCall`
+     (table `webhook_calls` : name/url/headers/payload/exception) et le principe de job
+     en queue sont repris, pas le reste du package (pas de config/webhook-client.php
+     publiee, pas de SignatureValidator custom)
+   - StripeWebhookController inchange sur la verification de signature (memes 400) ;
+     persiste un WebhookCall puis dispatch `App\Jobs\ProcessStripeWebhookJob` pour les
+     events de paiement reussi seulement
+   - ProcessStripeWebhookJob (ShouldQueue, tries=5, backoff exponentiel) : dedup par
+     `payload->id` (event.id Stripe, deja present dans le payload brut) en ne sautant
+     que sur un event deja traite AVEC SUCCES (exception IS NULL sur webhook_calls) -
+     une premiere tentative echouee reste retentable a la redelivraison Stripe suivante.
+     Exception ecrite sur `webhook_calls.exception` (colonne cast array : code/message/
+     trace) avant d'etre relancee, pour que le retry Laravel/Horizon s'active
+   - QUEUE_CONNECTION=redis en prod -> vrai retry ; =sync en test -> le job tourne
+     dans la meme requete, tests HTTP existants inchanges sauf un (Bus::fake() global
+     remplace par un fake selectif pour ne pas intercepter aussi ProcessStripeWebhookJob).
+     2 tests ajoutes (dedup par event.id, exception enregistree + relancee)
+   - Limite connue, non traitee ici (pas demande) : pas de purge programmee de
+     webhook_calls (le modele est MassPrunable mais lit `config('webhook-client.
+     delete_after_days')`, absent puisqu'on n'a pas publie ce config) -> la table
+     grandira sans limite tant que personne n'ajoute une purge
+   - Verifie : migration testee en reel sur Postgres local (`php artisan migrate`),
+     requete de dedup JSON (`payload->id`) validee via tinker, `pint --test` +
+     `phpstan analyse` clean sur les fichiers touches. Pest non execute (pdo_sqlite
+     absent sous cette machine WSL, limite connue) -> tests ecrits mais pas
+     executes localement, a verifier en CI
 
-3. [VERIFIE 2026-08-06] spatie/laravel-webhook-client
-   - Validation/tracabilite generique des webhooks entrants
-   - Verifie : le webhook Stripe maison (StripeWebhookController +
-     StripePaymentGateway::verifyWebhookSignature()) valide bien la signature et a une
-     dedup "metier" (ignore si Payment deja Succeeded/Refunded), mais deux vrais trous :
-       - Aucun logging structure des events recus/traites/echoues (juste un Log::warning
-         isole en cas de Payment introuvable), pas de payload persiste, pas de dedup par
-         event.id Stripe -> aucune tracabilite en cas d'incident
-       - Traitement 100% synchrone dans la requete HTTP (pas de job ShouldQueue) -> une
-         erreur transitoire (DB down, deadlock) fait planter la requete sans retry local,
-         seul Stripe retente cote externe
-   - Conclusion : apport reel confirme (pas "limite" comme suppose initialement), a
-     installer en priorite
+=== A INSTALLER EN PRIORITE ===
 
 === A VERIFIER AVANT D'INSTALLER ===
 

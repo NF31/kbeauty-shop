@@ -1,9 +1,12 @@
 <?php
 
+use App\Application\Orders\UseCases\ConfirmOrderPayment;
+use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Payments\WebhookEvent;
 use App\Enums\OrderStatus;
 use App\Enums\PaymentStatus;
+use App\Jobs\ProcessStripeWebhookJob;
 use App\Jobs\SendPlacedOrderEventToKlaviyo;
 use App\Models\InventoryMovement;
 use App\Models\Invoice;
@@ -19,6 +22,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
+use Spatie\WebhookClient\Models\WebhookCall;
 use Stripe\Exception\SignatureVerificationException;
 
 uses(RefreshDatabase::class);
@@ -262,7 +266,10 @@ test('checkout.session.completed notifies admins of the new paid order', functio
 });
 
 test('checkout.session.completed dispatches the Klaviyo Placed Order event job', function () {
-    Bus::fake();
+    // Fake sélectif : ProcessStripeWebhookJob doit tourner pour de vrai (sync en
+    // test) pour atteindre le dispatch de SendPlacedOrderEventToKlaviyo qu'il
+    // contient — un Bus::fake() global l'aurait intercepté avant.
+    Bus::fake([SendPlacedOrderEventToKlaviyo::class]);
 
     $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
     $order = Order::factory()->create(['status' => OrderStatus::Pending]);
@@ -392,4 +399,58 @@ test('replaying the same succeeded event does not generate a duplicate invoice',
     $this->postJson('/stripe/webhook', [], ['Stripe-Signature' => 'sig'])->assertOk();
 
     expect(Invoice::query()->where('order_id', $order->id)->count())->toBe(1);
+});
+
+test('a Stripe event replayed with the same event id is not reprocessed even if the payment was reset to pending', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 10]);
+    $order = Order::factory()->create(['status' => OrderStatus::Pending]);
+    OrderItem::factory()->create([
+        'order_id' => $order->id,
+        'product_variant_id' => $variant->id,
+        'quantity' => 3,
+    ]);
+    $payment = Payment::factory()->create([
+        'order_id' => $order->id,
+        'provider_payment_id' => 'cs_fake123',
+        'status' => PaymentStatus::Pending,
+    ]);
+
+    $event = fakeWebhookEvent('checkout.session.completed');
+    $payload = ['id' => 'evt_dedup_test', 'type' => 'checkout.session.completed'];
+
+    $firstCall = WebhookCall::create(['name' => 'stripe', 'url' => 'https://example.test/stripe/webhook', 'headers' => [], 'payload' => $payload]);
+    (new ProcessStripeWebhookJob($firstCall, $event))->handle(app(ConfirmOrderPayment::class));
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Succeeded);
+
+    // Remet le paiement à Pending pour isoler le dédup par event.id de la
+    // protection "métier" habituelle (Payment déjà Succeeded/Refunded, testée
+    // plus haut) : sans le dédup, ce deuxième appel repasserait la commande
+    // à paid et re-décrémenterait le stock.
+    $payment->update(['status' => PaymentStatus::Pending]);
+
+    $secondCall = WebhookCall::create(['name' => 'stripe', 'url' => 'https://example.test/stripe/webhook', 'headers' => [], 'payload' => $payload]);
+    (new ProcessStripeWebhookJob($secondCall, $event))->handle(app(ConfirmOrderPayment::class));
+
+    expect($payment->fresh()->status)->toBe(PaymentStatus::Pending);
+    expect($variant->fresh()->stock_quantity)->toBe(7);
+});
+
+test('an exception during processing is recorded on the webhook call and rethrown for the queue to retry', function () {
+    $this->mock(PaymentRepositoryInterface::class, function ($mock) {
+        $mock->shouldReceive('findByProviderPaymentId')->andThrow(new Exception('DB indisponible'));
+    });
+
+    $event = fakeWebhookEvent('checkout.session.completed');
+    $webhookCall = WebhookCall::create([
+        'name' => 'stripe',
+        'url' => 'https://example.test/stripe/webhook',
+        'headers' => [],
+        'payload' => ['id' => 'evt_failure_test', 'type' => 'checkout.session.completed'],
+    ]);
+
+    expect(fn () => (new ProcessStripeWebhookJob($webhookCall, $event))->handle(app(ConfirmOrderPayment::class)))
+        ->toThrow(Exception::class, 'DB indisponible');
+
+    expect($webhookCall->fresh()->exception['message'])->toBe('DB indisponible');
 });
