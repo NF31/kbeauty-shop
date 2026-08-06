@@ -64,7 +64,7 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 - [x] Pipeline `cassandra-driver` pour pousser les résultats dans Cassandra — deux tables (`gammes`, `products`), local **et** Astra DB ("prod" managée)
 - [ ] Scrapy-Playwright + social listening une fois le pipeline de base validé
 
-**Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`) — le cron n'est pas encore en place, le spider tourne pour l'instant manuellement.
+**Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`). Cron en place (2026-08-07) : `scripts/run_crawl.sh` dans `kbeauty-ingredients-scraper`, installé en crontab utilisateur quotidien à 3h — s'assure que Cassandra tourne avant de lancer le spider, log horodaté dans `logs/`. Reste : Scrapy-Playwright + social listening.
 
 ## Phase 5 — Brancher l'IA réelle — ~2-3 semaines (le plus incertain, prévoir buffer)
 
@@ -93,4 +93,4 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 ## Prochaine étape immédiate
 
-Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), le cron + Scrapy-Playwright (dernier point Phase 4), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
+Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), Scrapy-Playwright + social listening (dernier point Phase 4, le cron est en place depuis le 2026-08-07), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
