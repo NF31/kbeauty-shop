@@ -67,14 +67,49 @@ Liste etablie le 2026-08-06 suite a la veille Laravel News.
      absent sous cette machine WSL, limite connue) -> tests ecrits mais pas
      executes localement, a verifier en CI
 
+4. [FAIT 2026-08-06] spatie/laravel-csp
+   - Inventaire prealable exhaustif (fichier:ligne) de tout ce que le site charge en
+     tiers avant d'ecrire la moindre policy : Stripe.js (formulaire de paiement),
+     Google Tag Manager (script injecte apres consentement cookies), Crisp (chat
+     support, injecte sans attendre le consentement), Cloudflare Turnstile (anti-bot),
+     Cloudinary (res.cloudinary.com, toutes les images produits), api-adresse.data.gouv.fr
+     (autocompletion d'adresse, fetch direct cote client), Sentry (erreurs front, DSN
+     SaaS donc regions ingest.de/us.sentry.io). Klaviyo ecarte volontairement : appele
+     uniquement cote serveur (SendPlacedOrderEventToKlaviyo), jamais depuis le navigateur
+   - 4 presets officiels du package reutilises tels quels (Stripe, GoogleTagManager,
+     CloudflareTurnstile, Sentry) plutot que redefinis a la main - le preset Stripe
+     n'autorise pas connect-src vers api.stripe.com/m.stripe.network par choix du
+     package (les appels de l'iframe js.stripe.com sont regis par la CSP de Stripe,
+     pas celle du parent) : garde tel quel, a confirmer empiriquement par les
+     violations remontees plutot que suppose
+   - Preset custom `App\Support\Csp\KbeautyPreset` pour les 3 services sans preset
+     officiel : img-src Cloudinary, script-src/connect-src Crisp, connect-src
+     api-adresse.data.gouv.fr. Sous-domaine exact du WebSocket Crisp (probablement
+     client.relay.crisp.chat) non verifiable statiquement dans le code -> a confirmer
+     via les violations en report-only
+   - Active UNIQUEMENT en mode report-only (config/csp.php : 'presets' => [] vide,
+     tout dans 'report_only_presets') - aucun header CSP bloquant envoye, uniquement
+     Content-Security-Policy-Report-Only, verifie par une vraie requete HTTP locale
+     (APP_DEBUG=false pour contourner le garde-fou hot-reload du package qui saute
+     sinon l'ajout du header en dev)
+   - Pas de report_uri/reporting_endpoints configure pour l'instant (aurait demande soit
+     un service externe type report-uri.com, soit un endpoint interne a ecrire - hors
+     perimetre de "tester en report-only d'abord") : les violations sont visibles dans
+     la console de chaque navigateur lors de tests manuels, pas encore agregees
+     cote serveur
+   - Middleware `Spatie\Csp\AddCspHeaders` ajoute au groupe `web` dans bootstrap/app.php
+     (le package ne l'enregistre pas automatiquement, verifie en lisant CspServiceProvider)
+   - Verifie : policy generee inspectee via tinker (contenu coherent avec l'inventaire),
+     header confirme sur une vraie reponse HTTP locale, `pint --test` + `phpstan analyse`
+     clean sur les fichiers touches
+   - Prochaine etape (pas faite ici, hors perimetre demande) : observer les violations
+     reelles en prod pendant quelques jours/semaines, ajuster la policy (Crisp websocket,
+     eventuel besoin de nonce sur le script inline dark-mode et le script GTM injecte
+     dynamiquement), avant d'envisager de passer 'presets' en mode bloquant
+
 === A INSTALLER EN PRIORITE ===
 
 === A VERIFIER AVANT D'INSTALLER ===
-
-4. spatie/laravel-csp
-   - Content-Security-Policy en config plutot qu'en middleware maison
-   - Pertinent car le site charge du JS tiers (Stripe, Cloudinary, GTM)
-   - A tester en mode report-only d'abord pour ne rien casser
 
 === BLOQUES / PAS ENCORE PERTINENTS ===
 
