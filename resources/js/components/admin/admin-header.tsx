@@ -1,4 +1,5 @@
 import { usePage } from '@inertiajs/react';
+import { AdminSearchPalette } from '@/components/admin/admin-search-palette';
 import { AnimatedMenuButton } from '@/components/admin/animated-menu-button';
 import { Breadcrumbs } from '@/components/breadcrumbs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -26,6 +27,8 @@ export function AdminHeader({ breadcrumbs = [] }: AdminHeaderProps) {
                 <AnimatedMenuButton className="-ml-1 shrink-0" />
                 <Breadcrumbs breadcrumbs={breadcrumbs} />
             </div>
+
+            <AdminSearchPalette />
 
             {auth.user && (
                 <DropdownMenu>

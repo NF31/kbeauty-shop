@@ -8,15 +8,22 @@ use App\Models\ContactMessage;
 use App\Models\ContactMessageReplyLog;
 use App\Notifications\ContactMessageReply;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class ContactMessageController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search'));
+
         $messages = ContactMessage::query()
+            ->when($search !== '', fn ($query) => $query->where(fn ($q) => $q
+                ->whereLike('name', "%{$search}%")
+                ->orWhereLike('email', "%{$search}%")
+                ->orWhereLike('subject', "%{$search}%")))
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -34,6 +41,7 @@ class ContactMessageController extends Controller
         return Inertia::render('admin/contact-messages/index', [
             'messages' => $messages,
             'unreadCount' => ContactMessage::query()->unread()->count(),
+            'filters' => ['search' => $search],
         ]);
     }
 

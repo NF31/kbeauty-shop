@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { DataList } from '@/components/admin/data-list';
+import { ListFilters } from '@/components/admin/list-filters';
 import { PageHeader } from '@/components/admin/page-header';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
@@ -19,11 +20,13 @@ type ContactMessageRow = {
 type ContactMessagesIndexProps = {
     messages: Paginated<ContactMessageRow>;
     unreadCount: number;
+    filters: { search: string };
 };
 
 export default function ContactMessagesIndex({
     messages,
     unreadCount,
+    filters,
 }: ContactMessagesIndexProps) {
     return (
         <>
@@ -36,6 +39,11 @@ export default function ContactMessagesIndex({
                             ? `${unreadCount} message${unreadCount > 1 ? 's' : ''} non lu${unreadCount > 1 ? 's' : ''}.`
                             : 'Tous les messages ont été lus.'
                     }
+                />
+
+                <ListFilters
+                    search={filters.search}
+                    searchPlaceholder="Rechercher un message…"
                 />
 
                 <DataList

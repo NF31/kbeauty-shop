@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import { DataList } from '@/components/admin/data-list';
+import { ListFilters } from '@/components/admin/list-filters';
 import { PageHeader } from '@/components/admin/page-header';
 import type { Paginated } from '@/components/pagination';
 import { Pagination } from '@/components/pagination';
@@ -16,6 +17,8 @@ type ReturnRequestRow = {
 
 type ReturnRequestsIndexProps = {
     returnRequests: Paginated<ReturnRequestRow>;
+    filters: { search: string; status: string | null };
+    statusOptions: { value: string; label: string }[];
 };
 
 const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
@@ -26,6 +29,8 @@ const statusVariant: Record<string, 'default' | 'secondary' | 'destructive'> = {
 
 export default function ReturnRequestsIndex({
     returnRequests,
+    filters,
+    statusOptions,
 }: ReturnRequestsIndexProps) {
     return (
         <>
@@ -34,6 +39,14 @@ export default function ReturnRequestsIndex({
                 <PageHeader
                     title="Retours"
                     description="Demandes de retour soumises par les clients."
+                />
+
+                <ListFilters
+                    search={filters.search}
+                    searchPlaceholder="Rechercher par n° de commande…"
+                    status={filters.status}
+                    statusOptions={statusOptions}
+                    statusPlaceholder="Tous les statuts"
                 />
 
                 <DataList
