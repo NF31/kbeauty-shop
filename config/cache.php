@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 
 return [
@@ -129,8 +130,18 @@ return [
     | storage. By default, no PHP classes will be unserialized from your
     | cache to prevent gadget chain attacks if your APP_KEY is leaked.
     |
+    | laravel/pulse met en cache des Collection (et des stdClass pour la carte
+    | "Servers") pour ses widgets sur /pulse - sans ces deux entrees, chaque
+    | lecture cache renvoie un __PHP_Incomplete_Class au lieu du vrai objet
+    | (erreur 500 sur toutes les cartes Pulse). Liste volontairement minimale :
+    | ce sont des types de donnees, sans __wakeup/__destruct exploitable, pas
+    | equivalent a `true` qui autoriserait n'importe quelle classe de gadget.
+    |
     */
 
-    'serializable_classes' => false,
+    'serializable_classes' => [
+        Collection::class,
+        stdClass::class,
+    ],
 
 ];
