@@ -64,7 +64,7 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 - [x] Pipeline `cassandra-driver` pour pousser les résultats dans Cassandra — deux tables (`gammes`, `products`), local **et** Astra DB ("prod" managée)
 - [ ] Scrapy-Playwright + social listening une fois le pipeline de base validé
 
-**Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`) — le cron n'est pas encore en place, le spider tourne pour l'instant manuellement.
+**Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`). Cron en place (2026-08-07) : `scripts/run_crawl.sh` dans `kbeauty-ingredients-scraper`, installé en crontab utilisateur quotidien à 3h — s'assure que Cassandra tourne avant de lancer le spider, log horodaté dans `logs/`. Reste : Scrapy-Playwright + social listening.
 
 ## Phase 5 — Brancher l'IA réelle — ~2-3 semaines (le plus incertain, prévoir buffer)
 
