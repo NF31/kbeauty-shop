@@ -27,6 +27,7 @@ function getServerSnapshot(): boolean {
     return false;
 }
 
+/** `useSyncExternalStore` plutôt que useState+useEffect : `mql` (MediaQueryList) est déjà une source externe vivante, pas besoin de dupliquer son état dans un state React ni de gérer l'abonnement manuellement dans un effect. */
 export function useIsMobile(): boolean {
     return useSyncExternalStore(
         mediaQueryListener,

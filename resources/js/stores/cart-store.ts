@@ -1,5 +1,12 @@
 import { create } from 'zustand';
 
+/**
+ * Miroir client du panier serveur, utilisé pour que le compteur du header et
+ * le mini-panier réagissent instantanément (optimistic update) sans attendre
+ * le round-trip Inertia — chaque action serveur renvoie ensuite le panier à
+ * jour via sync(), qui écrase l'état optimiste par la source de vérité.
+ */
+
 export type CartStoreItem = {
     id: number;
     productName: string;

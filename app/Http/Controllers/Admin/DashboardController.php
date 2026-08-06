@@ -17,6 +17,9 @@ class DashboardController extends Controller
     {
         $lowStockThreshold = config('inventory.low_stock_threshold');
 
+        // Le CA compte une commande dès qu'elle est payée, même si elle n'est
+        // pas encore livrée — Pending (pas payée), Cancelled et Refunded en
+        // sont exclues.
         $revenueStatuses = [
             OrderStatus::Paid,
             OrderStatus::Processing,

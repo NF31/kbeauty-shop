@@ -7,6 +7,7 @@ use App\Enums\InventoryMovementType;
 use App\Models\InventoryMovement;
 use App\Models\ProductVariant;
 
+/** Implémentation Eloquent {@see StockRepositoryInterface}. */
 class EloquentStockRepository implements StockRepositoryInterface
 {
     public function lockVariant(int $variantId): ProductVariant

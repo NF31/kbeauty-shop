@@ -33,6 +33,10 @@ export default function ManageTwoFactor(props: Props) {
     const prevTwoFactorEnabled = useRef(twoFactorEnabled);
 
     useEffect(() => {
+        // Sur transition enabled -> disabled (via le formulaire Disable 2FA,
+        // pas au montage initial) : vide le QR/clé/codes en mémoire pour
+        // qu'une réactivation ultérieure ne réaffiche pas d'anciennes
+        // données de setup périmées.
         if (prevTwoFactorEnabled.current && !twoFactorEnabled) {
             clearTwoFactorAuthData();
         }

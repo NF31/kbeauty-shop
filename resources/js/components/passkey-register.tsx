@@ -10,6 +10,9 @@ type Props = {
 };
 
 export default function PasskeyRegistration({ onSuccess }: Props) {
+    // Le navigateur ne fournit aucun nom d'appareil via l'API WebAuthn —
+    // ce sniffing UA ne sert qu'à pré-remplir un nom par défaut modifiable,
+    // pas à une décision fonctionnelle.
     const [name, setName] = useState(() => {
         const ua = navigator.userAgent;
 

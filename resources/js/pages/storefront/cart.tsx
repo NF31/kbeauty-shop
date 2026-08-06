@@ -32,6 +32,9 @@ export default function CartPage({
     const sync = useCartStore((state) => state.sync);
     const { updateQuantity, removeItem } = useCartActions();
 
+    // Point de resynchronisation du store avec les props Inertia (source de
+    // vérité) à chaque chargement/navigation de cette page — voir
+    // stores/cart-store.ts pour le reste du cycle optimistic update.
     useEffect(() => {
         sync({ items, subtotalCents, totalCents, currency });
     }, [items, subtotalCents, totalCents, currency, sync]);

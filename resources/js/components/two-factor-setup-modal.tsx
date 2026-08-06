@@ -81,6 +81,8 @@ function TwoFactorSetupStep({
                                         dangerouslySetInnerHTML={{
                                             __html: qrCodeSvg,
                                         }}
+                                        // Le QR code renvoyé par le backend est toujours noir sur blanc ;
+                                        // en dark mode, l'inverser le rend lisible sans changer le SVG côté serveur.
                                         style={{
                                             filter:
                                                 resolvedAppearance === 'dark'

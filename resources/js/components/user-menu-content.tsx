@@ -29,6 +29,9 @@ type Props = {
 export function UserMenuContent({ user }: Props) {
     const cleanup = useMobileNavigation();
     const { auth } = usePage().props;
+    // N'affiche que le lien : le contrôle d'accès réel est côté serveur
+    // (routes/admin.php, middleware role:admin|staff|support) — cette liste
+    // doit rester alignée avec le backend, pas une source de vérité.
     const canAccessAdmin = ['admin', 'staff', 'support'].some((role) =>
         auth.roles.includes(role),
     );

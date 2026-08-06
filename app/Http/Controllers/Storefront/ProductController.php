@@ -15,6 +15,9 @@ class ProductController extends Controller
 {
     public function show(Request $request, Product $product, CloudinaryService $cloudinary): Response
     {
+        // 404 (pas 403) pour un produit Draft/Archived : même comportement
+        // qu'un slug inexistant, pour ne pas révéler qu'un produit non
+        // publié existe à cette URL.
         abort_if($product->status !== ProductStatus::Published, 404);
 
         $product->load(['brand:id,name', 'variants', 'images']);

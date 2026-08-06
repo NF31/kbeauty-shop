@@ -2,6 +2,9 @@
 
 namespace App\Enums;
 
+use App\Http\Controllers\Admin\ReturnRequestController;
+
+/** `Submitted` est le seul statut depuis lequel `accept()`/`refuse()` sont autorisés (garde dans {@see ReturnRequestController}). */
 enum ReturnRequestStatus: string
 {
     case Submitted = 'submitted';

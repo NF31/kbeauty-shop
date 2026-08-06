@@ -9,6 +9,11 @@ export type UseAppearanceReturn = {
     readonly updateAppearance: (mode: Appearance) => void;
 };
 
+// État module-level (pas useState) : `initializeTheme()` doit pouvoir
+// appliquer le thème avant même le premier rendu React (app.tsx, appelé au
+// bootstrap pour éviter un flash de thème par défaut), donc l'état ne peut
+// pas vivre dans un composant. `useAppearance()` s'y abonne juste via
+// useSyncExternalStore pour que les composants re-rendent quand il change.
 const listeners = new Set<() => void>();
 let currentAppearance: Appearance = 'system';
 

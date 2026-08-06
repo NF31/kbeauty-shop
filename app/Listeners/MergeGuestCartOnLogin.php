@@ -10,6 +10,11 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cookie;
 
+/**
+ * Sur connexion, fusionne le panier invité (identifié par le cookie
+ * {@see CartService::COOKIE_NAME}) dans le panier du compte,
+ * puis oublie le cookie — sans effet si aucun panier invité n'existe.
+ */
 class MergeGuestCartOnLogin
 {
     public function __construct(

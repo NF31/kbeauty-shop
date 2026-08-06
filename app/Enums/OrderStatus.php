@@ -2,6 +2,11 @@
 
 namespace App\Enums;
 
+/**
+ * Pas de machine à états formelle : chaque UseCase pose le statut qui le
+ * concerne directement (`Paid` par ConfirmOrderPayment, `Refunded` par
+ * RefundOrder...), sans validation centralisée des transitions autorisées.
+ */
 enum OrderStatus: string
 {
     case Pending = 'pending';
