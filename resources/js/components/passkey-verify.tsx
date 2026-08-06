@@ -17,23 +17,45 @@ type Props = {
     separator?: string;
 };
 
+const ERROR_MESSAGES: Record<string, string> = {
+    NotSupportedError:
+        'Les passkeys ne sont pas prises en charge par ce navigateur.',
+    UserCancelledError: 'Opération annulée.',
+    PasskeyExistsError: 'Cet appareil est déjà enregistré comme passkey.',
+    InvalidDomainError: "Ce domaine n'est pas autorisé pour les passkeys.",
+};
+
+function translateError(errorInstance: Error | null, fallback: string | null) {
+    if (!errorInstance) {
+        return fallback;
+    }
+
+    return (
+        ERROR_MESSAGES[errorInstance.name] ??
+        "Une erreur est survenue lors de l'authentification par passkey."
+    );
+}
+
 export default function PasskeyVerify({
     routes,
     label,
     loadingLabel,
     separator,
 }: Props = {}) {
-    const { verify, isLoading, error, isSupported } = usePasskeyVerify({
-        ...(routes && {
-            routes: {
-                options: routes.options.url,
-                submit: routes.submit.url,
+    const { verify, isLoading, error, errorInstance, isSupported } =
+        usePasskeyVerify({
+            ...(routes && {
+                routes: {
+                    options: routes.options.url,
+                    submit: routes.submit.url,
+                },
+            }),
+            onSuccess: (response) => {
+                router.visit(response.redirect ?? '/dashboard');
             },
-        }),
-        onSuccess: (response) => {
-            router.visit(response.redirect ?? '/dashboard');
-        },
-    });
+        });
+
+    const translatedError = translateError(errorInstance, error);
 
     if (!isSupported) {
         return null;
@@ -51,11 +73,14 @@ export default function PasskeyVerify({
                 >
                     {isLoading ? <Spinner /> : <KeyRound className="h-4 w-4" />}
                     {isLoading
-                        ? (loadingLabel ?? 'Authenticating...')
-                        : (label ?? 'Sign in with a passkey')}
+                        ? (loadingLabel ?? 'Authentification...')
+                        : (label ?? 'Se connecter avec une passkey')}
                 </Button>
-                {error && (
-                    <InputError message={error} className="text-center" />
+                {translatedError && (
+                    <InputError
+                        message={translatedError}
+                        className="text-center"
+                    />
                 )}
             </div>
 
@@ -65,7 +90,7 @@ export default function PasskeyVerify({
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                     <span className="bg-background px-2 text-muted-foreground">
-                        {separator ?? 'Or continue with email'}
+                        {separator ?? 'Ou continuer avec un email'}
                     </span>
                 </div>
             </div>
