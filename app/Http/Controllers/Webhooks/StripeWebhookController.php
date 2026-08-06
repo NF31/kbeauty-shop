@@ -2,11 +2,12 @@
 
 namespace App\Http\Controllers\Webhooks;
 
-use App\Application\Orders\UseCases\ConfirmOrderPayment;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessStripeWebhookJob;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Spatie\WebhookClient\Models\WebhookCall;
 use Stripe\Exception\SignatureVerificationException;
 
 /**
@@ -26,7 +27,7 @@ class StripeWebhookController extends Controller
      */
     private const PAYMENT_SUCCEEDED_EVENTS = ['checkout.session.completed', 'checkout.session.async_payment_succeeded'];
 
-    public function __invoke(Request $request, PaymentGatewayInterface $gateway, ConfirmOrderPayment $confirmOrderPayment): Response
+    public function __invoke(Request $request, PaymentGatewayInterface $gateway): Response
     {
         $signature = $request->header('Stripe-Signature');
 
@@ -46,7 +47,14 @@ class StripeWebhookController extends Controller
             && $event->sessionId
             && $event->paymentIntentId
         ) {
-            $confirmOrderPayment($event->sessionId, $event->paymentIntentId);
+            $webhookCall = WebhookCall::create([
+                'name' => 'stripe',
+                'url' => $request->fullUrl(),
+                'headers' => $request->headers->all(),
+                'payload' => $request->json()->all(),
+            ]);
+
+            ProcessStripeWebhookJob::dispatch($webhookCall, $event);
         }
 
         return response('', 200);
