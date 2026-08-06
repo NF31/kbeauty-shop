@@ -1,3 +1,9 @@
+---
+title: Structure de dossiers sous WSL Ubuntu
+group: Montée en compétence
+order: 8
+---
+
 ← [Retour au sommaire](README.md)
 
 # 8. Structure de dossiers sous WSL Ubuntu

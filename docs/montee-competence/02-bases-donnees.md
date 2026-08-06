@@ -1,3 +1,9 @@
+---
+title: Référentiel des bases de données & flux
+group: Montée en compétence
+order: 2
+---
+
 ← [Retour au sommaire](README.md)
 
 # 2. Référentiel des bases de données & flux (persistance polyglotte)

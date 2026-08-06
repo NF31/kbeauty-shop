@@ -1,3 +1,9 @@
+---
+title: Vue d'ensemble de l'écosystème distribué
+group: Montée en compétence
+order: 1
+---
+
 ← [Retour au sommaire](README.md)
 
 # 1. Vue d'ensemble de l'écosystème distribué (2026)

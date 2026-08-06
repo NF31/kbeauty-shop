@@ -1,3 +1,9 @@
+---
+title: Roadmap — Montée en compétence
+group: Montée en compétence
+order: 11
+---
+
 ← [Retour au sommaire](README.md)
 
 # Roadmap — Montée en compétence (prép. Master MIAGE)

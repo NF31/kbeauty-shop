@@ -1,3 +1,8 @@
+---
+title: Modèle de données
+order: 3
+---
+
 # Modèle de données
 
 Conventions Laravel/Eloquent + PostgreSQL. Tables au pluriel snake_case, clés étrangères `xxx_id`.
@@ -184,6 +189,10 @@ filtrer/afficher un sélecteur par axe (comme sur uniikon.com : "50ml / 100ml" +
 ### cart_items
 | id | cart_id fk | product_variant_id fk | quantity | unit_price_cents (snapshot) |
 
+> **Design cible, pas encore migré** (aucune migration `cart_gift_items` /
+> `gift_threshold_rules` / `gift_threshold_rule_rewards` en base à ce jour — feature P2, voir
+> `FEATURES.md`/`ROADMAP.md`) :
+
 ### cart_gift_items (cadeaux à paliers — ajoutés automatiquement, non modifiables par le client)
 | id | cart_id fk | product_variant_id fk | gift_threshold_rule_id fk | added_automatically boolean default true |
 
@@ -246,7 +255,7 @@ Une seule demande active (`submitted`/`accepted`) par commande à la fois — vo
 ### shipments
 | id | order_id fk | carrier (Sendcloud) | tracking_number nullable | tracking_url nullable | status(enum: `pending`,`shipped`,`delivered`) | shipped_at nullable | delivered_at nullable |
 
-### coupons
+### coupons — **design cible, pas encore migré** (feature P2, voir `FEATURES.md`/`ROADMAP.md`)
 | id | code unique | type(enum: `percentage`,`fixed`) | value | min_order_cents nullable | starts_at | expires_at | usage_limit nullable | times_used default 0 | is_active |
 
 ## Avis clients
@@ -288,6 +297,29 @@ Contrainte unique `(product_id, order_item_id)` pour empêcher plusieurs avis su
 
 ### wishlists
 | id | user_id fk | product_id fk | created_at | contrainte unique `(user_id, product_id)` |
+
+## Tables opérationnelles / infra (ajoutées après la conception initiale)
+
+### invoices
+| id | order_id fk unique | number unique | path (PDF, dompdf) | total_cents | currency | issued_at | timestamps |
+
+### contact_messages
+| id | name | email | subject | message | read_at nullable | timestamps |
+
+### contact_message_replies
+| id | contact_message_id fk | user_id fk nullable | message | created_at |
+
+### webhook_calls
+| id | name | url | headers (json) | payload (json) | attachments (json) | exception nullable | timestamps |
+
+> Fournie par `spatie/laravel-webhook-client` (voir `STACK.md`). Persiste chaque webhook Stripe
+> reçu ; `ProcessStripeWebhookJob` s'appuie sur `payload->id` (event.id Stripe) pour dédupliquer,
+> voir `ARCHITECTURE.md`.
+
+### activity_log, pulse_values / pulse_entries / pulse_aggregates, tables health-check
+Tables générées par `spatie/laravel-activitylog`, `laravel/pulse` et `spatie/laravel-health`
+respectivement (voir `STACK.md`) — schéma géré par le package, pas de migration maison à maintenir
+ici.
 
 ## Notes d'implémentation Laravel
 

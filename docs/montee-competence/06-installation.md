@@ -1,3 +1,9 @@
+---
+title: Manuel d'installation des composants
+group: Montée en compétence
+order: 6
+---
+
 ← [Retour au sommaire](README.md)
 
 # 6. Manuel d'installation des composants (WSL Ubuntu)
