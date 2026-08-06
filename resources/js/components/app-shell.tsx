@@ -9,6 +9,9 @@ type Props = {
 };
 
 export function AppShell({ children, variant = 'sidebar' }: Props) {
+    // sidebarOpen vient du cookie `sidebar_state` lu côté serveur
+    // (HandleInertiaRequests), pas d'un state client — évite le flash
+    // ouvert/fermé au chargement d'une nouvelle page Inertia.
     const isOpen = usePage().props.sidebarOpen;
 
     if (variant === 'header') {

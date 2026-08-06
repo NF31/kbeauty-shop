@@ -147,6 +147,9 @@ class OrderController extends Controller
                 ]),
                 'hasInvoice' => $hasInvoice,
             ],
+            // `Refunded` n'est pas sélectionnable manuellement ici : ce statut
+            // n'est posé que par le flux de remboursement (refund()/RefundOrder),
+            // jamais par un changement de statut arbitraire.
             'statusOptions' => array_map(
                 fn (OrderStatus $status) => ['value' => $status->value, 'label' => $status->label()],
                 array_filter(OrderStatus::cases(), fn (OrderStatus $status) => $status !== OrderStatus::Refunded),

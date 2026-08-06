@@ -6,6 +6,7 @@ use App\Domain\Orders\Contracts\InvoiceRepositoryInterface;
 use App\Models\Invoice;
 use App\Models\Order;
 
+/** Implémentation Eloquent {@see InvoiceRepositoryInterface} : une facture par commande. */
 class EloquentInvoiceRepository implements InvoiceRepositoryInterface
 {
     public function findForOrder(Order $order): ?Invoice

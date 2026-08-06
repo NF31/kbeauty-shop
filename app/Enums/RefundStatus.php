@@ -2,6 +2,7 @@
 
 namespace App\Enums;
 
+/** Statut du `Refund` Stripe lui-même — distinct de {@see PaymentStatus::Refunded}, qui reflète le `Payment` parent une fois le remboursement effectif. */
 enum RefundStatus: string
 {
     case Pending = 'pending';

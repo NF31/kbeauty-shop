@@ -12,6 +12,12 @@ use App\Models\ProductVariant;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 
+/**
+ * Toute variation de `stock_quantity` passe par
+ * {@see RecordStockMovement} (type `Adjustment`) plutôt qu'un `update()`
+ * direct, pour que chaque changement laisse une trace dans
+ * `inventory_movements`.
+ */
 class ProductVariantController extends Controller
 {
     public function store(StoreProductVariantRequest $request, Product $product, RecordStockMovement $recordStockMovement): RedirectResponse

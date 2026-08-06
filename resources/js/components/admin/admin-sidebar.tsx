@@ -33,6 +33,9 @@ import type { NavItem } from '@/types';
 
 export function AdminSidebar() {
     const { auth } = usePage().props;
+    // N'affiche/masque que les entrées de menu : chaque route admin a sa
+    // propre garde côté serveur (routes/admin.php), ces conditions ne
+    // remplacent pas le contrôle d'accès.
     const canManageProducts = auth.permissions.includes('products.manage');
     const canViewSystem = auth.permissions.includes('settings.manage');
     const isAdmin = auth.roles.includes('admin');

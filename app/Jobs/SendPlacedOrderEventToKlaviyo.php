@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 
+/** Dispatché à la confirmation de paiement (ConfirmOrderPayment) pour synchroniser l'event "Placed Order" côté Klaviyo. */
 class SendPlacedOrderEventToKlaviyo implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;

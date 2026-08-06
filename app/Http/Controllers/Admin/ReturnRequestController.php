@@ -70,6 +70,8 @@ class ReturnRequestController extends Controller
 
     public function accept(ReturnRequest $returnRequest, AcceptReturnRequest $acceptReturnRequest): RedirectResponse
     {
+        // Une demande déjà acceptée/refusée ne peut pas être rejouée (évite
+        // un double remboursement si l'admin recharge/soumet deux fois).
         abort_if($returnRequest->status !== ReturnRequestStatus::Submitted, 422);
 
         try {

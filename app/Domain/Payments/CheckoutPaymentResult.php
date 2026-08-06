@@ -2,6 +2,14 @@
 
 namespace App\Domain\Payments;
 
+use App\Application\Orders\UseCases\ProcessCheckoutPayment;
+
+/**
+ * Résultat de {@see ProcessCheckoutPayment} :
+ * soit le paiement est déjà confirmé côté Stripe (`alreadySucceeded`, session
+ * rechargée après succès), soit une Checkout Session reste à afficher/payer
+ * (`pending`, avec les infos nécessaires au formulaire côté client).
+ */
 final readonly class CheckoutPaymentResult
 {
     private function __construct(
