@@ -129,8 +129,18 @@ Liste etablie le 2026-08-06 suite a la veille Laravel News.
    - Chevauche Horizon (queues) et Sentry (erreurs) -> si un jour installe, seulement pour la
      partie "schedules", pas pour remplacer Horizon/Sentry
 
-6. Signal (doc auto par attributs PHP)
-   - Requiert PHP 8.5+, projet en ^8.4 -> bloque tant que pas de montee de version PHP
+6. [VERIFIE 2026-08-06] Signal (juststeveking/signal - doc auto par attributs PHP)
+   - PHP 8.5+ n'est plus un blocage : projet passe a "php": "^8.5" (composer.json)
+   - Mais BLOQUE pour une autre raison : son composer.json exige symfony/console
+     en 8.1.x-dev (branche de dev instable, pas un tag stable), incompatible avec
+     minimum-stability du projet -> `composer require --dev juststeveking/signal
+     --dry-run` echoue ("does not match your minimum-stability"). Seul
+     contournement serait de passer minimum-stability du projet en dev, ce qui
+     exposerait tout le reste des dependances a des versions non stables -
+     inacceptable sur un site en prod live
+   - Package tres jeune (v1.0.1, 91 telechargements, 0 dependant sur Packagist)
+   - A reevaluer si le mainteneur publie un tag qui pointe sur symfony/console
+     en version stable
 
 7. Email Magic Link
    - Connexion sans mot de passe compatible Fortify (deja en place)
