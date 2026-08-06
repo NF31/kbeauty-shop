@@ -1,3 +1,8 @@
+---
+title: Architecture technique
+order: 2
+---
+
 # Architecture technique
 
 ## 1. Stack
@@ -82,7 +87,8 @@ Kbeauty/
 │   │   │       └── StripeWebhookController.php
 │   │   ├── Middleware/                 # Déjà présent
 │   │   └── Requests/                   # Form Requests de validation
-│   ├── Jobs/                           # Jobs Horizon (email, sync stock, indexation Scout)
+│   ├── Jobs/                           # Jobs Horizon (email, sync stock, indexation Scout,
+│   │                                    # ProcessStripeWebhookJob, SendPlacedOrderEventToKlaviyo)
 │   ├── Models/                         # Product, ProductVariant, Order, Review... (voir DATA_MODEL.md)
 │   ├── Notifications/                  # OrderConfirmed, OrderShipped...
 │   ├── Observers/                      # ProductObserver (reviews_avg_rating), OrderObserver
@@ -282,6 +288,15 @@ traduire du texte provisoire). Détail des routes déjà traduites : `docs/FEATU
    remboursements, cf. `RefundOrder`), déclenche un Job Horizon (email confirmation via Resend,
    décrément stock, création `Shipment` à traiter).
 4. Les remboursements passent par l'admin (Inertia/React) → Action `RefundOrder` → API Stripe → `Refund`.
+
+**Traçabilité & retry (`spatie/laravel-webhook-client`)** : `StripeWebhookController` reste seul
+responsable de la vérification de signature (codes 400/500 inchangés) ; une fois validé, chaque
+event est persisté dans `webhook_calls` (voir `DATA_MODEL.md`) puis délégué à
+`ProcessStripeWebhookJob` (`ShouldQueue`, 5 tentatives, backoff exponentiel) pour les événements de
+paiement réussi. Dédup par `payload->id` (event.id Stripe) : ne saute que les events déjà traités
+**avec succès** (`webhook_calls.exception IS NULL`) — une tentative échouée reste retentable à la
+prochaine redelivraison Stripe. `QUEUE_CONNECTION=redis` en prod (vrai retry asynchrone via
+Horizon) ; `=sync` en test (le job tourne dans la requête).
 
 ## 5. Recherche (Scout + Meilisearch)
 

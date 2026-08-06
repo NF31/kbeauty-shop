@@ -1,3 +1,9 @@
+---
+title: Gestion des emails & monitoring croisé
+group: Montée en compétence
+order: 3
+---
+
 ← [Retour au sommaire](README.md)
 
 # 3. Gestion des emails & monitoring croisé

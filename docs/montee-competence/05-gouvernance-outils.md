@@ -1,3 +1,9 @@
+---
+title: Outils de gouvernance, modélisation & pilotage
+group: Montée en compétence
+order: 5
+---
+
 ← [Retour au sommaire](README.md)
 
 # 5. Outils de gouvernance, modélisation & pilotage (SI)

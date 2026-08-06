@@ -1,3 +1,9 @@
+---
+title: Axes hors programme
+group: Montée en compétence
+order: 7
+---
+
 ← [Retour au sommaire](README.md)
 
 # 7. Axes hors programme (extensions libres)

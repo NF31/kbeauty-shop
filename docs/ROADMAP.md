@@ -1,3 +1,8 @@
+---
+title: Roadmap
+order: 5
+---
+
 # Roadmap
 
 Phasage basé sur `FEATURES.md` (Phases 1-11, numérotation `#.#` = section.tâche). Objectif : livrer

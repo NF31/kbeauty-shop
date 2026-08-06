@@ -1,3 +1,8 @@
+---
+title: Stack technique
+order: 6
+---
+
 # Stack technique — Site E-commerce Laravel/Inertia
 
 Référence unique des technologies et packages retenus pour le projet. `ARCHITECTURE.md` explique
@@ -27,38 +32,32 @@ le *pourquoi* de certains choix ; ce document liste précisément *quoi installe
 
 ## 2. Packages Composer (PHP)
 
-Packages restant à installer (le reste du tableau §1 est déjà couvert par le starter, voir note
-ci-dessous) :
+Tous les packages ci-dessous sont installés (voir `composer.json` pour les contraintes de version
+exactes) :
 
-```bash
-composer require spatie/laravel-permission
-composer require stripe/stripe-php
-composer require brick/money
-composer require cloudinary/cloudinary_php
-composer require laravel/scout
-composer require meilisearch/meilisearch-php
-composer require resend/resend-laravel
-composer require spatie/laravel-sluggable
-composer require spatie/laravel-sitemap
-composer require spatie/laravel-translatable
-composer require artesaos/seotools
-composer require barryvdh/laravel-dompdf
-composer require laravel/horizon
-composer require sentry/sentry-laravel
-composer require spatie/laravel-health
 ```
+spatie/laravel-permission      stripe/stripe-php               brick/money
+cloudinary/cloudinary_php      laravel/scout                    meilisearch/meilisearch-php
+resend/resend-laravel          spatie/laravel-sluggable         spatie/laravel-sitemap
+spatie/laravel-translatable    barryvdh/laravel-dompdf          laravel/horizon
+sentry/sentry-laravel          spatie/laravel-health            predis/predis
+spatie/laravel-activitylog     spatie/laravel-backup            spatie/laravel-honeypot
+laravel/pulse                  spatie/laravel-csp               spatie/laravel-webhook-client
+petebishwhip/laradocs          laravel/chisel                   laravel/passkeys
+```
+
+> `artesaos/seotools` évalué puis écarté : SEO géré à la main (meta tags + JSON-LD dans
+> `seo-head.tsx`, voir `ARCHITECTURE.md`).
 
 ### Dev only (Composer)
 
-```bash
-composer require --dev laravel/telescope
-composer require --dev barryvdh/laravel-debugbar
-```
+Installés : `laravel/telescope`, `barryvdh/laravel-debugbar`, `andreapollastri/checkpoint`
+(scanner de sécurité, `php artisan checkpoint:scan`).
 
 > Déjà présents dans le starter, ne pas réinstaller : `laravel/fortify`, `inertiajs/inertia-laravel`,
-> `laravel/framework`, `laravel/tinker`, `laravel/wayfinder`, `laravel/chisel`, `laravel/passkeys`,
-> `larastan/larastan`, `pestphp/pest` + `pest-plugin-laravel`, `fakerphp/faker`, `laravel/pail`,
-> `laravel/pint`, `laravel/sail`, `mockery/mockery`, `nunomaduro/collision`.
+> `laravel/framework`, `laravel/tinker`, `laravel/wayfinder`, `larastan/larastan`, `pestphp/pest`
+> + `pest-plugin-laravel`, `fakerphp/faker`, `laravel/pail`, `laravel/pint`, `laravel/sail`,
+> `mockery/mockery`, `nunomaduro/collision`, `laravel/pao`.
 
 ### Packages optionnels (Phase 11, à installer seulement si la feature est activée)
 
@@ -68,26 +67,15 @@ composer require laravel/cashier           # réachat/abonnement récurrent (P3,
 
 ## 3. Packages NPM (JS/TS)
 
-Packages restant à installer :
+Tous les packages ci-dessous sont installés (voir `package.json`) : `zustand`, `zod`,
+`react-hook-form`, `@radix-ui/react-tabs`, `laravel-react-i18n`, `recharts`, `heroicons` (set
+d'icônes consommé au runtime par Laradocs, voir §2 de `FEATURES.md` / documentation interne).
 
-```bash
-npm install zustand zod react-hook-form
-npm install @radix-ui/react-tabs
-npm install laravel-react-i18n
-```
-
-> `@radix-ui/react-tabs` n'est pas déjà dans le starter (les autres `@radix-ui/react-*` oui) —
-> nécessaire dès la Phase 2 pour les onglets Bénéfices/Description/Ingrédients/Avis de la fiche
-> produit.
->
-> `recharts` n'est nécessaire qu'à la Phase 7 (KPIs admin, voir `FEATURES.md`) — à installer à ce
-> moment-là plutôt que dès le départ : `npm install recharts`.
->
 > L'admin (back-office) est un module Inertia/React comme le storefront, pas un package séparé.
 > Pas de nouvelle dépendance de table de données pour l'instant : un composant `DataTable`
 > réutilisable est construit sur le composant `Table` de shadcn/ui (déjà dans le starter). Si le
-> besoin de tri/filtrage/pagination avancé le justifie une fois les premières ressources admin
-> construites (16.1), évaluer `@tanstack/react-table` à ce moment-là plutôt que par anticipation.
+> besoin de tri/filtrage/pagination avancé le justifie, évaluer `@tanstack/react-table` à ce
+> moment-là plutôt que par anticipation.
 >
 > `@headlessui/react` n'est pas ajouté par défaut : les primitives `@radix-ui/react-*` déjà
 > installées (base de shadcn/ui) couvrent la même fonction. Ne l'installer que si un composant
@@ -117,6 +105,11 @@ starter.
 | `spatie/laravel-health` | vue d'ensemble santé infra (DB, Redis, queue, Horizon, disque, sauvegardes) sur `/admin/health` (22.5) — complète Sentry (erreurs applicatives) par une vision infra que Sentry ne couvre pas |
 | `laravel/telescope` / `barryvdh/laravel-debugbar` | debug local uniquement — **ne jamais activer en production** |
 | `laravel-react-i18n` + `spatie/laravel-translatable` | multi-langue FR/EN : `t()`/`tChoice()` côté front (clés = phrase française) + colonnes JSON traduisibles côté back (`Product.name`/`description`/etc.) — voir `ARCHITECTURE.md` §3ter |
+| `laravel/pulse` | dashboard de perf temps réel (`/pulse`, requêtes lentes, jobs, exceptions), gaté `permission:settings.manage` |
+| `spatie/laravel-csp` | Content-Security-Policy en config plutôt qu'en middleware maison, actif en mode report-only |
+| `spatie/laravel-webhook-client` | modèle `WebhookCall` + `ProcessStripeWebhookJob` (queue, retry, dédup par `event.id`) en couche fine devant `StripeWebhookController`, voir `ARCHITECTURE.md` |
+| `andreapollastri/checkpoint` (dev) | scanner de sécurité statique (CVE, injection, CSRF, mass-assignment...), `php artisan checkpoint:scan` |
+| `petebishwhip/laradocs` | rend `docs/` consultable sur `/docs` (nav, recherche, SEO), gaté `permission:settings.manage` — documentation manuelle, pas de génération à partir du code |
 
 ## 5. Configuration `.env` (extraits clés)
 

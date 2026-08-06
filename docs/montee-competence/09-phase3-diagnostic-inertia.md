@@ -1,3 +1,9 @@
+---
+title: Phase 3 — Page diagnostic en Inertia
+group: Montée en compétence
+order: 9
+---
+
 ← [Retour au sommaire](README.md)
 
 # 9. Phase 3 — Page diagnostic en Inertia

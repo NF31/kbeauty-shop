@@ -1,3 +1,8 @@
+---
+title: Arborescence du site & contenus
+order: 8
+---
+
 # Arborescence du site & contenus
 
 ## 1. Plan du site (storefront public)

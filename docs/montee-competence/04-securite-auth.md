@@ -1,3 +1,9 @@
+---
+title: Architecture de sécurité & authentification
+group: Montée en compétence
+order: 4
+---
+
 ← [Retour au sommaire](README.md)
 
 # 4. Architecture de sécurité & authentification

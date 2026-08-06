@@ -1,3 +1,9 @@
+---
+title: Phase 4 — Scraping Scrapy & pipeline Cassandra
+group: Montée en compétence
+order: 10
+---
+
 ← [Retour au sommaire](README.md)
 
 # 10. Phase 4 — Scraping Scrapy & pipeline Cassandra
