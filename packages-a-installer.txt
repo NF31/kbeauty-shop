@@ -1,0 +1,70 @@
+PACKAGES A INSTALLER - KBEAUTY
+Liste etablie le 2026-08-06 suite a la veille Laravel News.
+
+=== A INSTALLER EN PRIORITE ===
+
+1. Checkpoint (dev dependency)
+   - Scanner de securite Laravel : 26 checks (CVE dependances, injection, CSRF,
+     mass-assignment, cookies/session non securises, CORS, TLS desactive, debug en prod...)
+   - Pertinent MAINTENANT : GitHub a signale 2 vulnerabilites Dependabot (1 high, 1 moderate)
+   - Compatible Laravel 8-13 (projet en ^13.17)
+   - Dev-only, aucun risque prod, sortie JSON + exit code 1 -> integrable dans `composer ci:check`
+   - Commande : `php artisan checkpoint:scan`
+   - Limite : pattern-matching statique, pas une preuve d'exploitabilite -> lire les resultats, pas confiance aveugle
+
+2. laravel/pulse
+   - Dashboard de perf temps reel (requetes lentes, jobs, exceptions)
+   - Officiel Laravel, gratuit, complete Sentry/Horizon deja en place
+   - Installation rapide (~10 min)
+
+=== A VERIFIER AVANT D'INSTALLER ===
+
+3. Watchtower
+   - Dashboard unifie schedules + queues + erreurs, alertes Slack/webhook/email integrees gratuitement
+   - Comble un vrai trou : aucune des 7 taches planifiees (routes/console.php) n'a de
+     surveillance dediee (backup:run, cart:send-abandoned-reminders, etc.)
+   - ATTENTION : compat annoncee Laravel 11/12 seulement, projet en Laravel 13.17
+     -> verifier compatibilite reelle avant d'installer en prod (site live)
+   - Chevauche Horizon (queues) et Sentry (erreurs) -> installer seulement pour la partie
+     "schedules", pas pour remplacer Horizon/Sentry
+
+4. spatie/laravel-csp
+   - Content-Security-Policy en config plutot qu'en middleware maison
+   - Pertinent car le site charge du JS tiers (Stripe, Cloudinary, GTM)
+   - A tester en mode report-only d'abord pour ne rien casser
+
+5. spatie/laravel-webhook-client
+   - Validation/tracabilite generique des webhooks entrants
+   - A verifier : le webhook Stripe actuel gere-t-il deja retry/log correctement ?
+     Si oui, apport limite.
+
+=== BLOQUES / PAS ENCORE PERTINENTS ===
+
+6. Signal (doc auto par attributs PHP)
+   - Requiert PHP 8.5+, projet en ^8.4 -> bloque tant que pas de montee de version PHP
+
+7. Email Magic Link
+   - Connexion sans mot de passe compatible Fortify (deja en place)
+   - Interessant mais pas urgent, reduirait juste la friction au login
+
+8. Laradocs
+   - Rendrait le dossier docs/ (FEATURES.md, ARCHITECTURE.md, PRD.md, ROADMAP.md...)
+     en site consultable /docs, versionne avec le code
+   - Interessant mais PRD/ROADMAP = contenu business -> obligatoire de gater la route
+     derriere l'auth admin avant d'installer, jamais exposer publiquement
+
+9. ramadan/custom-fresh
+   - Commande fresh:custom pour preserver certaines tables lors d'un migrate:fresh
+   - Dev-only, sans risque, mais confort marginal (remplacable par un seeder perso)
+   - Pas prioritaire
+
+=== ECARTES (hors sujet pour un site e-commerce classique) ===
+
+Laravel Head (deja fait maison : seo-head.tsx + JSON-LD Product/OG)
+Laravel Doctor (chevauche spatie/laravel-health deja en place)
+Cooldown (chevauche le throttle middleware maison)
+spatie/laravel-schedule-monitor (alerting reel derriere Oh Dear, payant -> Watchtower fait mieux gratuitement)
+spatie/laravel-query-builder (utile seulement si API JSON exposee un jour, pas le cas)
+laravel/pennant (feature flags, pas de besoin actuel)
+Laravel Quota, Laravel MPP, Laravel AI Tasks, Laravel WhatsApp, Laravel SMS Catcher,
+Vocalizer, Laravel Time Machine, Queue-SQL, Heimdall, Laravel Legacy Bridge, Intercept
