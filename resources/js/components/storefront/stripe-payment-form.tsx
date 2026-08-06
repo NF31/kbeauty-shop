@@ -19,13 +19,11 @@ export function StripePaymentForm({
     totalCents,
     currency,
     billingAddress,
-    customerEmail,
 }: {
     clientSecret: string;
     totalCents: number;
     currency: string;
     billingAddress: AddressProp | null;
-    customerEmail?: string | null;
 }) {
     const { t } = useLaravelReactI18n();
 
@@ -47,9 +45,14 @@ export function StripePaymentForm({
                 // Préremplit le Payment Element avec ce qu'on a déjà collecté
                 // à l'étape adresse — plus au niveau du provider, pas de
                 // l'Element, depuis la migration vers l'API Checkout Sessions
-                // (voir docs/FEATURES.md 9.4).
+                // (voir docs/FEATURES.md 9.4). Pas d'`email` ici : Stripe
+                // refuse de le mettre à jour côté client dès que
+                // `customer_email` est déjà fixé côté serveur à la création
+                // de la session (toujours le cas ici, tunnel sans invité) —
+                // incident constaté en prod le 2026-08-06 ("You cannot
+                // update the email because a `customer_email`... is already
+                // set").
                 defaultValues: {
-                    email: customerEmail ?? undefined,
                     phoneNumber: billingAddress?.phone ?? undefined,
                     billingAddress: billingAddress
                         ? {
