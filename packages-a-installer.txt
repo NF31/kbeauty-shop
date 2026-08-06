@@ -35,26 +35,33 @@ Liste etablie le 2026-08-06 suite a la veille Laravel News.
 
 === A VERIFIER AVANT D'INSTALLER ===
 
-3. Watchtower
-   - Dashboard unifie schedules + queues + erreurs, alertes Slack/webhook/email integrees gratuitement
-   - Comble un vrai trou : aucune des 7 taches planifiees (routes/console.php) n'a de
-     surveillance dediee (backup:run, cart:send-abandoned-reminders, etc.)
-   - ATTENTION : compat annoncee Laravel 11/12 seulement, projet en Laravel 13.17
-     -> verifier compatibilite reelle avant d'installer en prod (site live)
-   - Chevauche Horizon (queues) et Sentry (erreurs) -> installer seulement pour la partie
-     "schedules", pas pour remplacer Horizon/Sentry
-
-4. spatie/laravel-csp
+3. spatie/laravel-csp
    - Content-Security-Policy en config plutot qu'en middleware maison
    - Pertinent car le site charge du JS tiers (Stripe, Cloudinary, GTM)
    - A tester en mode report-only d'abord pour ne rien casser
 
-5. spatie/laravel-webhook-client
+4. spatie/laravel-webhook-client
    - Validation/tracabilite generique des webhooks entrants
    - A verifier : le webhook Stripe actuel gere-t-il deja retry/log correctement ?
      Si oui, apport limite.
 
 === BLOQUES / PAS ENCORE PERTINENTS ===
+
+5. [VERIFIE 2026-08-06] Watchtower (devifyo/watchtower)
+   - Dashboard unifie schedules + queues + erreurs, alertes Slack/webhook/email integrees gratuitement
+   - Comble un vrai trou : aucune des 7 taches planifiees (routes/console.php) n'a de
+     surveillance dediee (backup:run, cart:send-abandoned-reminders, etc.)
+   - BLOQUE : le dernier tag publie sur Packagist est v1.0.2 (18 juin 2026), dont le
+     composer.json exige illuminate/*: ^11.0|^12.0 -> `composer require` echouerait sur ce
+     projet (Laravel ^13.17), resolution de dependances impossible
+   - Le support Laravel 13 existe uniquement sur la branche main non taguee (commit de2ac54,
+     1er juillet 2026, "support laravel 13 and test on php 8.4 and 8.5") -> aucune release
+     stable ne l'inclut, et le repo n'a meme aucune "Release" GitHub formelle (juste des tags)
+   - Installer maintenant impliquerait de pointer composer sur dev-main (non semver, pas
+     versionne) -> pas acceptable pour un site en prod live
+   - A reverifier : attendre un tag > v1.0.2 dont le composer.json declare illuminate ^13.0
+   - Chevauche Horizon (queues) et Sentry (erreurs) -> si un jour installe, seulement pour la
+     partie "schedules", pas pour remplacer Horizon/Sentry
 
 6. Signal (doc auto par attributs PHP)
    - Requiert PHP 8.5+, projet en ^8.4 -> bloque tant que pas de montee de version PHP
