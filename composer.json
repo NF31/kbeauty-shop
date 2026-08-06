@@ -25,6 +25,7 @@
         "laravel/wayfinder": "^0.1.14",
         "league/flysystem-aws-s3-v3": "^3.35",
         "meilisearch/meilisearch-php": "^1.16",
+        "petebishwhip/laradocs": "^1.0",
         "predis/predis": "^3.5",
         "resend/resend-laravel": "^1.4",
         "sentry/sentry-laravel": "^4.27",

@@ -25,3 +25,6 @@ parameters:
         -
             message: '#^Match expression does not handle remaining value: string$#'
             path: database/migrations/2026_08_06_154417_create_pulse_tables.php
+        -
+            message: '#^Parameter \#1 \$array \(array\{0\?: array\{label: ''GitHub'', url: non-falsy-string\|true, external: true\}\}\) of array_values is already a list, call has no effect\.$#'
+            path: config/laradocs.php
