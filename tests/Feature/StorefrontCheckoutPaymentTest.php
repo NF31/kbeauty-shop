@@ -22,12 +22,18 @@ function fakeCheckoutSession(string $sessionId = 'cs_fake123'): CheckoutSessionR
     );
 }
 
-function fakeCheckoutSessionStatus(string $paymentStatus = 'unpaid', ?string $paymentIntentId = null, string $sessionId = 'cs_fake123'): CheckoutSessionStatusResult
-{
+function fakeCheckoutSessionStatus(
+    string $paymentStatus = 'unpaid',
+    ?string $paymentIntentId = null,
+    string $sessionId = 'cs_fake123',
+    string $status = 'open',
+): CheckoutSessionStatusResult {
     return new CheckoutSessionStatusResult(
         id: $sessionId,
         paymentStatus: $paymentStatus,
         paymentIntentId: $paymentIntentId,
+        status: $status,
+        clientSecret: $sessionId.'_secret',
     );
 }
 
@@ -102,11 +108,13 @@ test('reloading the payment step with a GET request re-renders it instead of ret
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
-    // Une Checkout Session ne peut pas être mise à jour en place (contrairement
-    // à l'ancien PaymentIntent) : chaque passage tant que le paiement n'a pas
-    // réussi en crée une nouvelle.
+    // Tant que la session precedente est encore valide (`open`) et pour le
+    // meme montant, elle est reutilisee telle quelle plutot que recreee -
+    // sinon le formulaire de paiement deja affiche cote client pointerait
+    // vers une session que le webhook ne retrouverait plus (incident du
+    // 2026-08-06).
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createCheckoutSession')->twice()->andReturn(fakeCheckoutSession());
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession());
         $mock->shouldReceive('retrieveCheckoutSession')->once()->andReturn(fakeCheckoutSessionStatus());
     });
 
@@ -123,16 +131,53 @@ test('reloading the payment step with a GET request re-renders it instead of ret
     expect(Order::query()->count())->toBe(1);
 });
 
-test('paying twice reuses the same pending order instead of creating a duplicate', function () {
+test('paying twice reuses the same pending order and the same open Checkout Session', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
+    $user = reachPaymentStep($variant);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession('cs_first'));
+        $mock->shouldReceive('retrieveCheckoutSession')->once()->andReturn(fakeCheckoutSessionStatus(sessionId: 'cs_first'));
+    });
+
+    $this->actingAs($user)->post('/commande/paiement');
+    $this->actingAs($user)->post('/commande/paiement');
+
+    expect(Order::query()->count())->toBe(1);
+    expect(Payment::query()->count())->toBe(1);
+    expect(Payment::query()->sole()->provider_payment_id)->toBe('cs_first');
+});
+
+test('an expired Checkout Session is replaced by a new one on retry', function () {
     $variant = ProductVariant::factory()->create(['stock_quantity' => 5]);
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
         $mock->shouldReceive('createCheckoutSession')->twice()->andReturn(fakeCheckoutSession('cs_first'));
-        $mock->shouldReceive('retrieveCheckoutSession')->once()->andReturn(fakeCheckoutSessionStatus(sessionId: 'cs_first'));
+        $mock->shouldReceive('retrieveCheckoutSession')->once()->andReturn(fakeCheckoutSessionStatus(sessionId: 'cs_first', status: 'expired'));
     });
 
     $this->actingAs($user)->post('/commande/paiement');
+    $this->actingAs($user)->post('/commande/paiement');
+
+    expect(Order::query()->count())->toBe(1);
+    expect(Payment::query()->count())->toBe(1);
+});
+
+test('a changed order amount replaces the pending Checkout Session even if still open', function () {
+    $variant = ProductVariant::factory()->create(['stock_quantity' => 5, 'price_cents' => 1000]);
+    $user = reachPaymentStep($variant);
+
+    $this->mock(PaymentGatewayInterface::class, function ($mock) {
+        $mock->shouldReceive('createCheckoutSession')->twice()->andReturn(fakeCheckoutSession('cs_first'));
+        $mock->shouldReceive('retrieveCheckoutSession')->once()->andReturn(fakeCheckoutSessionStatus(sessionId: 'cs_first', status: 'open'));
+    });
+
+    $this->actingAs($user)->post('/commande/paiement');
+
+    $extraVariant = ProductVariant::factory()->create(['stock_quantity' => 5, 'price_cents' => 500]);
+    $this->actingAs($user)->post('/panier', ['product_variant_id' => $extraVariant->id, 'quantity' => 1]);
+
     $this->actingAs($user)->post('/commande/paiement');
 
     expect(Order::query()->count())->toBe(1);
@@ -232,7 +277,7 @@ test('a customer can resume payment on their own pending order', function () {
     $user = reachPaymentStep($variant);
 
     $this->mock(PaymentGatewayInterface::class, function ($mock) {
-        $mock->shouldReceive('createCheckoutSession')->twice()->andReturn(fakeCheckoutSession());
+        $mock->shouldReceive('createCheckoutSession')->once()->andReturn(fakeCheckoutSession());
         $mock->shouldReceive('retrieveCheckoutSession')->once()->andReturn(fakeCheckoutSessionStatus());
     });
 

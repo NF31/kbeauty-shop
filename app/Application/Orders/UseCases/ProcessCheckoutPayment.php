@@ -4,6 +4,7 @@ namespace App\Application\Orders\UseCases;
 
 use App\Domain\Orders\Contracts\PaymentRepositoryInterface;
 use App\Domain\Payments\CheckoutPaymentResult;
+use App\Domain\Payments\CheckoutSessionResult;
 use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Enums\PaymentProvider;
 use App\Enums\PaymentStatus;
@@ -11,7 +12,7 @@ use App\Models\Order;
 
 /**
  * Étape "Payer" du récapitulatif (docs/ARCHITECTURE.md §4) : crée (ou
- * remplace) la `Checkout Session` Stripe correspondant à la commande. La
+ * réutilise) la `Checkout Session` Stripe correspondant à la commande. La
  * confirmation définitive du paiement n'arrive jamais ici mais via le
  * webhook Stripe (tâche 9.4, voir ConfirmOrderPayment).
  *
@@ -41,11 +42,23 @@ class ProcessCheckoutPayment
                 return CheckoutPaymentResult::alreadySucceeded();
             }
 
-            // Contrairement à l'ancien PaymentIntent, une Checkout Session ne
-            // peut pas être mise à jour en place (ex. montant modifié entre
-            // deux passages) — on en crée toujours une nouvelle tant que le
-            // paiement précédent n'a pas réussi, et on repointe la ligne
-            // Payment existante dessus.
+            // Réutilise la session existante tant qu'elle est encore valide
+            // (`open`) et pour le même montant : recréer une session à
+            // chaque rechargement de page invaliderait le formulaire de
+            // paiement déjà affiché côté client — si le client confirmait
+            // alors ce paiement, son webhook ne retrouverait plus aucun
+            // `Payment` (provider_payment_id déjà remplacé), cf. incident du
+            // 2026-08-06. Une Checkout Session ne pouvant pas être mise à
+            // jour en place (contrairement à l'ancien PaymentIntent), une
+            // nouvelle session n'est créée que si l'ancienne a expiré ou si
+            // le montant de la commande a changé entre deux passages.
+            if ($session->status === 'open' && $payment->amount_cents === $order->total_cents) {
+                return CheckoutPaymentResult::pending(new CheckoutSessionResult(
+                    id: $session->id,
+                    clientSecret: $session->clientSecret,
+                ));
+            }
+
             $newSession = $this->gateway->createCheckoutSession($order, $returnUrl);
 
             $this->payments->replaceProviderPaymentId($payment, $newSession->id, $order->total_cents);
