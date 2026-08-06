@@ -1,16 +1,26 @@
 PACKAGES A INSTALLER - KBEAUTY
 Liste etablie le 2026-08-06 suite a la veille Laravel News.
 
-=== A INSTALLER EN PRIORITE ===
+=== FAIT ===
 
-1. Checkpoint (dev dependency)
+1. [FAIT 2026-08-06] Checkpoint (dev dependency) - PR #192 (commit d03d9bd)
    - Scanner de securite Laravel : 26 checks (CVE dependances, injection, CSRF,
      mass-assignment, cookies/session non securises, CORS, TLS desactive, debug en prod...)
-   - Pertinent MAINTENANT : GitHub a signale 2 vulnerabilites Dependabot (1 high, 1 moderate)
-   - Compatible Laravel 8-13 (projet en ^13.17)
-   - Dev-only, aucun risque prod, sortie JSON + exit code 1 -> integrable dans `composer ci:check`
-   - Commande : `php artisan checkpoint:scan`
+   - Installe en dev-only, config publiee dans config/checkpoint.php
+   - Au passage : les 2 vulnerabilites Dependabot signalees (guzzlehttp/guzzle CVE-2026-69246
+     + CVE-2026-69245) etaient corrigees par une simple mise a jour 7.15.1 -> 7.15.3
+     -> `composer audit` clean
+   - Scan de reference (apres whitelist des faux positifs) : 23 passed, 3 warning(s), 0 failed
+     Warnings restants (non bloquants, pas des faux positifs) :
+       - Environment Configuration : normal en local (APP_DEBUG/APP_ENV/SESSION_SECURE_COOKIE),
+         deja suivi comme point "important avant lancement" ailleurs
+       - File Permissions (.env 644) : lie au filesystem WSL/Windows monte, pas actionnable ici
+       - Supply Chain Tooling : suggestion d'installer Aikido Safe-Chain (npm), facultatif, pas fait
+   - Commande : `php artisan checkpoint:scan` (ne tourne pas sous PHP Windows natif, manque
+     pcntl/posix -> executer depuis WSL Ubuntu)
    - Limite : pattern-matching statique, pas une preuve d'exploitabilite -> lire les resultats, pas confiance aveugle
+
+=== A INSTALLER EN PRIORITE ===
 
 2. laravel/pulse
    - Dashboard de perf temps reel (requetes lentes, jobs, exceptions)
