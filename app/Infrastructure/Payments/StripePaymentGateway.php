@@ -84,6 +84,8 @@ class StripePaymentGateway implements PaymentGatewayInterface
                 id: $sessionId,
                 paymentStatus: 'unpaid',
                 paymentIntentId: null,
+                status: 'expired',
+                clientSecret: null,
             );
         }
 
@@ -91,6 +93,8 @@ class StripePaymentGateway implements PaymentGatewayInterface
             id: $session->id,
             paymentStatus: $session->payment_status,
             paymentIntentId: $session->payment_intent,
+            status: $session->status,
+            clientSecret: $session->client_secret,
         );
     }
 
