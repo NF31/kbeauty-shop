@@ -36,6 +36,7 @@ class HorizonJobFailedAlert extends Notification implements ShouldQueue
             ->greeting(Salutation::pour($notifiable).',')
             ->line("Le job « {$this->jobName} » a échoué sur la connexion « {$this->connectionName} » (queue « {$this->queueName} »).")
             ->line("Erreur : {$this->exception->getMessage()}")
-            ->action('Voir les jobs en échec', url(config('horizon.path').'/failed'));
+            ->action('Voir les jobs en échec', url(config('horizon.path').'/failed'))
+            ->salutation('Cordialement,');
     }
 }

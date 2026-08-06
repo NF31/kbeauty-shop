@@ -43,7 +43,8 @@ class OrderConfirmation extends Notification implements ShouldQueue
             ->line("Sous-total : {$this->formatCents($this->order->subtotal_cents)}")
             ->line("Livraison : {$this->formatCents($this->order->shipping_cents)}")
             ->line("Total : {$this->formatCents($this->order->total_cents)}")
-            ->line('Vous pouvez suivre votre commande depuis votre espace client.');
+            ->line('Vous pouvez suivre votre commande depuis votre espace client.')
+            ->salutation('Cordialement,');
     }
 
     private function formatCents(int $cents): string
