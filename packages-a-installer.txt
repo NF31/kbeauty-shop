@@ -20,12 +20,18 @@ Liste etablie le 2026-08-06 suite a la veille Laravel News.
      pcntl/posix -> executer depuis WSL Ubuntu)
    - Limite : pattern-matching statique, pas une preuve d'exploitabilite -> lire les resultats, pas confiance aveugle
 
-=== A INSTALLER EN PRIORITE ===
+2. [FAIT 2026-08-06] laravel/pulse
+   - Dashboard de perf temps reel (requetes lentes, jobs, exceptions), route /pulse
+   - Gate `viewPulse` ajoutee dans AppServiceProvider::boot() : meme permission
+     (`settings.manage`) que le dashboard de sante existant (admin.health) -> pas
+     un allowlist d'emails en dur comme Horizon/Telescope, coherent avec le systeme
+     de roles/permissions (spatie/laravel-permission) deja en place partout ailleurs
+   - Config publiee (config/pulse.php) + migration des tables (executee en local)
+   - Installe et migre depuis WSL (meme contrainte ext-pcntl que Checkpoint sous
+     PHP Windows natif, cf. laravel/horizon deja installe)
+   - Verifie : `vendor/bin/pint --test` + `phpstan analyse` clean sur les fichiers touches
 
-2. laravel/pulse
-   - Dashboard de perf temps reel (requetes lentes, jobs, exceptions)
-   - Officiel Laravel, gratuit, complete Sentry/Horizon deja en place
-   - Installation rapide (~10 min)
+=== A INSTALLER EN PRIORITE ===
 
 === A VERIFIER AVANT D'INSTALLER ===
 

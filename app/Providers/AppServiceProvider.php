@@ -34,6 +34,7 @@ use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 use Spatie\Translatable\Translatable;
@@ -80,6 +81,11 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         $this->configureAuthMailNotifications();
+
+        // Meme permission que le dashboard de sante (routes/admin.php, admin.health) :
+        // laravel/pulse expose des metriques d'infra (requetes lentes, jobs, exceptions),
+        // pas du contenu boutique -> reserve aux memes comptes que le reste du monitoring.
+        Gate::define('viewPulse', fn (User $user) => $user->can('settings.manage'));
 
         Event::listen(Login::class, MergeGuestCartOnLogin::class);
 
