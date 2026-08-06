@@ -31,7 +31,8 @@ class NewPaidOrderAlert extends Notification implements ShouldQueue
             ->greeting(Salutation::pour($notifiable).',')
             ->line("La commande {$this->order->order_number} vient d'être payée et est prête à être préparée.")
             ->line("Montant : {$this->formatCents($this->order->total_cents)}")
-            ->action('Voir la commande', route('admin.orders.show', $this->order));
+            ->action('Voir la commande', route('admin.orders.show', $this->order))
+            ->salutation('Cordialement,');
     }
 
     private function formatCents(int $cents): string

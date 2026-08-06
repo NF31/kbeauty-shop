@@ -35,6 +35,7 @@ class NewsletterSubscriptionConfirmation extends Notification implements ShouldQ
             ->greeting(Salutation::selonHeure().',')
             ->line('Merci de vouloir rejoindre la newsletter Korea Beauty ! Confirme ton adresse email pour recevoir nos nouveautés et offres.')
             ->action('Confirmer mon inscription', $confirmUrl)
-            ->line("Ce lien expire dans 7 jours. Si tu n'es pas à l'origine de cette demande, ignore simplement cet email.");
+            ->line("Ce lien expire dans 7 jours. Si tu n'es pas à l'origine de cette demande, ignore simplement cet email.")
+            ->salutation('Cordialement,');
     }
 }

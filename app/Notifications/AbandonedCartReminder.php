@@ -47,9 +47,11 @@ class AbandonedCartReminder extends Notification implements ShouldQueue
 
         $mail->line("Total : {$this->formatCents($this->cart->totalCents())}");
 
-        return $this->pendingOrder
+        $mail = $this->pendingOrder
             ? $mail->action('Continuer le paiement', route('storefront.checkout.resume', $this->pendingOrder))
             : $mail->action('Reprendre mon panier', route('storefront.cart.index'));
+
+        return $mail->salutation('Cordialement,');
     }
 
     private function formatCents(int $cents): string

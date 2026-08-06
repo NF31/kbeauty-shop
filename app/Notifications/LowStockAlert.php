@@ -33,6 +33,7 @@ class LowStockAlert extends Notification implements ShouldQueue
             ->greeting(Salutation::pour($notifiable).',')
             ->line("Le produit « {$productName} » (variante {$this->variant->sku}) est en stock bas.")
             ->line("Stock restant : {$this->variant->stock_quantity}.")
-            ->line('Pensez à passer une commande de réassort.');
+            ->line('Pensez à passer une commande de réassort.')
+            ->salutation('Cordialement,');
     }
 }

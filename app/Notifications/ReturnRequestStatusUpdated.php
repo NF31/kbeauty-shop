@@ -38,7 +38,7 @@ class ReturnRequestStatusUpdated extends Notification implements ShouldQueue
         $mail = (new MailMessage)
             ->greeting(Salutation::pour($notifiable).',');
 
-        return match ($this->returnRequest->status) {
+        $mail = match ($this->returnRequest->status) {
             ReturnRequestStatus::Submitted => $mail
                 ->subject("Votre demande de retour a bien été reçue ({$order->order_number})")
                 ->line("Nous avons bien reçu votre demande de retour pour la commande {$order->order_number}.")
@@ -54,5 +54,7 @@ class ReturnRequestStatusUpdated extends Notification implements ShouldQueue
                 ->line("Votre demande de retour pour la commande {$order->order_number} n'a malheureusement pas été acceptée.")
                 ->when($this->returnRequest->admin_note, fn (MailMessage $mail) => $mail->line("Motif : {$this->returnRequest->admin_note}")),
         };
+
+        return $mail->salutation('Cordialement,');
     }
 }

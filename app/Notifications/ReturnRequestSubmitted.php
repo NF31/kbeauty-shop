@@ -31,6 +31,7 @@ class ReturnRequestSubmitted extends Notification implements ShouldQueue
             ->greeting(Salutation::pour($notifiable).',')
             ->line("Un client a demandé un retour sur la commande {$this->returnRequest->order->order_number}.")
             ->line("Motif : {$this->returnRequest->reason}")
-            ->action('Voir la demande', route('admin.return-requests.show', $this->returnRequest));
+            ->action('Voir la demande', route('admin.return-requests.show', $this->returnRequest))
+            ->salutation('Cordialement,');
     }
 }

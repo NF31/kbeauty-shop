@@ -39,7 +39,8 @@ class RefundConfirmation extends Notification implements ShouldQueue
 
         return $mail
             ->line('Le montant sera recrédité sur votre moyen de paiement d\'origine sous quelques jours ouvrés.')
-            ->line('Vous pouvez suivre votre commande depuis votre espace client.');
+            ->line('Vous pouvez suivre votre commande depuis votre espace client.')
+            ->salutation('Cordialement,');
     }
 
     private function formatCents(int $cents): string
