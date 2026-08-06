@@ -13,6 +13,7 @@ use App\Http\Controllers\Admin\ProductLineController;
 use App\Http\Controllers\Admin\ProductOptionController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\ReturnRequestController;
+use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,6 +22,14 @@ Route::middleware(['auth', 'role:admin|staff|support'])
     ->name('admin.')
     ->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Palette globale Ctrl+K (26.x) : chaque section n'est peuplee que si
+        // l'utilisateur a le droit de voir la ressource (voir SearchController)
+        // - accessible a tout membre admin/staff/support, throttle dedie car
+        // appelee a chaque frappe cote client.
+        Route::get('search', [SearchController::class, 'suggest'])
+            ->middleware('throttle:60,1,admin-search')
+            ->name('search.suggestions');
 
         // Messages du formulaire de contact (26.5) : pas de permission dediee, meme
         // niveau d'acces que le dashboard (consultation seule, non destructif).

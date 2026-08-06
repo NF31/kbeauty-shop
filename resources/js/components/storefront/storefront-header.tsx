@@ -1,11 +1,12 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
-import { Menu, Search } from 'lucide-react';
+import { Menu } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import AppLogo from '@/components/app-logo';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { MegaMenu } from '@/components/storefront/mega-menu';
 import { MiniCartSheet } from '@/components/storefront/mini-cart-sheet';
+import { SearchSheet } from '@/components/storefront/search-sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -187,14 +188,7 @@ export function StorefrontHeader() {
 
                 <div className="ml-auto flex items-center space-x-2">
                     <LanguageSwitcher />
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="h-9 w-9"
-                        aria-label="Rechercher"
-                    >
-                        <Search className="!size-5 opacity-80" />
-                    </Button>
+                    <SearchSheet />
                     <MiniCartSheet />
 
                     {auth.user ? (

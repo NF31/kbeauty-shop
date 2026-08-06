@@ -10,16 +10,28 @@ use App\Http\Requests\Admin\RefuseReturnRequestRequest;
 use App\Models\ReturnRequest;
 use App\Models\ReturnRequestItem;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 use RuntimeException;
 
 class ReturnRequestController extends Controller
 {
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $search = trim((string) $request->query('search'));
+        $status = $request->query('status');
+
         $returnRequests = ReturnRequest::query()
             ->with('order:id,order_number')
+            ->when($search !== '', fn ($query) => $query->whereHas(
+                'order',
+                fn ($orderQuery) => $orderQuery->whereLike('order_number', "%{$search}%"),
+            ))
+            ->when(
+                is_string($status) && ReturnRequestStatus::tryFrom($status) !== null,
+                fn ($query) => $query->where('status', $status),
+            )
             ->latest('id')
             ->paginate(20)
             ->withQueryString();
@@ -34,6 +46,11 @@ class ReturnRequestController extends Controller
 
         return Inertia::render('admin/return-requests/index', [
             'returnRequests' => $returnRequests,
+            'filters' => ['search' => $search, 'status' => $status],
+            'statusOptions' => array_map(
+                fn (ReturnRequestStatus $status) => ['value' => $status->value, 'label' => $status->label()],
+                ReturnRequestStatus::cases(),
+            ),
         ]);
     }
 

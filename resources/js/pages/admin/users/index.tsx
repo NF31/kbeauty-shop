@@ -1,5 +1,6 @@
 import { Form, Head } from '@inertiajs/react';
 import { DataList } from '@/components/admin/data-list';
+import { ListFilters } from '@/components/admin/list-filters';
 import { PageHeader } from '@/components/admin/page-header';
 import InputError from '@/components/input-error';
 import type { Paginated } from '@/components/pagination';
@@ -23,6 +24,7 @@ type UserRow = {
 
 type UsersIndexProps = {
     users: Paginated<UserRow>;
+    filters: { search: string };
 };
 
 const roleOptions = [
@@ -31,7 +33,7 @@ const roleOptions = [
     { value: 'support', label: 'Support' },
 ];
 
-export default function UsersIndex({ users }: UsersIndexProps) {
+export default function UsersIndex({ users, filters }: UsersIndexProps) {
     return (
         <>
             <Head title="Utilisateurs" />
@@ -39,6 +41,11 @@ export default function UsersIndex({ users }: UsersIndexProps) {
                 <PageHeader
                     title="Utilisateurs"
                     description="Rôle admin, staff ou support de chaque compte."
+                />
+
+                <ListFilters
+                    search={filters.search}
+                    searchPlaceholder="Rechercher un utilisateur…"
                 />
 
                 <DataList

@@ -12,6 +12,7 @@ use App\Http\Controllers\Storefront\LegalController;
 use App\Http\Controllers\Storefront\NewsletterController;
 use App\Http\Controllers\Storefront\ProductController;
 use App\Http\Controllers\Storefront\ReturnRequestController;
+use App\Http\Controllers\Storefront\SearchController;
 use App\Http\Controllers\Storefront\SkinGuideController;
 use App\Http\Controllers\Storefront\WishlistController;
 use Illuminate\Support\Facades\Route;
@@ -24,6 +25,12 @@ Route::get('produits', [CatalogController::class, 'index'])
 Route::get('produits/{product:slug}', [ProductController::class, 'show'])
     ->middleware('locale:fr')
     ->name('storefront.products.show');
+
+// Autocomplete du header (26.x) : JSON, appelé à chaque frappe côté client -
+// throttle dédié pour ne pas laisser un script marteler la recherche Scout.
+Route::get('recherche/suggestions', [SearchController::class, 'suggest'])
+    ->middleware(['locale:fr', 'throttle:60,1,storefront-search'])
+    ->name('storefront.search.suggestions');
 
 Route::get('panier', [CartController::class, 'index'])
     ->middleware('locale:fr')
@@ -120,6 +127,10 @@ Route::prefix('en')->name('en.')->middleware('locale:en')->group(function () {
 
     Route::get('produits/{product:slug}', [ProductController::class, 'show'])
         ->name('storefront.products.show');
+
+    Route::get('recherche/suggestions', [SearchController::class, 'suggest'])
+        ->middleware('throttle:60,1,storefront-search')
+        ->name('storefront.search.suggestions');
 
     Route::get('panier', [CartController::class, 'index'])
         ->name('storefront.cart.index');
