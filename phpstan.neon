@@ -11,3 +11,17 @@ parameters:
         - routes/
 
     level: 7
+
+    # Stubs generes par `vendor:publish` (laravel/pulse) : code du package,
+    # pas le notre - driver() vaut toujours mariadb/mysql/pgsql/sqlite en
+    # pratique (verifie par Pulse ailleurs), et env() est bien une string ici
+    # (valeur par defaut '/' fournie) - faux positifs lies au typage generique
+    # de ces deux fonctions, pas de vrai bug. Republier ecraserait ces
+    # fichiers de toute facon, donc pas d'edition du code genere lui-meme.
+    ignoreErrors:
+        -
+            message: '#^Parameter \#2 \$string of function explode expects string, bool\|string given\.$#'
+            path: config/pulse.php
+        -
+            message: '#^Match expression does not handle remaining value: string$#'
+            path: database/migrations/2026_08_06_154417_create_pulse_tables.php
