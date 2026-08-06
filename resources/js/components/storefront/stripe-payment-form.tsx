@@ -19,13 +19,11 @@ export function StripePaymentForm({
     totalCents,
     currency,
     billingAddress,
-    customerEmail,
 }: {
     clientSecret: string;
     totalCents: number;
     currency: string;
     billingAddress: AddressProp | null;
-    customerEmail?: string | null;
 }) {
     const { t } = useLaravelReactI18n();
 
@@ -47,10 +45,16 @@ export function StripePaymentForm({
                 // Préremplit le Payment Element avec ce qu'on a déjà collecté
                 // à l'étape adresse — plus au niveau du provider, pas de
                 // l'Element, depuis la migration vers l'API Checkout Sessions
-                // (voir docs/FEATURES.md 9.4).
+                // (voir docs/FEATURES.md 9.4). Ni `email` ni `phoneNumber`
+                // ici : ce sont des champs de la Checkout Session elle-même,
+                // que Stripe refuse de mettre à jour côté client sans
+                // l'activation explicite correspondante côté serveur
+                // (`customer_email` déjà fixé à la création / pas de
+                // `phone_number_collection.enabled`) — incidents constatés en
+                // prod le 2026-08-06 ("You cannot update the email...",
+                // "You cannot update the phone number unless
+                // phone_number_collection.enabled is set to `true`.").
                 defaultValues: {
-                    email: customerEmail ?? undefined,
-                    phoneNumber: billingAddress?.phone ?? undefined,
                     billingAddress: billingAddress
                         ? {
                               name: billingAddress.full_name,

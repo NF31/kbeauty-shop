@@ -151,11 +151,6 @@ class CheckoutController extends Controller
                 'currency' => $order->currency,
             ],
             'clientSecret' => $result->session->clientSecret,
-            // Préremplit le Payment Element avec ce qu'on a déjà collecté à
-            // l'étape adresse — inutile de redemander nom/adresse/téléphone,
-            // et l'email du compte s'il est connecté (pas encore capturé pour
-            // un invité, cf. tunnel 9.1).
-            'customerEmail' => $request->user()?->email,
         ]);
     }
 
@@ -281,7 +276,6 @@ class CheckoutController extends Controller
                 'currency' => $order->currency,
             ],
             'clientSecret' => $result->session->clientSecret,
-            'customerEmail' => $request->user()->email,
         ]);
     }
 

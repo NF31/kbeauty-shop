@@ -123,7 +123,6 @@ type CheckoutPageProps = {
         currency: string;
     };
     clientSecret?: string;
-    customerEmail?: string | null;
 };
 
 const emptyAddress = {
@@ -145,7 +144,6 @@ export default function CheckoutPage({
     billingAddress,
     order,
     clientSecret,
-    customerEmail,
 }: CheckoutPageProps) {
     const { t, tChoice } = useLaravelReactI18n();
     const { locale } = usePage().props;
@@ -197,7 +195,6 @@ export default function CheckoutPage({
                         totalCents={order.totalCents}
                         currency={order.currency}
                         billingAddress={billingAddress}
-                        customerEmail={customerEmail}
                     />
                 )}
             </div>
