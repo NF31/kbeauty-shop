@@ -12,11 +12,15 @@ order: 7
 
 ## 1. Contrat de données entre services (Schema Registry / validation de messages)
 
+- [ ] À faire (retenu en priorité le 2026-08-07)
+
 Aujourd'hui, RabbitMQ transporte des messages sans contrat formel entre producteur (Spring Boot) et consommateur (Laravel). Si le format d'un message change côté Spring Boot, Laravel casse silencieusement en prod.
 
 **Proposition** : valider chaque message publié/consommé via un schéma JSON Schema (ou Avro pour aller plus loin), versionné dans un dossier `contracts/` partagé entre les deux repos.
 
 ## 2. Résilience applicative (Circuit Breaker / Retry)
+
+- [ ] À faire (retenu en priorité le 2026-08-07)
 
 La résilience actuelle du dossier est uniquement infra (RabbitMQ persiste les messages sur disque en cas de panne). Rien ne gère la panne applicative : si l'API IA externe timeout, Spring Boot ne fait rien de spécifique.
 

@@ -93,4 +93,10 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 ## Prochaine étape immédiate
 
-Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), Scrapy-Playwright + social listening (dernier point Phase 4, le cron est en place depuis le 2026-08-07), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
+Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), le cron + Scrapy-Playwright (dernier point Phase 4), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
+
+**Décision (2026-08-07)** : avant de reprendre Phase 0, deux axes hors programme retenus en priorité (voir [07-axes-hors-programme.md](07-axes-hors-programme.md)) car ils comblent un vrai trou du design event-driven actuel, effort faible :
+- [ ] Axe 1 — Contrat de données entre services (schéma JSON validé sur les messages RabbitMQ Spring Boot ↔ Laravel)
+- [ ] Axe 2 — Résilience applicative (Resilience4j : circuit breaker + retry sur l'appel API IA côté Spring Boot)
+
+Phase 0 (BPMN/UML) est repoussée après ces deux axes, volontairement — priorité donnée au code.
