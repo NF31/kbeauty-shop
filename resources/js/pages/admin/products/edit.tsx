@@ -205,10 +205,12 @@ export default function ProductsEdit({
                                 <CardContent className="space-y-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="name">Nom</Label>
-                                        <Input
+                                        <Textarea
                                             id="name"
                                             name="name"
                                             required
+                                            rows={2}
+                                            className="resize-y"
                                             defaultValue={product.name}
                                         />
                                         <InputError message={errors.name} />
@@ -330,9 +332,11 @@ export default function ProductsEdit({
                                         <Label htmlFor="short_description">
                                             Description courte
                                         </Label>
-                                        <Input
+                                        <Textarea
                                             id="short_description"
                                             name="short_description"
+                                            rows={2}
+                                            className="resize-y"
                                             defaultValue={
                                                 product.short_description ?? ''
                                             }
@@ -502,9 +506,9 @@ export default function ProductsEdit({
                             {product.options.map((option) => (
                                 <div
                                     key={option.id}
-                                    className="flex items-center justify-between rounded-md border p-3"
+                                    className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
                                 >
-                                    <div>
+                                    <div className="min-w-0 break-words">
                                         <p className="font-medium">
                                             {option.name}
                                         </p>
@@ -796,9 +800,9 @@ export default function ProductsEdit({
                                 ) : (
                                     <div
                                         key={variant.id}
-                                        className="flex items-center justify-between rounded-md border p-3"
+                                        className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
                                     >
-                                        <div>
+                                        <div className="min-w-0 break-words">
                                             <p className="font-medium">
                                                 {variant.sku}{' '}
                                                 {variant.is_default && (
@@ -1071,7 +1075,12 @@ export default function ProductsEdit({
                                         <Label htmlFor="alt_text">
                                             Texte alternatif
                                         </Label>
-                                        <Input id="alt_text" name="alt_text" />
+                                        <Textarea
+                                            id="alt_text"
+                                            name="alt_text"
+                                            rows={2}
+                                            className="resize-y"
+                                        />
                                         <InputError message={errors.alt_text} />
                                     </div>
                                     {product.variants.length > 0 && (

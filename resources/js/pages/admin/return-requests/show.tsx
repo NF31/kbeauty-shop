@@ -60,10 +60,10 @@ export default function ReturnRequestShow({
         <>
             <Head title={`Retour — ${returnRequest.order.orderNumber}`} />
             <div className="mx-auto flex max-w-2xl flex-1 flex-col gap-6 p-4">
-                <div className="flex items-center justify-between">
-                    <div>
-                        <div className="flex items-center gap-2">
-                            <h1 className="text-xl font-semibold">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h1 className="text-xl font-semibold break-words">
                                 Retour — {returnRequest.order.orderNumber}
                             </h1>
                             <Badge
@@ -75,7 +75,7 @@ export default function ReturnRequestShow({
                                 {returnRequest.statusLabel}
                             </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm break-words text-muted-foreground">
                             {returnRequest.order.customerName ?? '—'}
                             {returnRequest.order.customerEmail
                                 ? ` (${returnRequest.order.customerEmail})`
@@ -102,9 +102,9 @@ export default function ReturnRequestShow({
                         {returnRequest.items.map((item, index) => (
                             <li
                                 key={index}
-                                className="flex items-center justify-between gap-4 p-4"
+                                className="flex flex-wrap items-center justify-between gap-4 p-4"
                             >
-                                <div>
+                                <div className="min-w-0 break-words">
                                     <p className="font-medium">
                                         {item.productName}
                                     </p>
@@ -220,23 +220,24 @@ export default function ReturnRequestShow({
                             {...admin.returnRequests.refuse.form(
                                 returnRequest.id,
                             )}
-                            className="mt-4 flex flex-wrap items-end gap-3"
+                            className="mt-4 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
                         >
                             {({ processing }) => (
                                 <>
-                                    <div className="grid gap-2">
+                                    <div className="grid w-full gap-2 sm:w-auto">
                                         <Label htmlFor="admin_note">
                                             Motif du refus (optionnel)
                                         </Label>
                                         <Textarea
                                             id="admin_note"
                                             name="admin_note"
-                                            className="w-72"
+                                            className="w-full sm:w-72"
                                         />
                                     </div>
                                     <Button
                                         type="submit"
                                         variant="outline"
+                                        className="w-full sm:w-auto"
                                         disabled={processing}
                                     >
                                         Refuser

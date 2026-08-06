@@ -41,6 +41,7 @@ export function StorefrontHeader() {
     const { whenCurrentUrl } = useCurrentUrl();
     const sync = useCartStore((state) => state.sync);
     const [isScrolled, setIsScrolled] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     const productsUrl = localizedPath('/produits', locale);
 
@@ -76,7 +77,10 @@ export function StorefrontHeader() {
         >
             <div className="mx-auto flex h-16 items-center px-4 md:max-w-7xl">
                 <div className="lg:hidden">
-                    <Sheet>
+                    <Sheet
+                        open={mobileMenuOpen}
+                        onOpenChange={setMobileMenuOpen}
+                    >
                         <SheetTrigger asChild>
                             <Button
                                 variant="ghost"
@@ -98,6 +102,7 @@ export function StorefrontHeader() {
                                 <Link
                                     href={productsUrl}
                                     className="font-medium"
+                                    onClick={() => setMobileMenuOpen(false)}
                                 >
                                     {t('Produits')}
                                 </Link>
@@ -112,6 +117,9 @@ export function StorefrontHeader() {
                                                         locale,
                                                     )}
                                                     className="text-muted-foreground"
+                                                    onClick={() =>
+                                                        setMobileMenuOpen(false)
+                                                    }
                                                 >
                                                     {category.name}
                                                 </Link>
@@ -131,6 +139,7 @@ export function StorefrontHeader() {
                                         key={item.title}
                                         href={item.href}
                                         className="font-medium"
+                                        onClick={() => setMobileMenuOpen(false)}
                                     >
                                         {item.title}
                                     </Link>

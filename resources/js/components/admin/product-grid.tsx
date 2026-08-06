@@ -66,8 +66,8 @@ export function ProductGrid({
                         )}
                     </div>
                     <CardContent className="flex flex-col gap-1 px-3 pt-3">
-                        <p className="truncate font-medium">{row.name}</p>
-                        <p className="truncate text-sm text-muted-foreground">
+                        <p className="font-medium break-words">{row.name}</p>
+                        <p className="text-sm break-words text-muted-foreground">
                             {row.brand?.name ?? '—'}
                         </p>
                         <div className="flex items-center justify-between pt-1">

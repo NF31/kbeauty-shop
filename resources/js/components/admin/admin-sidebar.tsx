@@ -26,6 +26,7 @@ import {
     SidebarMenu,
     SidebarMenuButton,
     SidebarMenuItem,
+    useSidebar,
 } from '@/components/ui/sidebar';
 import admin from '@/routes/admin';
 import type { NavItem } from '@/types';
@@ -35,6 +36,7 @@ export function AdminSidebar() {
     const canManageProducts = auth.permissions.includes('products.manage');
     const canViewSystem = auth.permissions.includes('settings.manage');
     const isAdmin = auth.roles.includes('admin');
+    const { isMobile, setOpenMobile } = useSidebar();
 
     const mainNavItems: NavItem[] = [
         {
@@ -112,7 +114,15 @@ export function AdminSidebar() {
                 <SidebarMenu>
                     <SidebarMenuItem>
                         <SidebarMenuButton size="lg" asChild>
-                            <Link href={admin.dashboard()} prefetch>
+                            <Link
+                                href={admin.dashboard()}
+                                prefetch
+                                onClick={() => {
+                                    if (isMobile) {
+                                        setOpenMobile(false);
+                                    }
+                                }}
+                            >
                                 <AppLogo />
                             </Link>
                         </SidebarMenuButton>

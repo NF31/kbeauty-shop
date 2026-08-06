@@ -96,14 +96,14 @@ export default function OrdersIndex({
                         rowKey={(row) => row.id}
                         emptyMessage="Aucune commande pour l'instant."
                         renderRow={(order) => (
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div className="min-w-0 flex-1">
+                            <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4">
+                                <div className="min-w-0 overflow-hidden">
                                     <div className="flex flex-wrap items-center gap-2">
                                         <Link
                                             href={OrderController.show.url(
                                                 order.id,
                                             )}
-                                            className="truncate font-medium underline-offset-2 hover:underline"
+                                            className="font-medium break-words underline-offset-2 hover:underline"
                                         >
                                             {order.orderNumber}
                                         </Link>
@@ -116,14 +116,14 @@ export default function OrdersIndex({
                                             {order.statusLabel}
                                         </Badge>
                                     </div>
-                                    <p className="truncate text-sm text-muted-foreground">
+                                    <p className="text-sm break-words text-muted-foreground">
                                         {order.customerName ?? '—'}
                                         {order.customerEmail
                                             ? ` (${order.customerEmail})`
                                             : ''}
                                     </p>
                                 </div>
-                                <div className="flex shrink-0 flex-col items-end gap-1 text-sm">
+                                <div className="flex flex-col items-end gap-1 text-sm">
                                     <span className="font-medium">
                                         {formatMoney(
                                             order.totalCents,
@@ -167,11 +167,11 @@ export default function OrdersIndex({
                                             {order.statusLabel}
                                         </Badge>
                                     </div>
-                                    <div>
-                                        <p className="truncate text-sm">
+                                    <div className="min-w-0">
+                                        <p className="text-sm break-words">
                                             {order.customerName ?? '—'}
                                         </p>
-                                        <p className="truncate text-sm text-muted-foreground">
+                                        <p className="text-sm break-words text-muted-foreground">
                                             {order.customerEmail}
                                         </p>
                                     </div>

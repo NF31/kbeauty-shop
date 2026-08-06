@@ -88,11 +88,11 @@ export default function ActivityLogIndex({
                         Aucune activité pour l'instant.
                     </p>
                 ) : (
-                    <ul className="flex flex-col gap-3">
+                    <ul className="flex w-full min-w-0 flex-col gap-3">
                         {activities.data.map((activity) => (
                             <li
                                 key={activity.id}
-                                className="rounded-lg border bg-card p-4"
+                                className="min-w-0 overflow-hidden rounded-lg border bg-card p-4"
                             >
                                 <div className="flex flex-wrap items-center justify-between gap-2">
                                     <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -110,12 +110,12 @@ export default function ActivityLogIndex({
                                         {activity.subjectUrl ? (
                                             <Link
                                                 href={activity.subjectUrl}
-                                                className="truncate font-medium underline-offset-2 hover:underline"
+                                                className="font-medium break-words underline-offset-2 hover:underline"
                                             >
                                                 {activity.subjectLabel}
                                             </Link>
                                         ) : (
-                                            <span className="truncate font-medium">
+                                            <span className="font-medium break-words">
                                                 {activity.subjectLabel}
                                             </span>
                                         )}

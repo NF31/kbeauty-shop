@@ -50,13 +50,13 @@ export function MegaMenu() {
                                             `/produits?category=${category.slug}`,
                                             locale,
                                         )}
-                                        className="block truncate text-sm font-medium"
+                                        className="block text-sm font-medium break-words"
                                     >
                                         {category.name}
                                     </Link>
                                 </NavigationMenuLink>
                             ) : (
-                                <span className="block truncate text-sm font-medium text-muted-foreground">
+                                <span className="block text-sm font-medium break-words text-muted-foreground">
                                     {category.name}
                                 </span>
                             )}
@@ -70,7 +70,7 @@ export function MegaMenu() {
                                                         `/produits?category=${child.slug}`,
                                                         locale,
                                                     )}
-                                                    className="block truncate text-sm text-muted-foreground hover:text-foreground"
+                                                    className="block text-sm break-words text-muted-foreground hover:text-foreground"
                                                 >
                                                     {child.name}
                                                 </Link>

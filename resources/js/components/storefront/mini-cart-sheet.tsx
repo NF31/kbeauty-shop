@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
 import { useLaravelReactI18n } from 'laravel-react-i18n';
 import { ShoppingBag, Trash2 } from 'lucide-react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import {
     Sheet,
@@ -22,9 +23,10 @@ export function MiniCartSheet() {
     const currency = useCartStore((state) => state.currency);
     const itemCount = useCartStore((state) => state.itemCount);
     const { removeItem } = useCartActions();
+    const [open, setOpen] = useState(false);
 
     return (
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
                 <Button
                     variant="ghost"
@@ -71,7 +73,7 @@ export function MiniCartSheet() {
                                     </div>
 
                                     <div className="min-w-0 flex-1">
-                                        <p className="truncate text-sm font-medium">
+                                        <p className="text-sm font-medium break-words">
                                             {item.productName}
                                         </p>
                                         <p className="text-xs text-muted-foreground">
@@ -111,7 +113,10 @@ export function MiniCartSheet() {
                             <span>{formatMoney(totalCents, currency)}</span>
                         </div>
                         <Button asChild className="w-full">
-                            <Link href={localizedPath('/panier', locale)}>
+                            <Link
+                                href={localizedPath('/panier', locale)}
+                                onClick={() => setOpen(false)}
+                            >
                                 {t('Voir le panier')}
                             </Link>
                         </Button>

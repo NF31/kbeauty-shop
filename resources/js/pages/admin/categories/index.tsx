@@ -92,12 +92,12 @@ export default function CategoriesIndex({
                         rowKey={(row) => row.id}
                         emptyMessage="Aucune catégorie pour l'instant."
                         renderRow={(category) => (
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate font-medium">
+                            <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4">
+                                <div className="min-w-0 overflow-hidden">
+                                    <p className="font-medium break-words">
                                         {category.name}
                                     </p>
-                                    <p className="truncate text-sm text-muted-foreground">
+                                    <p className="text-sm break-words text-muted-foreground">
                                         {category.slug}
                                         {category.parent
                                             ? ` · ${category.parent.name}`
@@ -107,7 +107,7 @@ export default function CategoriesIndex({
                                         {category.products_count > 1 ? 's' : ''}
                                     </p>
                                 </div>
-                                <div className="flex shrink-0 gap-2">
+                                <div className="flex gap-2">
                                     <Button variant="outline" size="sm" asChild>
                                         <Link
                                             href={CategoryController.edit.url(
@@ -139,10 +139,10 @@ export default function CategoriesIndex({
                                     <Tags className="size-8 text-muted-foreground" />
                                 </div>
                                 <CardContent className="flex flex-col gap-1 px-3 pt-3">
-                                    <p className="truncate font-medium">
+                                    <p className="font-medium break-words">
                                         {category.name}
                                     </p>
-                                    <p className="truncate text-sm text-muted-foreground">
+                                    <p className="text-sm break-words text-muted-foreground">
                                         {category.parent?.name ?? '—'}
                                     </p>
                                     <p className="text-xs text-muted-foreground">

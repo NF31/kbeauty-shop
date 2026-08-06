@@ -61,19 +61,19 @@ export default function ProductLinesIndex({
                     rowKey={(row) => row.id}
                     emptyMessage="Aucune gamme pour l'instant."
                     renderRow={(productLine) => (
-                        <div className="flex flex-wrap items-center justify-between gap-4">
-                            <div className="min-w-0 flex-1">
-                                <p className="truncate font-medium">
+                        <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4">
+                            <div className="min-w-0 overflow-hidden">
+                                <p className="font-medium break-words">
                                     {productLine.name}
                                 </p>
-                                <p className="truncate text-sm text-muted-foreground">
+                                <p className="text-sm break-words text-muted-foreground">
                                     {productLine.brand.name}
                                     {' · '}
                                     {productLine.products_count} produit
                                     {productLine.products_count > 1 ? 's' : ''}
                                 </p>
                             </div>
-                            <div className="flex shrink-0 gap-2">
+                            <div className="flex gap-2">
                                 <Button variant="outline" size="sm" asChild>
                                     <Link
                                         href={ProductLineController.edit.url(
