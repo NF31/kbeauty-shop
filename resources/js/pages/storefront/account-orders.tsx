@@ -124,12 +124,12 @@ export default function AccountOrdersPage({
                                                     width={200}
                                                     height={200}
                                                     loading="lazy"
-                                                    className="size-10 rounded-md object-cover"
+                                                    className="size-10 shrink-0 rounded-md object-cover"
                                                 />
                                             ) : (
-                                                <span className="size-10 rounded-md bg-muted" />
+                                                <span className="size-10 shrink-0 rounded-md bg-muted" />
                                             )}
-                                            <span>
+                                            <span className="min-w-0 break-words">
                                                 {item.quantity} ×{' '}
                                                 {item.productName}
                                                 {item.variantLabel

@@ -95,11 +95,11 @@ export default function ContactMessageShow({
                 <Card>
                     <CardContent className="grid gap-3 sm:grid-cols-2 md:grid-cols-3">
                         {details.map((detail) => (
-                            <div key={detail.label}>
+                            <div key={detail.label} className="min-w-0">
                                 <p className="text-xs text-muted-foreground">
                                     {detail.label}
                                 </p>
-                                <p className="truncate text-sm font-medium">
+                                <p className="text-sm font-medium break-words">
                                     {detail.value}
                                 </p>
                             </div>

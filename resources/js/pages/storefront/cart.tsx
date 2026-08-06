@@ -67,75 +67,82 @@ export default function CartPage({
                             {storeItems.map((item) => (
                                 <li
                                     key={item.id}
-                                    className="flex flex-wrap items-center gap-4 py-4"
+                                    className="flex flex-col gap-4 py-4 sm:flex-row sm:items-center"
                                 >
-                                    <div className="size-16 shrink-0 overflow-hidden rounded-md bg-muted">
-                                        {item.thumbnailUrl && (
-                                            <img
-                                                src={item.thumbnailUrl}
-                                                alt={item.productName}
-                                                width={200}
-                                                height={200}
-                                                loading="lazy"
-                                                className="h-full w-full object-cover"
-                                            />
-                                        )}
+                                    <div className="flex min-w-0 items-center gap-4 sm:flex-1">
+                                        <div className="size-16 shrink-0 overflow-hidden rounded-md bg-muted">
+                                            {item.thumbnailUrl && (
+                                                <img
+                                                    src={item.thumbnailUrl}
+                                                    alt={item.productName}
+                                                    width={200}
+                                                    height={200}
+                                                    loading="lazy"
+                                                    className="h-full w-full object-cover"
+                                                />
+                                            )}
+                                        </div>
+
+                                        <div className="min-w-0 flex-1">
+                                            <Link
+                                                href={`${localePrefix}/produits/${item.productSlug}`}
+                                                className="font-medium hover:underline"
+                                            >
+                                                {item.productName}
+                                            </Link>
+                                            <p className="text-xs text-muted-foreground">
+                                                {item.sku}
+                                            </p>
+                                            <p className="text-sm text-muted-foreground">
+                                                {formatMoney(
+                                                    item.unitPriceCents,
+                                                    storeCurrency,
+                                                )}{' '}
+                                                {t('/ unité')}
+                                            </p>
+                                        </div>
                                     </div>
 
-                                    <div className="min-w-0 flex-1">
-                                        <Link
-                                            href={`${localePrefix}/produits/${item.productSlug}`}
-                                            className="font-medium hover:underline"
-                                        >
-                                            {item.productName}
-                                        </Link>
-                                        <p className="text-xs text-muted-foreground">
-                                            {item.sku}
-                                        </p>
-                                        <p className="text-sm text-muted-foreground">
+                                    <div className="flex items-center justify-between gap-4 sm:justify-end">
+                                        <QuantitySelector
+                                            value={item.quantity}
+                                            max={item.stockQuantity}
+                                            onChange={(quantity) =>
+                                                updateQuantity(
+                                                    item.id,
+                                                    quantity,
+                                                )
+                                            }
+                                        />
+
+                                        <p className="w-16 text-right font-medium tabular-nums sm:w-24">
                                             {formatMoney(
-                                                item.unitPriceCents,
+                                                item.lineTotalCents,
                                                 storeCurrency,
-                                            )}{' '}
-                                            {t('/ unité')}
+                                            )}
                                         </p>
+
+                                        <button
+                                            type="button"
+                                            aria-label={t('Retirer du panier')}
+                                            className="text-muted-foreground hover:text-destructive"
+                                            onClick={() => removeItem(item.id)}
+                                        >
+                                            <Trash2 className="size-4" />
+                                        </button>
                                     </div>
-
-                                    <QuantitySelector
-                                        value={item.quantity}
-                                        max={item.stockQuantity}
-                                        onChange={(quantity) =>
-                                            updateQuantity(item.id, quantity)
-                                        }
-                                    />
-
-                                    <p className="w-24 text-right font-medium tabular-nums">
-                                        {formatMoney(
-                                            item.lineTotalCents,
-                                            storeCurrency,
-                                        )}
-                                    </p>
-
-                                    <button
-                                        type="button"
-                                        aria-label={t('Retirer du panier')}
-                                        className="text-muted-foreground hover:text-destructive"
-                                        onClick={() => removeItem(item.id)}
-                                    >
-                                        <Trash2 className="size-4" />
-                                    </button>
                                 </li>
                             ))}
                         </ul>
 
-                        <div className="mt-6 flex items-center justify-end gap-4">
-                            <p className="text-lg font-semibold">
+                        <div className="mt-6 flex flex-col items-stretch gap-4 sm:flex-row sm:items-center sm:justify-end">
+                            <p className="text-lg font-semibold sm:text-right">
                                 {t('Total :')}{' '}
                                 {formatMoney(storeTotalCents, storeCurrency)}
                             </p>
                             <Link
                                 href={`${localePrefix}/commande`}
-                                className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+                                className="rounded-md bg-primary px-4 py-2 text-center text-sm font-medium text-primary-foreground hover:bg-primary/90"
                             >
                                 {t('Passer la commande')}
                             </Link>

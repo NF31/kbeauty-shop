@@ -139,18 +139,18 @@ export default function AdminDashboard({
                                     {recentOrders.map((order) => (
                                         <li
                                             key={order.id}
-                                            className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                                            className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
                                         >
                                             <div className="min-w-0">
                                                 <Link
                                                     href={OrderController.show.url(
                                                         order.id,
                                                     )}
-                                                    className="truncate font-medium underline-offset-2 hover:underline"
+                                                    className="block font-medium break-words underline-offset-2 hover:underline"
                                                 >
                                                     {order.orderNumber}
                                                 </Link>
-                                                <p className="truncate text-sm text-muted-foreground">
+                                                <p className="text-sm break-words text-muted-foreground">
                                                     {order.customerName ?? '—'}
                                                 </p>
                                             </div>
@@ -195,16 +195,16 @@ export default function AdminDashboard({
                                     {lowStockVariants.map((variant) => (
                                         <li
                                             key={variant.id}
-                                            className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                                            className="flex items-start justify-between gap-4 py-3 first:pt-0 last:pb-0"
                                         >
                                             <div className="flex min-w-0 items-center gap-3">
                                                 <ClipboardList className="size-4 shrink-0 text-muted-foreground" />
                                                 <div className="min-w-0">
-                                                    <p className="truncate font-medium">
+                                                    <p className="font-medium break-words">
                                                         {variant.productName ??
                                                             '—'}
                                                     </p>
-                                                    <p className="truncate text-sm text-muted-foreground">
+                                                    <p className="text-sm break-words text-muted-foreground">
                                                         {variant.sku}
                                                     </p>
                                                 </div>

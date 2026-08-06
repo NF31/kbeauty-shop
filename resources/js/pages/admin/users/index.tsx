@@ -48,19 +48,19 @@ export default function UsersIndex({ users }: UsersIndexProps) {
                     renderRow={(user) => (
                         <Form
                             {...admin.users.updateRole.form(user.id)}
-                            className="flex flex-wrap items-center justify-between gap-3"
+                            className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
                         >
                             {({ processing, errors }) => (
                                 <>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="truncate font-medium">
+                                    <div className="min-w-0 overflow-hidden">
+                                        <p className="font-medium break-words">
                                             {user.name}
                                         </p>
-                                        <p className="truncate text-sm text-muted-foreground">
+                                        <p className="text-sm break-words text-muted-foreground">
                                             {user.email}
                                         </p>
                                     </div>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex flex-wrap items-center gap-2">
                                         <Select
                                             name="role"
                                             defaultValue={

@@ -114,64 +114,59 @@ export default function ProductsIndex({
                         rowKey={(row) => row.id}
                         emptyMessage="Aucun produit pour l'instant."
                         renderRow={(product) => (
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div className="flex min-w-0 flex-1 items-center gap-3">
-                                    {thumbnailUrls[product.id] ? (
-                                        <img
-                                            src={thumbnailUrls[product.id]}
-                                            alt={product.name}
-                                            loading="lazy"
-                                            className="size-10 shrink-0 rounded object-cover"
-                                        />
-                                    ) : (
-                                        <div
-                                            role="img"
-                                            aria-label={`Aucune image pour ${product.name}`}
-                                            className="size-10 shrink-0 rounded bg-muted"
-                                        />
-                                    )}
-                                    <div className="min-w-0">
-                                        <div className="flex flex-wrap items-center gap-2">
-                                            <p className="truncate font-medium">
-                                                {product.name}
-                                            </p>
-                                            {product.is_featured && (
-                                                <Badge className="shrink-0 bg-brand-gold text-brand-gold-foreground">
-                                                    Vedette
-                                                </Badge>
-                                            )}
-                                            <Badge
-                                                variant={
-                                                    product.status ===
-                                                    'published'
-                                                        ? 'default'
-                                                        : 'secondary'
-                                                }
-                                            >
-                                                {
-                                                    productStatusLabels[
-                                                        product.status
-                                                    ]
-                                                }
-                                            </Badge>
-                                        </div>
-                                        <p className="truncate text-sm text-muted-foreground">
-                                            {product.brand?.name ?? '—'}
-                                            {' · '}
-                                            {product.priceFromCents !== null
-                                                ? formatMoney(
-                                                      product.priceFromCents,
-                                                  )
-                                                : '—'}
-                                            {' · '}
-                                            {product.variants_count} variante
-                                            {product.variants_count > 1
-                                                ? 's'
-                                                : ''}
+                            <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-3 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-4">
+                                {thumbnailUrls[product.id] ? (
+                                    <img
+                                        src={thumbnailUrls[product.id]}
+                                        alt={product.name}
+                                        loading="lazy"
+                                        className="size-10 rounded object-cover"
+                                    />
+                                ) : (
+                                    <div
+                                        role="img"
+                                        aria-label={`Aucune image pour ${product.name}`}
+                                        className="size-10 rounded bg-muted"
+                                    />
+                                )}
+                                <div className="min-w-0 overflow-hidden">
+                                    <div className="flex flex-wrap items-center gap-2">
+                                        <p className="font-medium break-words">
+                                            {product.name}
                                         </p>
+                                        {product.is_featured && (
+                                            <Badge className="shrink-0 bg-brand-gold text-brand-gold-foreground">
+                                                Vedette
+                                            </Badge>
+                                        )}
+                                        <Badge
+                                            variant={
+                                                product.status === 'published'
+                                                    ? 'default'
+                                                    : 'secondary'
+                                            }
+                                        >
+                                            {
+                                                productStatusLabels[
+                                                    product.status
+                                                ]
+                                            }
+                                        </Badge>
                                     </div>
+                                    <p className="text-sm break-words text-muted-foreground">
+                                        {product.brand?.name ?? '—'}
+                                        {' · '}
+                                        {product.priceFromCents !== null
+                                            ? formatMoney(
+                                                  product.priceFromCents,
+                                              )
+                                            : '—'}
+                                        {' · '}
+                                        {product.variants_count} variante
+                                        {product.variants_count > 1 ? 's' : ''}
+                                    </p>
                                 </div>
-                                <div className="flex shrink-0 gap-2">
+                                <div className="col-span-2 flex gap-2 sm:col-span-1 sm:col-start-3">
                                     <Button variant="outline" size="sm" asChild>
                                         <Link
                                             href={ProductController.edit.url(

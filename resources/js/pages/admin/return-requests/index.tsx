@@ -56,7 +56,7 @@ export default function ReturnRequestsIndex({
                                     >
                                         {returnRequest.statusLabel}
                                     </Badge>
-                                    <p className="truncate font-medium">
+                                    <p className="min-w-0 font-medium break-words">
                                         {returnRequest.orderNumber}
                                     </p>
                                 </div>

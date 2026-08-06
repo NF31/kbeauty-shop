@@ -147,7 +147,7 @@ export default function OrderShow({
                         <h1 className="text-2xl font-semibold break-words">
                             Commande {order.orderNumber}
                         </h1>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm break-words text-muted-foreground">
                             {order.customerName} ({order.customerEmail})
                         </p>
                         {order.placedAt && (
@@ -178,43 +178,41 @@ export default function OrderShow({
                     </div>
                 </div>
 
-                <div className="rounded-lg border">
-                    <ul className="divide-y">
+                <div className="overflow-hidden rounded-lg border">
+                    <ul className="divide-y overflow-hidden">
                         {order.items.map((item, index) => (
                             <li
                                 key={index}
-                                className="flex flex-wrap items-center justify-between gap-4 p-4"
+                                className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 p-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-4"
                             >
-                                <div className="flex min-w-0 items-center gap-4">
-                                    {item.imageUrl ? (
-                                        <img
-                                            src={item.imageUrl}
-                                            alt=""
-                                            loading="lazy"
-                                            className="size-16 shrink-0 rounded-md object-cover"
-                                        />
-                                    ) : (
-                                        <span className="size-16 shrink-0 rounded-md bg-muted" />
+                                {item.imageUrl ? (
+                                    <img
+                                        src={item.imageUrl}
+                                        alt=""
+                                        loading="lazy"
+                                        className="size-16 rounded-md object-cover"
+                                    />
+                                ) : (
+                                    <span className="size-16 rounded-md bg-muted" />
+                                )}
+                                <div className="min-w-0 overflow-hidden">
+                                    <p className="font-medium break-words">
+                                        {item.productName}
+                                    </p>
+                                    {item.variantLabel && (
+                                        <p className="text-sm break-words text-muted-foreground">
+                                            {item.variantLabel}
+                                        </p>
                                     )}
-                                    <div className="min-w-0">
-                                        <p className="truncate font-medium">
-                                            {item.productName}
-                                        </p>
-                                        {item.variantLabel && (
-                                            <p className="truncate text-sm text-muted-foreground">
-                                                {item.variantLabel}
-                                            </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {item.quantity} ×{' '}
+                                        {formatMoney(
+                                            item.unitPriceCents,
+                                            order.currency,
                                         )}
-                                        <p className="text-sm text-muted-foreground">
-                                            {item.quantity} ×{' '}
-                                            {formatMoney(
-                                                item.unitPriceCents,
-                                                order.currency,
-                                            )}
-                                        </p>
-                                    </div>
+                                    </p>
                                 </div>
-                                <p className="shrink-0 font-medium">
+                                <p className="col-span-2 justify-self-end font-medium sm:col-span-1 sm:col-start-3">
                                     {formatMoney(
                                         item.totalCents,
                                         order.currency,
@@ -289,11 +287,11 @@ export default function OrderShow({
                     ) : (
                         <Form
                             {...OrderController.updateStatus.form(order.id)}
-                            className="flex flex-wrap items-end gap-3"
+                            className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
                         >
                             {({ processing, errors, submit }) => (
                                 <>
-                                    <div className="grid gap-2">
+                                    <div className="grid w-full gap-2 sm:w-auto">
                                         <Label htmlFor="status">Statut</Label>
                                         <Select
                                             name="status"
@@ -301,7 +299,7 @@ export default function OrderShow({
                                         >
                                             <SelectTrigger
                                                 id="status"
-                                                className="w-48"
+                                                className="w-full sm:w-48"
                                             >
                                                 <SelectValue />
                                             </SelectTrigger>
@@ -320,6 +318,7 @@ export default function OrderShow({
                                     </div>
                                     <Button
                                         type="button"
+                                        className="w-full sm:w-auto"
                                         disabled={processing}
                                         onClick={() =>
                                             setStatusConfirmOpen(true)
@@ -384,9 +383,9 @@ export default function OrderShow({
                             {order.refunds.map((refund) => (
                                 <li
                                     key={refund.id}
-                                    className="flex items-center justify-between"
+                                    className="flex flex-wrap items-center justify-between gap-2"
                                 >
-                                    <span>
+                                    <span className="min-w-0 break-words">
                                         {formatMoney(
                                             refund.amountCents,
                                             order.currency,
@@ -414,11 +413,11 @@ export default function OrderShow({
                         <Form
                             {...OrderController.refund.form(order.id)}
                             resetOnSuccess
-                            className="flex flex-wrap items-end gap-3"
+                            className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-end"
                         >
                             {({ processing, errors, submit }) => (
                                 <>
-                                    <div className="grid gap-2">
+                                    <div className="grid w-full gap-2 sm:w-auto">
                                         <Label htmlFor="amount_cents">
                                             Montant (centimes)
                                         </Label>
@@ -429,18 +428,18 @@ export default function OrderShow({
                                             min={1}
                                             max={order.refundableCents}
                                             defaultValue={order.refundableCents}
-                                            className="w-40"
+                                            className="w-full sm:w-40"
                                         />
                                         <InputError
                                             message={errors.amount_cents}
                                         />
                                     </div>
-                                    <div className="grid gap-2">
+                                    <div className="grid w-full gap-2 sm:w-auto">
                                         <Label htmlFor="reason">Motif</Label>
                                         <Textarea
                                             id="reason"
                                             name="reason"
-                                            className="w-64"
+                                            className="w-full sm:w-64"
                                             placeholder="Optionnel"
                                         />
                                         <InputError message={errors.reason} />
@@ -448,6 +447,7 @@ export default function OrderShow({
                                     <Button
                                         type="button"
                                         variant="destructive"
+                                        className="w-full sm:w-auto"
                                         disabled={processing}
                                         onClick={() => setConfirmOpen(true)}
                                     >

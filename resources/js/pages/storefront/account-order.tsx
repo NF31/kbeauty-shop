@@ -182,40 +182,38 @@ export default function AccountOrderPage({ order }: { order: OrderDetail }) {
                         {order.items.map((item, index) => (
                             <li
                                 key={index}
-                                className="flex items-center justify-between gap-4 p-4"
+                                className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-4 gap-y-2 p-4 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:gap-4"
                             >
-                                <div className="flex items-center gap-4">
-                                    {item.imageUrl ? (
-                                        <img
-                                            src={item.imageUrl}
-                                            alt=""
-                                            width={200}
-                                            height={200}
-                                            loading="lazy"
-                                            className="size-16 rounded-md object-cover"
-                                        />
-                                    ) : (
-                                        <span className="size-16 rounded-md bg-muted" />
+                                {item.imageUrl ? (
+                                    <img
+                                        src={item.imageUrl}
+                                        alt=""
+                                        width={200}
+                                        height={200}
+                                        loading="lazy"
+                                        className="size-16 rounded-md object-cover"
+                                    />
+                                ) : (
+                                    <span className="size-16 rounded-md bg-muted" />
+                                )}
+                                <div className="min-w-0 overflow-hidden">
+                                    <p className="font-medium break-words">
+                                        {item.productName}
+                                    </p>
+                                    {item.variantLabel && (
+                                        <p className="text-sm break-words text-muted-foreground">
+                                            {item.variantLabel}
+                                        </p>
                                     )}
-                                    <div>
-                                        <p className="font-medium">
-                                            {item.productName}
-                                        </p>
-                                        {item.variantLabel && (
-                                            <p className="text-sm text-muted-foreground">
-                                                {item.variantLabel}
-                                            </p>
+                                    <p className="text-sm text-muted-foreground">
+                                        {item.quantity} ×{' '}
+                                        {formatMoney(
+                                            item.unitPriceCents,
+                                            order.currency,
                                         )}
-                                        <p className="text-sm text-muted-foreground">
-                                            {item.quantity} ×{' '}
-                                            {formatMoney(
-                                                item.unitPriceCents,
-                                                order.currency,
-                                            )}
-                                        </p>
-                                    </div>
+                                    </p>
                                 </div>
-                                <p className="font-medium">
+                                <p className="col-span-2 justify-self-end font-medium sm:col-span-1 sm:col-start-3">
                                     {formatMoney(
                                         item.totalCents,
                                         order.currency,

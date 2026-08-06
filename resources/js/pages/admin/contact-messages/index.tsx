@@ -57,11 +57,11 @@ export default function ContactMessagesIndex({
                                             Répondu
                                         </Badge>
                                     )}
-                                    <p className="truncate font-medium">
+                                    <p className="min-w-0 font-medium break-words">
                                         {message.subject}
                                     </p>
                                 </div>
-                                <p className="truncate text-sm text-muted-foreground">
+                                <p className="text-sm break-words text-muted-foreground">
                                     {message.name} · {message.email}
                                 </p>
                             </div>

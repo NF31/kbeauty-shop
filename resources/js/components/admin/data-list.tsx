@@ -22,9 +22,12 @@ export function DataList<Row>({
     }
 
     return (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex w-full min-w-0 flex-col gap-3 overflow-hidden">
             {rows.map((row) => (
-                <li key={rowKey(row)} className="rounded-lg border bg-card p-4">
+                <li
+                    key={rowKey(row)}
+                    className="min-w-0 overflow-hidden rounded-lg border bg-card p-4"
+                >
                     {renderRow(row)}
                 </li>
             ))}

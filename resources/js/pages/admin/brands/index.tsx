@@ -89,12 +89,12 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                         rowKey={(row) => row.id}
                         emptyMessage="Aucune marque pour l'instant."
                         renderRow={(brand) => (
-                            <div className="flex flex-wrap items-center justify-between gap-4">
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate font-medium">
+                            <div className="grid grid-cols-1 items-center gap-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:gap-4">
+                                <div className="min-w-0 overflow-hidden">
+                                    <p className="font-medium break-words">
                                         {brand.name}
                                     </p>
-                                    <p className="truncate text-sm text-muted-foreground">
+                                    <p className="text-sm break-words text-muted-foreground">
                                         {brand.slug}
                                         {brand.country_of_origin
                                             ? ` · ${brand.country_of_origin}`
@@ -104,7 +104,7 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                                         {brand.products_count > 1 ? 's' : ''}
                                     </p>
                                 </div>
-                                <div className="flex shrink-0 gap-2">
+                                <div className="flex gap-2">
                                     <Button variant="outline" size="sm" asChild>
                                         <Link
                                             href={BrandController.edit.url(
@@ -147,10 +147,10 @@ export default function BrandsIndex({ brands, filters }: BrandsIndexProps) {
                                     )}
                                 </div>
                                 <CardContent className="flex flex-col gap-1 px-3 pt-3">
-                                    <p className="truncate font-medium">
+                                    <p className="font-medium break-words">
                                         {brand.name}
                                     </p>
-                                    <p className="truncate text-sm text-muted-foreground">
+                                    <p className="text-sm break-words text-muted-foreground">
                                         {brand.country_of_origin ?? '—'}
                                     </p>
                                     <p className="text-xs text-muted-foreground">

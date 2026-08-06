@@ -11,7 +11,6 @@ import {
     CardTitle,
 } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
     Select,
@@ -73,11 +72,13 @@ export default function ProductsCreate({
                                 <CardContent className="space-y-4">
                                     <div className="grid gap-2">
                                         <Label htmlFor="name">Nom</Label>
-                                        <Input
+                                        <Textarea
                                             id="name"
                                             name="name"
                                             required
                                             autoFocus
+                                            rows={2}
+                                            className="resize-y"
                                         />
                                         <InputError message={errors.name} />
                                     </div>
@@ -176,9 +177,11 @@ export default function ProductsCreate({
                                         <Label htmlFor="short_description">
                                             Description courte
                                         </Label>
-                                        <Input
+                                        <Textarea
                                             id="short_description"
                                             name="short_description"
+                                            rows={2}
+                                            className="resize-y"
                                         />
                                         <InputError
                                             message={errors.short_description}
