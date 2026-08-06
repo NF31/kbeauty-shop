@@ -8,6 +8,7 @@ use App\Domain\Payments\Contracts\PaymentGatewayInterface;
 use App\Domain\Payments\RefundResult;
 use App\Domain\Payments\WebhookEvent;
 use App\Models\Order;
+use Stripe\Exception\InvalidRequestException;
 use Stripe\Exception\SignatureVerificationException;
 use Stripe\Refund;
 use Stripe\StripeClient;
@@ -65,10 +66,26 @@ class StripePaymentGateway implements PaymentGatewayInterface
      * `createCheckoutSession()`). Vérifie si le paiement est déjà passé côté
      * Stripe (ex. rechargement de la page après un paiement réussi) sans
      * attendre le webhook.
+     *
+     * `$sessionId` peut être un id hérité d'avant la migration Checkout
+     * Sessions (2026-08-06) : un `Payment` `pending` créé sous l'ancien flux
+     * PaymentIntent stocke un id `pi_...`, pas `cs_...` — Stripe répond alors
+     * "No such checkout.session" (incident constaté en prod juste après la
+     * migration). Traité comme "pas encore payé" plutôt que de faire planter
+     * le paiement : `ProcessCheckoutPayment` crée une nouvelle session et
+     * remplace cet id invalide, auto-guérissant l'état.
      */
     public function retrieveCheckoutSession(string $sessionId): CheckoutSessionStatusResult
     {
-        $session = $this->stripe->checkout->sessions->retrieve($sessionId);
+        try {
+            $session = $this->stripe->checkout->sessions->retrieve($sessionId);
+        } catch (InvalidRequestException) {
+            return new CheckoutSessionStatusResult(
+                id: $sessionId,
+                paymentStatus: 'unpaid',
+                paymentIntentId: null,
+            );
+        }
 
         return new CheckoutSessionStatusResult(
             id: $session->id,
