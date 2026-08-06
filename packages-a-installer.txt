@@ -33,17 +33,26 @@ Liste etablie le 2026-08-06 suite a la veille Laravel News.
 
 === A INSTALLER EN PRIORITE ===
 
+3. [VERIFIE 2026-08-06] spatie/laravel-webhook-client
+   - Validation/tracabilite generique des webhooks entrants
+   - Verifie : le webhook Stripe maison (StripeWebhookController +
+     StripePaymentGateway::verifyWebhookSignature()) valide bien la signature et a une
+     dedup "metier" (ignore si Payment deja Succeeded/Refunded), mais deux vrais trous :
+       - Aucun logging structure des events recus/traites/echoues (juste un Log::warning
+         isole en cas de Payment introuvable), pas de payload persiste, pas de dedup par
+         event.id Stripe -> aucune tracabilite en cas d'incident
+       - Traitement 100% synchrone dans la requete HTTP (pas de job ShouldQueue) -> une
+         erreur transitoire (DB down, deadlock) fait planter la requete sans retry local,
+         seul Stripe retente cote externe
+   - Conclusion : apport reel confirme (pas "limite" comme suppose initialement), a
+     installer en priorite
+
 === A VERIFIER AVANT D'INSTALLER ===
 
-3. spatie/laravel-csp
+4. spatie/laravel-csp
    - Content-Security-Policy en config plutot qu'en middleware maison
    - Pertinent car le site charge du JS tiers (Stripe, Cloudinary, GTM)
    - A tester en mode report-only d'abord pour ne rien casser
-
-4. spatie/laravel-webhook-client
-   - Validation/tracabilite generique des webhooks entrants
-   - A verifier : le webhook Stripe actuel gere-t-il deja retry/log correctement ?
-     Si oui, apport limite.
 
 === BLOQUES / PAS ENCORE PERTINENTS ===
 
