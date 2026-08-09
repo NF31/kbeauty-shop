@@ -426,8 +426,11 @@ test('a Stripe event replayed with the same event id is not reprocessed even if 
     // Remet le paiement à Pending pour isoler le dédup par event.id de la
     // protection "métier" habituelle (Payment déjà Succeeded/Refunded, testée
     // plus haut) : sans le dédup, ce deuxième appel repasserait la commande
-    // à paid et re-décrémenterait le stock.
-    $payment->update(['status' => PaymentStatus::Pending]);
+    // à paid et re-décrémenterait le stock. `refresh()` d'abord : ConfirmOrderPayment
+    // (dans le premier handle()) a modifié la ligne via sa propre instance
+    // (repository), donc $payment ici est encore figé sur son état de création
+    // (Pending) - sans refresh(), Eloquent ne verrait aucun changement à écrire.
+    $payment->refresh()->update(['status' => PaymentStatus::Pending]);
 
     $secondCall = WebhookCall::create(['name' => 'stripe', 'url' => 'https://example.test/stripe/webhook', 'headers' => [], 'payload' => $payload]);
     (new ProcessStripeWebhookJob($secondCall, $event))->handle(app(ConfirmOrderPayment::class));
