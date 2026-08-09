@@ -97,7 +97,7 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Phase 4 est maintenant close (cron, exploitation des données, cf. ci-dessus). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
 
 **Décision (2026-08-07)** : avant de reprendre Phase 0, deux axes hors programme retenus en priorité (voir [07-axes-hors-programme.md](07-axes-hors-programme.md)) car ils comblent un vrai trou du design event-driven actuel, effort faible :
-- [ ] Axe 1 — Contrat de données entre services (schéma JSON validé sur les messages RabbitMQ Spring Boot ↔ Laravel)
+- [x] Axe 1 — Contrat de données entre services (2026-08-09) : schéma JSON Schema validé sur les messages RabbitMQ Spring Boot ↔ Laravel, voir [détail complet](12-contrat-rabbitmq-laravel.md) (journal côté Spring Boot : `kbeauty-ai-core-service/docs/04-contrat-donnees-json-schema.md`, repo séparé)
 - [ ] Axe 2 — Résilience applicative (Resilience4j : circuit breaker + retry sur l'appel API IA côté Spring Boot)
 
 Phase 0 (BPMN/UML) est repoussée après ces deux axes, volontairement — priorité donnée au code.

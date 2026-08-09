@@ -12,11 +12,13 @@ order: 7
 
 ## 1. Contrat de données entre services (Schema Registry / validation de messages)
 
-- [ ] À faire (retenu en priorité le 2026-08-07)
+- [x] Fait (2026-08-09) — voir [détail complet](12-contrat-rabbitmq-laravel.md)
 
 Aujourd'hui, RabbitMQ transporte des messages sans contrat formel entre producteur (Spring Boot) et consommateur (Laravel). Si le format d'un message change côté Spring Boot, Laravel casse silencieusement en prod.
 
 **Proposition** : valider chaque message publié/consommé via un schéma JSON Schema (ou Avro pour aller plus loin), versionné dans un dossier `contracts/` partagé entre les deux repos.
+
+**Réalisé** : le message `diagnostic.created`, jusque-là une string texte brute, est maintenant du JSON structuré validé des deux côtés contre `contracts/rabbitmq/diagnostic-created.schema.json` (JSON Schema draft 2020-12) — `com.networknt:json-schema-validator` côté Spring Boot (avant publication), `justinrainbow/json-schema` côté Laravel (avant traitement, dans une commande Artisan `rabbitmq:consume-diagnostic-created` qui n'existait pas — Laravel n'avait aucun consommateur RabbitMQ jusqu'ici). Deux bugs d'interopérabilité Java↔PHP trouvés et corrigés en testant la boucle réelle plutôt qu'en se fiant aux seuls tests unitaires (voir le détail : `ObjectMapper` non partagé avec `Jackson2JsonMessageConverter`, puis nanosecondes Java vs microsecondes PHP sur `occurredAt`).
 
 ## 2. Résilience applicative (Circuit Breaker / Retry)
 
