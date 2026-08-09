@@ -15,3 +15,4 @@
 9. [Roadmap de développement phasée](ROADMAP.md)
 10. [Phase 3 — Page diagnostic en Inertia (pas de pont Next.js)](09-phase3-diagnostic-inertia.md)
 11. [Phase 4 — Scraping Scrapy & pipeline Cassandra](10-phase4-scraping-cassandra.md)
+12. [Embeddings, RAG & pgvector — comprendre la brique avant de la coder](11-embeddings-rag-pgvector.md)
