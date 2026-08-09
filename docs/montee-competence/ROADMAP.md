@@ -62,9 +62,10 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 - [x] Scrapy spider simple sur un catalogue d'ingrédients (pas encore Reddit/Playwright — commencer par du HTML statique) — [uniikon.com](https://uniikon.com), voir [détail complet](10-phase4-scraping-cassandra.md)
 - [x] Pipeline `cassandra-driver` pour pousser les résultats dans Cassandra — deux tables (`gammes`, `products`), local **et** Astra DB ("prod" managée)
-- [ ] Scrapy-Playwright + social listening une fois le pipeline de base validé
+- [x] ~~Scrapy-Playwright + social listening~~ — abandonné (2026-08-09) : les avis clients (widget Loox sur uniikon.com) sont le seul contenu JS pertinent trouvé, mais `loox.io` interdit `/widget` dans son `robots.txt`, et Trustpilot (piste de repli) bloque tout via un `Disallow: /` générique. Le projet respecte toujours `robots.txt` (c'est déjà pour ça qu'uniikon.com avait été retenu au départ) — pas de contournement. Redirigé vers une exploitation réelle des données déjà scrapées plutôt que d'insister pour cocher la case Playwright.
+- [x] Exploitation des données scrapées (2026-08-09) : `scripts/analyze_scraped_data.py` (ingrédients INCI les plus fréquents, recouvrement avec le catalogue kbeauty-shop, positionnement prix) et première brique du pipeline RAG (`scripts/embed_ingredients.py`) — 59 listes INCI vectorisées (Voyage AI `voyage-3.5`) dans une table `pgvector` dédiée sur Neon (`uniikon_ingredient_embeddings`), en vue du futur moteur de matching Phase 5. Le matching réel (côté `kbeauty-ai-core-service`) reste un chantier à part.
 
-**Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`). Cron en place (2026-08-07) : `scripts/run_crawl.sh` dans `kbeauty-ingredients-scraper`, installé en crontab utilisateur quotidien à 3h — s'assure que Cassandra tourne avant de lancer le spider, log horodaté dans `logs/`. Reste : Scrapy-Playwright + social listening.
+**Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`). Cron en place (2026-08-07) : `scripts/run_crawl.sh` dans `kbeauty-ingredients-scraper`, installé en crontab utilisateur quotidien à 3h — s'assure que Cassandra tourne avant de lancer le spider, log horodaté dans `logs/`. Phase 4 close : voir ci-dessus pour l'issue de Scrapy-Playwright et l'exploitation des données.
 
 ## Phase 5 — Brancher l'IA réelle — ~2-3 semaines (le plus incertain, prévoir buffer)
 
@@ -93,7 +94,7 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 ## Prochaine étape immédiate
 
-Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), le cron + Scrapy-Playwright (dernier point Phase 4), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
+Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Phase 4 est maintenant close (cron, exploitation des données, cf. ci-dessus). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
 
 **Décision (2026-08-07)** : avant de reprendre Phase 0, deux axes hors programme retenus en priorité (voir [07-axes-hors-programme.md](07-axes-hors-programme.md)) car ils comblent un vrai trou du design event-driven actuel, effort faible :
 - [ ] Axe 1 — Contrat de données entre services (schéma JSON validé sur les messages RabbitMQ Spring Boot ↔ Laravel)
