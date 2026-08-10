@@ -26,13 +26,15 @@ order: 11
 
 **Livrable** : dossier de conception validé, backlog priorisé. Rien codé encore.
 
-## Phase 1 — Infra commune (J2) — ~2-3 jours
+## Phase 1 — Infra commune (J2) — ~2-3 jours — [x] Fait (2026-08-10)
 
-- [ ] `docker-compose.yml` (Valkey, RabbitMQ, Cassandra, SonarQube) sous WSL Ubuntu
-- [ ] Vérifier chaque conteneur individuellement (`docker compose ps`, dashboards RabbitMQ `:15672`, SonarQube `:9000`)
-- [ ] Premier scan SonarQube sur le repo Laravel/React existant — sert de baseline qualité, pas besoin d'attendre les microservices
+- [x] `docker-compose.yml` (Valkey, RabbitMQ, Cassandra, SonarQube) sous WSL Ubuntu — existait déjà dans `kbeauty-ecosystem/docker-compose.yml` (créé en amont pour les Phases 2/4/5), jamais coché ici
+- [x] Vérifier chaque conteneur individuellement (2026-08-10) : RabbitMQ (dashboard `:15672` → 200 OK), SonarQube (`:9000` → `status: UP`), Cassandra (`cqlsh -e "describe cluster"` → répond), Valkey (`valkey-cli PING` → `PONG`). Cassandra/SonarQube/Valkey sont gourmands en RAM (2-4 Go chacun, VM WSL limitée à ~5.7 Go) : arrêtés juste après vérification, seul RabbitMQ tourne en continu (utilisé par les Phases 2-5)
+- [x] Premier scan SonarQube sur `kbeauty-shop` (2026-08-10) — baseline : 31 248 lignes de code, 2 bugs (fiabilité C), 3 vulnérabilités (sécurité C), 227 code smells, 5.4% de duplication, maintenabilité A. Config dans `sonar-project.properties` (nouveau, à la racine)
 
 **Livrable** : infra locale qui tourne, scan Sonar du projet existant fait.
+
+**Trouvé en vérifiant (2026-08-10)** : Laravel utilise en réalité un `redis-server` natif (paquet apt, service systemd, port 6379), pas le conteneur `valkey` du docker-compose — `.env` pointe `REDIS_HOST=127.0.0.1` avec `CACHE_STORE=redis` et `QUEUE_CONNECTION=redis`, mais rien ne force ce trafic vers le conteneur Docker. Le conteneur `valkey` existe et répond, mais n'est jamais réellement sollicité par l'application. Pas corrigé ici (bascule vers le conteneur = choix d'archi à trancher, pas une correction de doc) — juste documenté pour ne pas le découvrir plus tard par surprise.
 
 ## Phase 2 — Premier microservice end-to-end (J4 réduit) — ~1-2 semaines
 
@@ -94,7 +96,7 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 ## Prochaine étape immédiate
 
-Phases 2, 3, 4 et maintenant 5 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier avec une vraie analyse IA, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), puis Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
+Phases 1, 2, 3, 4 et 5 fonctionnelles de bout en bout (infra Docker vérifiée + baseline SonarQube, microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier avec une vraie analyse IA, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), puis Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
 
 **Décision (2026-08-07)** : avant de reprendre Phase 0, deux axes hors programme retenus en priorité (voir [07-axes-hors-programme.md](07-axes-hors-programme.md)) car ils comblent un vrai trou du design event-driven actuel, effort faible :
 - [x] Axe 1 — Contrat de données entre services (2026-08-09) : schéma JSON Schema validé sur les messages RabbitMQ Spring Boot ↔ Laravel, voir [détail complet](12-contrat-rabbitmq-laravel.md) (journal côté Spring Boot : `kbeauty-ai-core-service/docs/04-contrat-donnees-json-schema.md`, repo séparé)
