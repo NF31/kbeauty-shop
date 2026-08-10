@@ -22,13 +22,13 @@ Aujourd'hui, RabbitMQ transporte des messages sans contrat formel entre producte
 
 ## 2. Résilience applicative (Circuit Breaker / Retry)
 
-- [ ] À faire (retenu en priorité le 2026-08-07)
+- [x] Fait (2026-08-10) — voir `kbeauty-ai-core-service/docs/06-resilience-anthropic.md` (repo séparé)
 
 La résilience actuelle du dossier est uniquement infra (RabbitMQ persiste les messages sur disque en cas de panne). Rien ne gère la panne applicative : si l'API IA externe timeout, Spring Boot ne fait rien de spécifique.
 
-**Proposition** : intégrer Resilience4j côté Spring Boot (circuit breaker + retry avec backoff exponentiel) sur l'appel à l'API IA externe.
-
 **Statut (2026-08-09)** : évalué prématuré à ce moment-là — aucun appel API externe n'existait encore sur `main` (l'appel Anthropic était seulement un WIP non mergé). Débloqué le 2026-08-10 par la Phase 5 (voir `ROADMAP.md`) : `AnthropicVisionService` appelle maintenant réellement `api.anthropic.com`, ce qui donne enfin une cible concrète à cet axe.
+
+**Réalisé (2026-08-10)** : Resilience4j côté Spring Boot (`resilience4j-spring-boot3` + `spring-boot-starter-aop`) sur l'appel HTTP à Anthropic, isolé dans une classe dédiée `AnthropicApiClient` (piège Spring AOP : l'auto-invocation depuis la même classe que l'appelant aurait fait ignorer silencieusement les annotations `@Retry`/`@CircuitBreaker`). Retry avec backoff exponentiel (3 tentatives, 1s/2s), puis circuit breaker (fenêtre de 10 appels, seuil 50%, pause 30s) si les échecs persistent — les deux ignorent volontairement les erreurs 4xx (clé invalide, crédit insuffisant : pas transitoire, retenter ne résout rien). Ordre des aspects explicite (retry enveloppe le circuit breaker) pour qu'un circuit ouvert fasse échouer les tentatives de retry restantes immédiatement plutôt que d'attendre un backoff pour rien. Vérifié via un test avec contexte Spring minimal (`ApplicationContextRunner`) et HTTP simulé (`MockRestServiceServer`), pas en conditions réelles cette fois (impossible de provoquer un vrai 5xx Anthropic à la demande).
 
 ## 3. Identité centralisée (SSO / OIDC) plutôt que jeton ad-hoc
 

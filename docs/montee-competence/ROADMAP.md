@@ -98,6 +98,6 @@ Phases 2, 3, 4 et maintenant 5 fonctionnelles de bout en bout (microservice Spri
 
 **Décision (2026-08-07)** : avant de reprendre Phase 0, deux axes hors programme retenus en priorité (voir [07-axes-hors-programme.md](07-axes-hors-programme.md)) car ils comblent un vrai trou du design event-driven actuel, effort faible :
 - [x] Axe 1 — Contrat de données entre services (2026-08-09) : schéma JSON Schema validé sur les messages RabbitMQ Spring Boot ↔ Laravel, voir [détail complet](12-contrat-rabbitmq-laravel.md) (journal côté Spring Boot : `kbeauty-ai-core-service/docs/04-contrat-donnees-json-schema.md`, repo séparé)
-- [ ] Axe 2 — Résilience applicative (Resilience4j : circuit breaker + retry sur l'appel API IA côté Spring Boot) — évalué prématuré le 2026-08-09 (aucun appel API externe n'existait encore sur `main`), débloqué depuis par la Phase 5 (voir ci-dessus) qui lui donne enfin une cible réelle : l'appel à `api.anthropic.com` dans `AnthropicVisionService`
+- [x] Axe 2 — Résilience applicative (2026-08-10) : Resilience4j (circuit breaker + retry avec backoff exponentiel) sur l'appel à `api.anthropic.com` dans `AnthropicVisionService`, débloqué par la Phase 5 ci-dessus — détail complet côté Spring Boot : `kbeauty-ai-core-service/docs/06-resilience-anthropic.md` (repo séparé)
 
-Phase 0 (BPMN/UML) est repoussée après ces deux axes, volontairement — priorité donnée au code.
+Les deux axes hors programme priorisés sont maintenant faits. Reste Phase 0 (BPMN/UML), toujours repoussée volontairement — priorité donnée au code jusqu'ici.
