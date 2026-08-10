@@ -172,9 +172,7 @@ export default function DiagnosticPage({
                                 accept="image/png,image/jpeg,image/webp"
                                 disabled={isAnalyzing}
                                 onChange={(e) =>
-                                    setPhotoFile(
-                                        e.target.files?.[0] ?? null,
-                                    )
+                                    setPhotoFile(e.target.files?.[0] ?? null)
                                 }
                                 className="rounded-md border p-2 text-sm disabled:opacity-50"
                             />
@@ -193,9 +191,7 @@ export default function DiagnosticPage({
                         <Button
                             onClick={analyze}
                             disabled={
-                                isAnalyzing ||
-                                !selectedSkinType ||
-                                !photoFile
+                                isAnalyzing || !selectedSkinType || !photoFile
                             }
                         >
                             {isAnalyzing
@@ -221,7 +217,7 @@ export default function DiagnosticPage({
                                                 key={label}
                                                 className="flex items-center gap-3"
                                             >
-                                                <span className="w-24 shrink-0 text-xs capitalize text-muted-foreground">
+                                                <span className="w-24 shrink-0 text-xs text-muted-foreground capitalize">
                                                     {label}
                                                 </span>
                                                 <div className="h-2 flex-1 rounded-full bg-muted">
