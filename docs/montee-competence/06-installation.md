@@ -80,7 +80,7 @@ docker compose ps
 
 ## 📁 B. Configuration du Micro-service Java Spring Boot (`pom.xml`)
 
-`~/projects/kbeauty-ai-core-service` — dépendances réellement utilisées (Hibernate/JPA, PostgreSQL, RabbitMQ). L'OpenAPI/Springdoc et Lombok, envisagés au départ, n'ont pas encore été ajoutés (dernier point restant de la Phase 2, voir [`ROADMAP.md`](ROADMAP.md)) :
+`~/projects/kbeauty-ai-core-service` — dépendances réellement utilisées aujourd'hui (2026-08-10, après les Axes 1 et 2 hors programme). L'OpenAPI/Springdoc et Lombok, envisagés au départ, n'ont toujours pas été ajoutés (dernier point restant de la Phase 2, voir [`ROADMAP.md`](ROADMAP.md)) :
 
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
@@ -119,9 +119,36 @@ docker compose ps
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-amqp</artifactId>
         </dependency>
+        <dependency>
+            <!-- Validation des evenements RabbitMQ contre contracts/rabbitmq/*.schema.json
+                 avant publication (Axe 1 hors programme). -->
+            <groupId>com.networknt</groupId>
+            <artifactId>json-schema-validator</artifactId>
+            <version>1.5.6</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <!-- Circuit breaker + retry sur l'appel a l'API Anthropic (Axe 2 hors programme). -->
+            <groupId>io.github.resilience4j</groupId>
+            <artifactId>resilience4j-spring-boot3</artifactId>
+            <version>2.4.0</version>
+        </dependency>
+        <dependency>
+            <!-- Requis pour que Spring proxy (AOP) les methodes annotees
+                 @CircuitBreaker/@Retry - sans ce starter, les annotations
+                 sont silencieusement ignorees. -->
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
     </dependencies>
 </project>
 ```
+
+Les deux dernières (`resilience4j-spring-boot3`, `spring-boot-starter-aop`) et `json-schema-validator` viennent des axes hors programme (voir [07-axes-hors-programme.md](07-axes-hors-programme.md)), pas de la Phase 2 initiale — détail complet côté Spring Boot dans `kbeauty-ai-core-service/docs/04-contrat-donnees-json-schema.md` et `kbeauty-ai-core-service/docs/06-resilience-anthropic.md` (repo séparé).
 
 *Compilation initiale sous Linux :*
 ```bash
