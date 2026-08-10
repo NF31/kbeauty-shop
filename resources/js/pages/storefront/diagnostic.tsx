@@ -22,6 +22,7 @@ type DiagnosticResult = {
     diagnosticId: number | null;
     skinType: { value: string; label: string };
     analysis: string;
+    scores: Record<string, number> | null;
     recommendedProducts: RecommendedProduct[];
 };
 
@@ -45,6 +46,11 @@ export default function DiagnosticPage({
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [addingVariantId, setAddingVariantId] = useState<number | null>(null);
     const [addErrors, setAddErrors] = useState<Record<number, string>>({});
+    const [selectedSkinType, setSelectedSkinType] = useState<string | null>(
+        null,
+    );
+    const [photoFile, setPhotoFile] = useState<File | null>(null);
+    const [photoError, setPhotoError] = useState<string | null>(null);
 
     setLayoutProps({
         breadcrumbs: [
@@ -56,14 +62,21 @@ export default function DiagnosticPage({
     const diagnosticPath = localizedPath('/diagnostic-peau', locale);
     const cartPath = localizedPath('/panier', locale);
 
-    const analyze = (skinType: string) => {
+    const analyze = () => {
+        if (!selectedSkinType || !photoFile) {
+            return;
+        }
+
         setIsAnalyzing(true);
+        setPhotoError(null);
 
         router.post(
             diagnosticPath,
-            { skin_type: skinType },
+            { skin_type: selectedSkinType, photo: photoFile },
             {
+                forceFormData: true,
                 preserveScroll: true,
+                onError: (errors) => setPhotoError(errors.photo ?? null),
                 onFinish: () => setIsAnalyzing(false),
             },
         );
@@ -117,18 +130,78 @@ export default function DiagnosticPage({
                 </div>
 
                 {!result && (
-                    <div className="flex flex-col gap-3">
-                        {skinTypeOptions.map((option) => (
-                            <button
-                                key={option.value}
-                                type="button"
-                                disabled={isAnalyzing}
-                                onClick={() => analyze(option.value)}
-                                className="rounded-md border p-4 text-center font-medium transition-colors hover:bg-muted disabled:opacity-50"
+                    <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-3">
+                            <p className="text-sm font-medium">
+                                {t('Ton type de peau')}
+                            </p>
+                            <div className="flex flex-col gap-3">
+                                {skinTypeOptions.map((option) => (
+                                    <button
+                                        key={option.value}
+                                        type="button"
+                                        disabled={isAnalyzing}
+                                        onClick={() =>
+                                            setSelectedSkinType(option.value)
+                                        }
+                                        aria-pressed={
+                                            selectedSkinType === option.value
+                                        }
+                                        className={`rounded-md border p-4 text-center font-medium transition-colors hover:bg-muted disabled:opacity-50 ${
+                                            selectedSkinType === option.value
+                                                ? 'border-foreground bg-muted'
+                                                : ''
+                                        }`}
+                                    >
+                                        {option.label}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <label
+                                htmlFor="diagnostic-photo"
+                                className="text-sm font-medium"
                             >
-                                {option.label}
-                            </button>
-                        ))}
+                                {t('Une photo de ton visage')}
+                            </label>
+                            <input
+                                id="diagnostic-photo"
+                                type="file"
+                                accept="image/png,image/jpeg,image/webp"
+                                disabled={isAnalyzing}
+                                onChange={(e) =>
+                                    setPhotoFile(
+                                        e.target.files?.[0] ?? null,
+                                    )
+                                }
+                                className="rounded-md border p-2 text-sm disabled:opacity-50"
+                            />
+                            <p className="text-xs text-muted-foreground">
+                                {t(
+                                    'Analysee puis jetee immediatement, jamais conservee.',
+                                )}
+                            </p>
+                            {photoError && (
+                                <p className="text-sm text-destructive">
+                                    {photoError}
+                                </p>
+                            )}
+                        </div>
+
+                        <Button
+                            onClick={analyze}
+                            disabled={
+                                isAnalyzing ||
+                                !selectedSkinType ||
+                                !photoFile
+                            }
+                        >
+                            {isAnalyzing
+                                ? t('Analyse en cours...')
+                                : t('Lancer le diagnostic')}
+                        </Button>
                     </div>
                 )}
 
@@ -139,6 +212,34 @@ export default function DiagnosticPage({
                                 {result.skinType.label}
                             </p>
                             <p>{result.analysis}</p>
+
+                            {result.scores && (
+                                <div className="mt-4 flex flex-col gap-2">
+                                    {Object.entries(result.scores).map(
+                                        ([label, value]) => (
+                                            <div
+                                                key={label}
+                                                className="flex items-center gap-3"
+                                            >
+                                                <span className="w-24 shrink-0 text-xs capitalize text-muted-foreground">
+                                                    {label}
+                                                </span>
+                                                <div className="h-2 flex-1 rounded-full bg-muted">
+                                                    <div
+                                                        className="h-2 rounded-full bg-foreground"
+                                                        style={{
+                                                            width: `${value}%`,
+                                                        }}
+                                                    />
+                                                </div>
+                                                <span className="w-8 shrink-0 text-right text-xs text-muted-foreground">
+                                                    {value}%
+                                                </span>
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            )}
                         </div>
 
                         {result.recommendedProducts.length > 0 && (
@@ -213,7 +314,12 @@ export default function DiagnosticPage({
 
                         <button
                             type="button"
-                            onClick={() => router.get(diagnosticPath)}
+                            onClick={() => {
+                                setSelectedSkinType(null);
+                                setPhotoFile(null);
+                                setPhotoError(null);
+                                router.get(diagnosticPath);
+                            }}
                             className="text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
                         >
                             {t('Refaire le test')}

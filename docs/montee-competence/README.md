@@ -17,3 +17,4 @@
 11. [Phase 4 — Scraping Scrapy & pipeline Cassandra](10-phase4-scraping-cassandra.md)
 12. [Embeddings, RAG & pgvector — comprendre la brique avant de la coder](11-embeddings-rag-pgvector.md)
 13. [Consommateur RabbitMQ Laravel & contrat JSON Schema](12-contrat-rabbitmq-laravel.md)
+14. [Phase 5 — Diagnostic peau réel (vision Claude)](13-diagnostic-vision-laravel.md)

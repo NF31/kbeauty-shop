@@ -67,14 +67,14 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 **Livrable** : spider validé par un crawl complet (78 pages, données visibles dans Cassandra via `cqlsh`). Cron en place (2026-08-07) : `scripts/run_crawl.sh` dans `kbeauty-ingredients-scraper`, installé en crontab utilisateur quotidien à 3h — s'assure que Cassandra tourne avant de lancer le spider, log horodaté dans `logs/`. Phase 4 close : voir ci-dessus pour l'issue de Scrapy-Playwright et l'exploitation des données.
 
-## Phase 5 — Brancher l'IA réelle — ~2-3 semaines (le plus incertain, prévoir buffer)
+## Phase 5 — Brancher l'IA réelle — ~2-3 semaines (le plus incertain, prévoir buffer) — [x] Fait (2026-08-10)
 
-- [ ] Choisir et budgéter l'API vision/LLM (coût par appel, quota)
-- [ ] Endpoint Spring Boot qui appelle l'API IA, traite l'image en mémoire uniquement (RGPD — jamais persistée)
-- [ ] Persistance des scores anonymisés uniquement (`rougeurs: 40%`)
-- [ ] Brancher sur le pipeline RabbitMQ de la Phase 2
+- [x] Choisir l'API vision/LLM : Claude (Anthropic), `claude-sonnet-5` — coût réel non encore suivi dans la durée (juste vérifié négligeable par appel de test), pas de budget/quota formalisé
+- [x] Endpoint Spring Boot qui appelle l'API IA, traite l'image en mémoire uniquement (RGPD — jamais persistée)
+- [x] Persistance des scores anonymisés uniquement (`rougeurs: 0%`, etc. — `diagnostic_request.scores_json`)
+- [x] Brancher sur le pipeline RabbitMQ de la Phase 2
 
-**Livrable** : diagnostic réel de bout en bout, avec coûts mesurés.
+**Livrable** : diagnostic réel de bout en bout, vérifié depuis le vrai formulaire `/diagnostic-peau` (upload photo → Spring Boot → Claude vision → Neon → RabbitMQ → consumer Laravel). Détail côté Java : `kbeauty-ai-core-service/docs/05-diagnostic-vision-claude.md` (repo séparé) ; côté Laravel : [13-diagnostic-vision-laravel.md](13-diagnostic-vision-laravel.md). Deux bugs trouvés uniquement en testant en conditions réelles (compte Anthropic sans crédit, puis un bloc "extended thinking" mal géré côté parsing Java) — voir le détail dans ces deux docs.
 
 ## Phase 6 — Analytics & CI/CD (J6) — ~1-2 semaines
 
@@ -94,10 +94,10 @@ Objectif : un Spring Boot minimal qui **lit/écrit réellement** dans Neon et **
 
 ## Prochaine étape immédiate
 
-Phases 2, 3 et 4 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier, spider + pipeline Cassandra local/Astra). Phase 4 est maintenant close (cron, exploitation des données, cf. ci-dessus). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), puis Phase 5 (IA réelle) et Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
+Phases 2, 3, 4 et maintenant 5 fonctionnelles de bout en bout (microservice Spring Boot + Neon + RabbitMQ, page diagnostic Inertia connectée au panier avec une vraie analyse IA, spider + pipeline Cassandra local/Astra). Restent : Phase 0 (BPMN + UML, toujours en attente — la seule fondation SI pas encore posée), le contrat OpenAPI/Springdoc (dernier point Phase 2), puis Phase 6 (analytics/CI). Phase 0 reste la priorité "sur le papier" (c'est ce que MIAGE évalue le plus), mais rien n'empêche de continuer à consolider ce qui tourne déjà.
 
 **Décision (2026-08-07)** : avant de reprendre Phase 0, deux axes hors programme retenus en priorité (voir [07-axes-hors-programme.md](07-axes-hors-programme.md)) car ils comblent un vrai trou du design event-driven actuel, effort faible :
 - [x] Axe 1 — Contrat de données entre services (2026-08-09) : schéma JSON Schema validé sur les messages RabbitMQ Spring Boot ↔ Laravel, voir [détail complet](12-contrat-rabbitmq-laravel.md) (journal côté Spring Boot : `kbeauty-ai-core-service/docs/04-contrat-donnees-json-schema.md`, repo séparé)
-- [ ] Axe 2 — Résilience applicative (Resilience4j : circuit breaker + retry sur l'appel API IA côté Spring Boot)
+- [ ] Axe 2 — Résilience applicative (Resilience4j : circuit breaker + retry sur l'appel API IA côté Spring Boot) — évalué prématuré le 2026-08-09 (aucun appel API externe n'existait encore sur `main`), débloqué depuis par la Phase 5 (voir ci-dessus) qui lui donne enfin une cible réelle : l'appel à `api.anthropic.com` dans `AnthropicVisionService`
 
 Phase 0 (BPMN/UML) est repoussée après ces deux axes, volontairement — priorité donnée au code.

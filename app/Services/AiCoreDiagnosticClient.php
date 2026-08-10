@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -15,16 +16,50 @@ use Throwable;
  */
 class AiCoreDiagnosticClient
 {
-    public function createDiagnosticRequest(): ?int
+    /**
+     * Timeout large (20s, contre 2s pour un simple insert) : un appel a une
+     * API vision externe (cote Spring Boot) est naturellement plus lent. La
+     * photo est lue en memoire (UploadedFile::get()) et transmise telle
+     * quelle, jamais ecrite sur le disque Laravel.
+     *
+     * @return array{diagnosticId: int, analysis: string, scores: array<string, int>}|null
+     */
+    public function analyzeSkin(UploadedFile $image, string $skinType): ?array
     {
-        try {
-            $response = Http::timeout(2)->post(
-                rtrim((string) config('services.ai_core.url'), '/').'/diagnostics',
-            );
+        $contents = $image->get();
 
-            return $response->successful() ? $response->json('id') : null;
+        if ($contents === false) {
+            Log::warning('Photo de diagnostic illisible', ['path' => $image->getPathname()]);
+
+            return null;
+        }
+
+        try {
+            $response = Http::timeout(20)
+                ->attach('image', $contents, $image->getClientOriginalName(), [
+                    'Content-Type' => $image->getMimeType(),
+                ])
+                ->post(
+                    rtrim((string) config('services.ai_core.url'), '/').'/diagnostics/analyze',
+                    ['skin_type' => $skinType],
+                );
+
+            if (! $response->successful()) {
+                Log::warning('kbeauty-ai-core-service a refuse l\'analyse', [
+                    'status' => $response->status(),
+                    'body' => $response->json('error'),
+                ]);
+
+                return null;
+            }
+
+            return [
+                'diagnosticId' => $response->json('id'),
+                'analysis' => $response->json('analysis'),
+                'scores' => $response->json('scores'),
+            ];
         } catch (Throwable $e) {
-            Log::warning('kbeauty-ai-core-service injoignable', ['message' => $e->getMessage()]);
+            Log::warning('kbeauty-ai-core-service injoignable (analyse vision)', ['message' => $e->getMessage()]);
 
             return null;
         }

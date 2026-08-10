@@ -28,6 +28,8 @@ La résilience actuelle du dossier est uniquement infra (RabbitMQ persiste les m
 
 **Proposition** : intégrer Resilience4j côté Spring Boot (circuit breaker + retry avec backoff exponentiel) sur l'appel à l'API IA externe.
 
+**Statut (2026-08-09)** : évalué prématuré à ce moment-là — aucun appel API externe n'existait encore sur `main` (l'appel Anthropic était seulement un WIP non mergé). Débloqué le 2026-08-10 par la Phase 5 (voir `ROADMAP.md`) : `AnthropicVisionService` appelle maintenant réellement `api.anthropic.com`, ce qui donne enfin une cible concrète à cet axe.
+
 ## 3. Identité centralisée (SSO / OIDC) plutôt que jeton ad-hoc
 
 Le flux « jeton signé 2 minutes » entre Laravel et Next.js fonctionne pour 2 services mais ne scale pas si un 3ᵉ client apparaît.
